@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import LogoutBtn from "@/features/auth/components/logout-btn"
-import { Home, Languages, LayoutDashboard, Server, Settings } from "lucide-react"
+import { BookText, CircleQuestionMark, Home, Languages, LayoutDashboard, LayoutGrid, Server, Settings } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 
@@ -33,7 +33,7 @@ export function AppSidebar() {
           <span>{s("dashboard_title")}</span>
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>{s("navigation")}</SidebarGroupLabel>
@@ -49,10 +49,35 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
+                {/* categories */}
+                <SidebarMenuButton asChild>
+                  <Link to="/categories">
+                    <LayoutGrid />
+                    <span>{s("categories")}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link to="/services">
                     <Server />
                     <span>{s("services")}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/faq">
+                    <CircleQuestionMark />
+                    <span>{s("faq")}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/blogs">
+                    <BookText />
+                    <span>{s("blogs")}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -74,7 +99,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton onClick={toggleLanguage}>
               <Languages />
-              <span>{i18n.language.startsWith('ar') ? 'English' : 'عربي'}</span>
+              <span>{i18n.language.startsWith("ar") ? "English" : "عربي"}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
@@ -85,5 +110,5 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

@@ -7,6 +7,9 @@
     "home": "الرئيسية",
     "services": "الخدمات",
     "settings": "الإعدادات",
+    "faq": "الأسئلة الشائعة",
+    "blogs": "المدونات",
+    "categories": "التصنيفات",
     "logout": "تسجيل الخروج"
   },
   "services":{
@@ -126,6 +129,210 @@
     "email_invalid": "البريد الإلكتروني غير صالح",
     "email_required": "البريد الإلكتروني مطلوب",
     "password_required": "كلمة المرور مطلوبة"
+  },
+  "faq": {
+    "title": "الأسئلة الشائعة",
+    "description": "إدارة الأسئلة الشائعة واجابتها للمستخدم",
+    "add_faq": "إضافة سؤال جديد",
+    "all_faq": "كل الأسئلة",
+    "active_faq": "الأسئلة المنشورة",
+    "inactive_faq": "المسودات",
+    "question": "سؤال",
+    "category": "التصنيف",
+    "status": "الحالة",
+    "last_modified": "آخر تعديل",
+    "actions": "الإجراءات",
+    "published": "منشور",
+    "draft": "مسودة",
+    "all_categories": "كل التصنيفات",
+    "search_placeholder": "ابحث عن سؤال...",
+    "showing_info": "عرض {{start}} - {{end}} من {{total}}",
+    "categories": {
+      "all": "الكل",
+      "account": "حساب",
+      "orders": "الطلبات",
+      "support": "الدعم"
+    },
+    "form": {
+      "add_new_question": "إضافة سؤال جديد",
+      "question_ar": "السؤال (بالعربية)",
+      "question_en": "السؤال (بالإنجليزية)",
+      "answer_ar": "الإجابة (بالعربية)",
+      "answer_en": "الإجابة (بالإنجليزية)",
+      "meta_title_ar": "عنوان الميتا (بالعربية)",
+      "meta_title_en": "عنوان الميتا (بالإنجليزية)",
+      "meta_description_ar": "وصف الميتا (بالعربية)",
+      "meta_description_en": "وصف الميتا (بالإنجليزية)",
+      "category_placeholder": "اختر التصنيف",
+      "save_faq": "حفظ السؤال"
+    }
+  },
+  "blogs": {
+    "title": "المدونات",
+    "description": "إدارة مقالات المدونة والأخبار الخاصة بك",
+    "add_blog": "إضافة مقالة جديدة",
+    "all_blogs": "كل المقالات",
+    "active_blogs": "المنشورة",
+    "inactive_blogs": "المسودات",
+    "table": {
+      "search_placeholder": "ابحث عن مدونة...",
+      "title": "العنوان",
+      "subtitle": "العنوان الفرعي",
+      "category": "الفئة",
+      "publisher": "الناشر",
+      "tags": "الوسوم",
+      "image": "صورة",
+      "description": "الوصف",
+      "views": "مشاهدات",
+      "status": "نشط",
+      "created_at": "تم الإنشاء في",
+      "actions": "الإجراءات"
+    },
+    "showing_info": "عرض {{start}} - {{end}} من {{total}}",
+    "categories": {
+      "all": "الكل",
+      "accessories": "أكسسوارات",
+      "chilled": "برد"
+    },
+    "form": {
+      "basic_info": "المعلومات الأساسية",
+      "content_label": "المحتوى",
+      "media_label": "الوسائط",
+      "seo_label": "SEO",
+      "status_label": "الحالة",
+      "title_ar": "العنوان (بالعربية)",
+      "title_en": "العنوان (بالإنجليزية)",
+      "subtitle_ar": "العنوان الفرعي (بالعربية)",
+      "subtitle_en": "العنوان الفرعي (بالإنجليزية)",
+      "content_ar": "المحتوى (بالعربية)",
+      "content_en": "المحتوى (بالإنجليزية)",
+      "publisher": "اسم الناشر",
+      "tags": "الوسوم",
+      "tags_hint": "مفصولة بفاصلة",
+      "category": "الفئة",
+      "image": "صورة",
+      "image_alt": "نص بديل للصورة",
+      "meta_title_ar": "عنوان الميتا (بالعربية)",
+      "meta_title_en": "عنوان الميتا (بالإنجليزية)",
+      "meta_description_ar": "وصف الميتا (بالعربية)",
+      "meta_description_en": "وصف الميتا (بالإنجليزية)",
+      "is_active": "نشط",
+      "pub_status": "حالة النشر",
+      "draft": "مسودة",
+      "published": "منشور",
+      "scheduled": "مجدول",
+      "save": "حفظ المقالة"
+    }
+  },
+  "categories": {
+    "title": "التصنيفات",
+    "description": "إدارة تصنيفات المدونة والخدمات",
+    "add_button": "إضافة تصنيف",
+    "table": {
+      "name": "اسم التصنيف",
+      "blogs_count": "عدد المقالات",
+      "status": "الحالة",
+      "actions": "الإجراءات",
+      "status_badge": {
+        "active": "نشط",
+        "inactive": "غير نشط"
+      }
+    },
+    "form": {
+      "title_ar": "العنوان (بالعربية)",
+      "title_en": "العنوان (بالإنجليزية)",
+      "desc_ar": "الوصف (بالعربية)",
+      "desc_en": "الوصف (بالإنجليزية)",
+      "meta_title_ar": "عنوان الميتا (بالعربية)",
+      "meta_title_en": "عنوان الميتا (بالإنجليزية)",
+      "meta_desc_ar": "وصف الميتا (بالعربية)",
+      "meta_desc_en": "وصف الميتا (بالإنجليزية)",
+      "save": "حفظ التصنيف"
+    }
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "description": "إدارة إعدادات الموقع وتكويناته",
+    "tabs": {
+      "general": "عام",
+      "contact": "التواصل",
+      "offices": "المكاتب والعناوين",
+      "working_hours": "ساعات العمل",
+      "social": "وسائل التواصل الاجتماعي",
+      "seo": "SEO"
+    },
+    "general": {
+      "title": "المعلومات العامة",
+      "site_name": "اسم الموقع",
+      "logo": "الشعار",
+      "change_logo": "تغيير الشعار",
+      "favicon": "Favicon",
+      "change_favicon": "تغيير الأيقونة",
+      "timezone": "المنطقة الزمنية",
+      "default_language": "اللغة الافتراضية",
+      "save_changes": "حفظ التغييرات"
+    },
+    "contact": {
+      "title": "معلومات التواصل",
+      "whatsapp_turkey": "واتس أب / جوال - تركيا",
+      "whatsapp_oman_1": "واتس أب / جوال - عمان (1)",
+      "whatsapp_oman_2": "واتس أب / جوال - عمان (2)",
+      "email": "البريد الإلكتروني",
+      "save_changes": "حفظ التغييرات"
+    },
+    "offices": {
+      "title": "المكاتب والعناوين",
+      "add_button": "إضافة مكتب",
+      "office_title": "عنوان المكتب",
+      "address": "تفاصيل العنوان",
+      "country": "الدولة",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "save": "حفظ المكتب",
+      "cancel": "إلغاء",
+      "delete_confirm": "هل أنت متأكد من حذف هذا المكتب؟"
+    },
+    "working_hours": {
+      "title": "ساعات العمل",
+      "from_day": "من اليوم",
+      "to_day": "إلى اليوم",
+      "from_hour": "من الساعة",
+      "to_hour": "إلى الساعة",
+      "show_on_site": "عرض ساعات العمل في الموقع",
+      "save_changes": "حفظ التغييرات"
+    },
+    "social": {
+      "title": "وسائل التواصل الاجتماعي",
+      "add_button": "إضافة وسيلة",
+      "platform": "المنصة",
+      "link": "الرابط",
+      "status": "الحالة",
+      "actions": "الإجراء",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "save": "حفظ الوسيلة",
+      "cancel": "إلغاء",
+      "follow": "ظاهر في الموقع",
+      "unfollow": "غير ظاهر في الموقع"
+    },
+    "seo": {
+      "title": "Meta Titles لكل صفحة",
+      "page": "الصفحة",
+      "meta_title": "Meta Title",
+      "description": "Description (اختياري)",
+      "actions": "الإجراء",
+      "edit": "تعديل",
+      "save": "حفظ الإعدادات",
+      "pages": {
+        "home": "الرئيسية",
+        "about": "من نحن",
+        "portfolio": "نماذج العملاء",
+        "blog": "المدونة",
+        "courses": "الدورات",
+        "faq": "الأسئلة الشائعة",
+        "contact": "اتصل بنا"
+      }
+    }
   }
 }
 
