@@ -1,5 +1,5 @@
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { $getRoot } from "lexical";
+import { $getRoot, $createParagraphNode, $createTextNode, $isElementNode } from "lexical";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
@@ -7,9 +7,11 @@ import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { ListNode, ListItemNode } from "@lexical/list";
-import { $generateHtmlFromNodes } from "@lexical/html";
+import { $generateHtmlFromNodes, $generateNodesFromDOM } from "@lexical/html";
+import { useEffect } from "react";
 import Toolbar from "./tool-bar";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +62,18 @@ export default function RichTextEditor({
     theme: editorTheme,
     nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode],
     onError: console.error,
+    editorState: () => {
+      if (!value) return;
+      // If it's the object structure we return in onChange
+      if (typeof value === "object" && value !== null && "json" in value) {
+        return JSON.stringify((value as unknown).json);
+      }
+      // If it's a string (could be JSON or handled by a conversion plugin)
+      if (typeof value === "string" && value.startsWith("{")) {
+        return value;
+      }
+      return undefined; // Default empty
+    },
   };
 
   const isRTL = dir === "rtl";
@@ -102,6 +116,7 @@ export default function RichTextEditor({
         <ListPlugin />
         <AutoFocusPlugin />
 
+        <LoadContentPlugin value={value} />
         <HtmlPlugin onChange={onChange} />
       </LexicalComposer>
     </div>
@@ -122,4 +137,56 @@ function HtmlPlugin({ onChange }: { onChange?: (val: unknown) => void }) {
       }}
     />
   );
+}
+
+function LoadContentPlugin({ value }: { value: any }) {
+  const [editor] = useLexicalComposerContext();
+
+  useEffect(() => {
+    if (!value) return;
+
+    editor.update(() => {
+      const root = $getRoot();
+      
+      // If we already have content that isn't just an empty initial state, don't overwrite
+      const currentText = root.getTextContent();
+      if (currentText.trim().length > 0) return;
+
+      if (typeof value === "string") {
+        if (value.startsWith("{")) {
+          try {
+            const json = JSON.parse(value);
+            editor.setEditorState(editor.parseEditorState(json));
+            return;
+          } catch (e) {}
+        }
+        
+        root.clear();
+        const parser = new DOMParser();
+        const dom = parser.parseFromString(value, "text/html");
+        const nodes = $generateNodesFromDOM(editor, dom);
+        
+        if (nodes.length > 0) {
+          nodes.forEach((node) => {
+            if ($isElementNode(node)) {
+              root.append(node);
+            } else {
+              const paragraph = $createParagraphNode();
+              paragraph.append(node);
+              root.append(paragraph);
+            }
+          });
+        } else {
+          // Fallback for very simple plain text
+          const paragraph = $createParagraphNode();
+          paragraph.append($createTextNode(value));
+          root.append(paragraph);
+        }
+      } else if (typeof value === "object" && value !== null && "json" in value) {
+        editor.setEditorState(editor.parseEditorState(value.json));
+      }
+    });
+  }, [value, editor]);
+
+  return null;
 }

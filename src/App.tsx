@@ -14,6 +14,10 @@ import CategoriesPage from "./pages/categories/CategoriesPage"
 import CreateCategoryPage from "./pages/categories/CreateCategoryPage"
 
 import SettingsPage from "./pages/Settings"
+import HomeContentPage from "./pages/home-content/HomeContentPage"
+import WhyChooseUsPage from "./pages/why-choose-us/WhyChooseUsPage"
+import SolutionsPage from "./pages/solutions/SolutionsPage"
+import HelpYouPage from "./pages/help-you/HelpYouPage"
 
 const router = createBrowserRouter([
   {
@@ -23,6 +27,22 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <Dashboard />,
+      },
+      {
+        path: "/home-content",
+        element: <HomeContentPage />,
+      },
+      {
+        path: "/why-choose-us",
+        element: <WhyChooseUsPage />,
+      },
+      {
+        path: "/solutions",
+        element: <SolutionsPage />,
+      },
+      {
+        path: "/help-you",
+        element: <HelpYouPage />,
       },
       {
         path: "/settings",

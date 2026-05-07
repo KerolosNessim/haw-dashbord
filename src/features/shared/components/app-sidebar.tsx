@@ -4,26 +4,80 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarMenuItem
 } from "@/components/ui/sidebar"
 import LogoutBtn from "@/features/auth/components/logout-btn"
+import { cn } from "@/lib/utils"
 import { BookText, CircleQuestionMark, Home, Languages, LayoutDashboard, LayoutGrid, Server, Settings } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 
 export function AppSidebar() {
   const { i18n } = useTranslation()
   const { t: s } = useTranslation("translation", { keyPrefix: "sidebar" })
   const dir = i18n.dir()
+  const location = useLocation()
 
   const toggleLanguage = () => {
     const nextLang = i18n.language.startsWith('ar') ? 'en' : 'ar'
     i18n.changeLanguage(nextLang)
   }
+
+  const Navlinks = [
+    {
+      title: s("home"),
+      href: "/",
+      icon: Home,
+    },
+    {
+      title: s("home_content"),
+      href: "/home-content",
+      icon: Home,
+    },
+    {
+      title: s("why_choose_us"),
+      href: "/why-choose-us",
+      icon: Home,
+    },
+    {
+      title: s("solutions"),
+      href: "/solutions",
+      icon: Home,
+    },
+    {
+      title: s("help_you"),
+      href: "/help-you",
+      icon: Home,
+    },
+    {
+      title: s("categories"),
+      href: "/categories",
+      icon: LayoutGrid,
+    },
+    {
+      title: s("services"),
+      href: "/services",
+      icon: Server,
+    },
+    {
+      title: s("faq"),
+      href: "/faq",
+      icon: CircleQuestionMark,
+    },
+    {
+      title: s("blogs"),
+      href: "/blogs",
+      icon: BookText,
+    },
+    {
+      title: s("settings"),
+      href: "/settings",
+      icon: Settings,
+    },
+  ]
 
   return (
     <Sidebar side={dir === "rtl" ? "right" : "left"}>
@@ -36,59 +90,18 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{s("navigation")}</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                {/* dashboard */}
-                <SidebarMenuButton asChild>
-                  <Link to="/">
-                    <Home />
-                    <span>{s("home")}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                {/* categories */}
-                <SidebarMenuButton asChild>
-                  <Link to="/categories">
-                    <LayoutGrid />
-                    <span>{s("categories")}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/services">
-                    <Server />
-                    <span>{s("services")}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/faq">
-                    <CircleQuestionMark />
-                    <span>{s("faq")}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/blogs">
-                    <BookText />
-                    <span>{s("blogs")}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/settings">
-                    <Settings />
-                    <span>{s("settings")}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+            <SidebarMenu className="space-y-2">
+              {Navlinks.map((link) => (
+                <SidebarMenuItem key={link.href} >
+                  <SidebarMenuButton asChild className={cn(" hover:text-white hover:bg-primary", location.pathname === link.href && "bg-primary text-white")}>
+                    <Link to={link.href} className="flex items-center gap-2 text-base!">
+                      <link.icon />
+                      <span>{link.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

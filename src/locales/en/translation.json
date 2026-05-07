@@ -5,6 +5,10 @@
     "dashboard_title": "My Dashboard",
     "navigation": "Navigation",
     "home": "Home",
+    "home_content": "Home Page Content",
+    "why_choose_us": "Why Choose Us",
+    "solutions": "Our Solutions",
+    "help_you": "How We Help You",
     "services": "Services",
     "settings": "Settings",
     "faq": "FAQ",
@@ -331,6 +335,120 @@
         "faq": "FAQ",
         "contact": "Contact Us"
       }
+    }
+  },
+    "home_content":{
+    "title": "Home Page Content",
+    "description": "Manage Home Page Content",
+    "tabs": {
+      "hero": "Main Section",
+      "states": "States",
+      "dependencies": "Our Dependencies",
+      "our_clients": "Our Clients"
+    },
+    "hero": {
+      "title": "Hero Section Content",
+      "des": "Manage hero section content",
+      "sup_des": "Supplementary Description",
+      "phone": "Phone Number",
+      "image": "Hero Image",
+      "image_preview": "Image Preview",
+      "upload_image": "Upload Image",
+      "delete_image": "Delete Image",
+      "ar": "Arabic",
+      "en": "English",
+      "save": "Save Changes"
+    },
+    "states": {
+      "title": "Statistics",
+      "description": "Manage counters and metrics",
+      "add_stat": "Add New Statistic",
+      "number": "Number/Value",
+      "stat_title": "Title",
+      "stat_description": "Description",
+      "save": "Save Changes"
+    },
+    "dependencies": {
+      "title": "Accreditations",
+      "description": "Manage certifications and trusted partners",
+      "sec_title": "Section Title",
+      "sec_des": "Section Description",
+      "images": "Gallery Images",
+      "add_images": "Add Images",
+      "save": "Save Changes"
+    },
+    "our_clients": {
+      "title": "Our Clients",
+      "description": "Manage client logos and brands",
+      "sec_title": "Section Title",
+      "sec_des": "Section Description",
+      "images": "Client Logos",
+      "add_images": "Add Logos",
+      "save": "Save Changes"
+    }
+  },
+  "why_choose_us": {
+    "title": "Why Choose Us",
+    "description": "Manage the reasons why customers should choose your business",
+    "tabs": {
+      "general": "General Settings",
+      "content": "Content Management"
+    },
+    "general": {
+      "title": "General Settings",
+      "description": "Manage the main title and description of the Why Choose Us section.",
+      "sec_title": "Section Title",
+      "sec_des": "Section Description",
+      "save": "Save Changes"
+    },
+    "content": {
+      "title": "Content Management",
+      "description": "Manage individual features and cards for this section.",
+      "add_feature": "Add New Feature",
+      "feature_title": "Feature Title",
+      "feature_description": "Feature Description",
+      "image": "Feature Icon/Image",
+      "upload_image": "Upload Image",
+      "save": "Save Content"
+    }
+  },
+  "solutions": {
+    "title": "Our Solutions",
+    "description": "Manage the strategic solutions and expertise we provide.",
+    "tabs": {
+      "general": "General Settings",
+      "content": "Solutions List"
+    },
+    "general": {
+      "title": "General Settings",
+      "description": "Manage the main title and description for the Solutions section.",
+      "sec_title": "Section Title",
+      "sec_des": "Section Description",
+      "save": "Save Changes"
+    },
+    "content": {
+      "title": "Solutions List",
+      "description": "Add, edit, or remove individual solutions.",
+      "add_feature": "Add New Solution",
+      "feature_title": "Solution Title",
+      "feature_description": "Solution Description",
+      "image": "Solution Icon/Image",
+      "upload_image": "Upload Image",
+      "save": "Save Solutions"
+    }
+  },
+  "help_you": {
+    "title": "How We Help You",
+    "description": "Manage the list of ways we support and assist our clients.",
+    "content": {
+      "title": "Help Items",
+      "description": "Manage individual help cards and support items.",
+      "add_item": "Add New Item",
+      "item_title": "Item Title",
+      "item_description": "Item Description",
+      "image": "Item Image/Icon",
+      "upload_image": "Upload Image",
+      "save": "Save Changes"
     }
   }
 }
