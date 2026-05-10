@@ -73,6 +73,11 @@ export function AppSidebar() {
       icon: BookText,
     },
     {
+      title: s("testimonials"),
+      href: "/testimonials",
+      icon: LayoutGrid,
+    },
+    {
       title: s("settings"),
       href: "/settings",
       icon: Settings,

@@ -18,6 +18,7 @@ import HomeContentPage from "./pages/home-content/HomeContentPage"
 import WhyChooseUsPage from "./pages/why-choose-us/WhyChooseUsPage"
 import SolutionsPage from "./pages/solutions/SolutionsPage"
 import HelpYouPage from "./pages/help-you/HelpYouPage"
+import TestimonialsPage from "./pages/testimonials/TestimonialsPage"
 
 const router = createBrowserRouter([
   {
@@ -83,6 +84,10 @@ const router = createBrowserRouter([
       {
         path: "/services/edit/:id",
         element: <EditServicesPage />,
+      },
+      {
+        path: "/testimonials",
+        element: <TestimonialsPage />,
       },
     ],
   },

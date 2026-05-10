@@ -14,6 +14,7 @@
     "faq": "FAQ",
     "blogs": "Blogs",
     "categories": "Categories",
+    "testimonials": "Testimonials",
     "logout": "Log out"
   },
   "services":{
@@ -449,6 +450,37 @@
       "image": "Item Image/Icon",
       "upload_image": "Upload Image",
       "save": "Save Changes"
+    }
+  },
+  "testimonials": {
+    "title": "Testimonials",
+    "description": "Manage customer reviews and feedback",
+    "tabs": {
+      "general": "General Settings",
+      "list": "Testimonials List"
+    },
+    "general": {
+      "ar": "Arabic",
+      "en": "English",
+      "title": "General Settings",
+      "description": "Manage the main title and description of the testimonials section.",
+      "sec_title": "Section Title",
+      "sec_des": "Section Description",
+      "save": "Save Changes"
+    },
+    "list": {
+      "ar": "Arabic",
+      "en": "English",
+      "title": "Testimonials List",
+      "description": "Manage individual customer reviews.",
+      "add_testimonial": "Add New Testimonial",
+      "name": "Name",
+      "job_title": "Job Title",
+      "content": "Review Content",
+      "rate": "Rating",
+      "image": "Customer Image",
+      "upload_image": "Upload Image",
+      "save": "Save Testimonial"
     }
   }
 }
