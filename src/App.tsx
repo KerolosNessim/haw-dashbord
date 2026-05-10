@@ -8,6 +8,7 @@ import CreateServicesPage from "./pages/services/CreateServices"
 import EditServicesPage from "./pages/services/EditServices"
 import FaqPage from "./pages/faq/FaqPage"
 import CreateFaqPage from "./pages/faq/CreateFaqPage"
+import EditFaqPage from "./pages/faq/EditFaqPage"
 import BlogsPage from "./pages/blogs/BlogsPage"
 import CreateBlogPage from "./pages/blogs/CreateBlogPage"
 import CategoriesPage from "./pages/categories/CategoriesPage"
@@ -19,6 +20,7 @@ import WhyChooseUsPage from "./pages/why-choose-us/WhyChooseUsPage"
 import SolutionsPage from "./pages/solutions/SolutionsPage"
 import HelpYouPage from "./pages/help-you/HelpYouPage"
 import TestimonialsPage from "./pages/testimonials/TestimonialsPage"
+import AboutUsPage from "./pages/about/AboutUsPage"
 
 const router = createBrowserRouter([
   {
@@ -58,6 +60,10 @@ const router = createBrowserRouter([
         element: <CreateFaqPage/>,
       },
       {
+        path: "/faq/edit/:id",
+        element: <EditFaqPage/>,
+      },
+      {
         path: "/blogs",
         element: <BlogsPage/>,
       },
@@ -88,6 +94,10 @@ const router = createBrowserRouter([
       {
         path: "/testimonials",
         element: <TestimonialsPage />,
+      },
+      {
+        path: "/about",
+        element: <AboutUsPage />,
       },
     ],
   },

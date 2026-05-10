@@ -12,6 +12,13 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { useTestimonialsGeneral } from "../hooks/useTestimonialsGeneral";
 
+interface GeneralFormValues {
+  title_ar: string;
+  title_en: string;
+  description_ar: string;
+  description_en: string;
+}
+
 /**
  * GeneralTab Component
  *
@@ -26,7 +33,7 @@ export default function GeneralTab() {
     useTestimonialsGeneral();
   const apiData = getGeneralQuery.data?.data;
 
-  const { control, handleSubmit } = useForm({
+  const { control, handleSubmit } = useForm<GeneralFormValues>({
     values: {
       title_ar: apiData?.title?.ar ?? "",
       title_en: apiData?.title?.en ?? "",
@@ -35,7 +42,7 @@ export default function GeneralTab() {
     },
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: GeneralFormValues) => {
     const formData = new FormData();
     formData.append("title[ar]", data.title_ar);
     formData.append("title[en]", data.title_en);

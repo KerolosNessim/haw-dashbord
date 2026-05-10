@@ -15,6 +15,7 @@
     "blogs": "Blogs",
     "categories": "Categories",
     "testimonials": "Testimonials",
+    "about_us": "About Us",
     "logout": "Log out"
   },
   "services":{
@@ -135,8 +136,25 @@
     "password_required": "Password is required"
   },
 "faq": {
-    "title": "FAQ",
-    "description": "Manage frequently asked questions and provide answers to users",
+    "title": "FAQs",
+    "description": "Manage frequently asked questions and categories.",
+    "tabs": {
+      "general": "General Settings",
+      "list": "FAQs List"
+    },
+    "general": {
+      "ar": "Arabic",
+      "en": "English",
+      "title": "General Settings",
+      "description": "Manage basic FAQ page information and SEO.",
+      "sec_title": "Title",
+      "sec_des": "Description",
+      "slug": "Slug",
+      "is_active": "Is Active",
+      "status_online": "FAQ Section is Online",
+      "seo_settings": "SEO Settings",
+      "save": "Save Changes"
+    },
     "add_faq": "Add New Question",
     "all_faq": "All Questions",
     "active_faq": "Published",
@@ -159,6 +177,8 @@
     },
     "form": {
       "add_new_question": "Add New Question",
+      "edit_question": "Edit Question",
+      "edit_description": "Update the question and answer details below.",
       "question_ar": "Question (Arabic)",
       "question_en": "Question (English)",
       "answer_ar": "Answer (Arabic)",
@@ -168,7 +188,8 @@
       "meta_description_ar": "Meta Description (Arabic)",
       "meta_description_en": "Meta Description (English)",
       "category_placeholder": "Select Category",
-      "save_faq": "Save FAQ"
+      "save_faq": "Save FAQ",
+      "update_faq": "Update FAQ"
     }
   },
   "blogs": {
@@ -481,6 +502,83 @@
       "image": "Customer Image",
       "upload_image": "Upload Image",
       "save": "Save Testimonial"
+    }
+  },
+  "about": {
+    "title": "About Us",
+    "description": "Manage your company information and story",
+    "tabs": {
+      "general": "General Settings",
+      "intro": "Introductory Section",
+      "vision": "Vision & Message",
+      "why_us": "Why Us",
+      "contact": "Contact"
+    },
+    "general": {
+      "ar": "Arabic",
+      "en": "English",
+      "title": "General Settings",
+      "description": "Manage basic about us information and media.",
+      "sec_title": "Title",
+      "sec_des": "Description",
+      "video_url": "Video URL",
+      "image": "About Us Image",
+      "upload_image": "Upload Image",
+      "meta_title": "Meta Title",
+      "meta_description": "Meta Description",
+      "basic_content": "Basic Content",
+      "seo_settings": "SEO Settings",
+      "media_content": "Media Content",
+      "video_hint": "Paste a link to your introduction video (YouTube, Vimeo, etc.)",
+      "save": "Save Changes"
+    },
+    "intro": {
+      "ar": "Arabic",
+      "en": "English",
+      "title": "Introductory Section",
+      "description": "Manage the introductory section content and image.",
+      "sec_title": "Section Title",
+      "sec_des": "Section Description",
+      "image": "Section Image",
+      "upload_image": "Upload Image",
+      "save": "Save Changes"
+    },
+    "vision": {
+      "ar": "Arabic",
+      "en": "English",
+      "title": "Vision & Message",
+      "description": "Manage your company vision and mission statements.",
+      "vision_title": "Vision Title",
+      "vision_des": "Vision Description",
+      "vision_image": "Vision Image",
+      "message_title": "Message Title",
+      "message_des": "Message Description",
+      "message_image": "Message Image",
+      "upload_image": "Upload Image",
+      "save": "Save Changes"
+    },
+    "why_us": {
+      "ar": "Arabic",
+      "en": "English",
+      "title": "Why Us & Our Values",
+      "description": "Manage the reasons for choosing your company and your core values.",
+      "sec_title": "Main Title",
+      "sec_des": "Description",
+      "values_title": "Values Title",
+      "values_des": "Values Description",
+      "image": "Section Image",
+      "upload_image": "Upload Image",
+      "save": "Save Changes"
+    },
+    "contact": {
+      "ar": "Arabic",
+      "en": "English",
+      "title": "Contact Us",
+      "description": "Manage the contact information shown on the about us page.",
+      "sec_title": "Title",
+      "sec_des": "Description",
+      "phone": "Phone Number",
+      "save": "Save Changes"
     }
   }
 }

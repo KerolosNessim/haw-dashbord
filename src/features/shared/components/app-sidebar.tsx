@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sidebar"
 import LogoutBtn from "@/features/auth/components/logout-btn"
 import { cn } from "@/lib/utils"
-import { BookText, CircleQuestionMark, Home, Languages, LayoutDashboard, LayoutGrid, Server, Settings } from "lucide-react"
+import { BookText, CircleQuestionMark, Home, Info, Languages, LayoutDashboard, LayoutGrid, Server, Settings } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link, useLocation } from "react-router-dom"
 
@@ -76,6 +76,11 @@ export function AppSidebar() {
       title: s("testimonials"),
       href: "/testimonials",
       icon: LayoutGrid,
+    },
+    {
+      title: s("about_us"),
+      href: "/about",
+      icon: Info,
     },
     {
       title: s("settings"),
