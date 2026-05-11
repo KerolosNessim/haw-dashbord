@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/features/shared/components/editor";
 import { cn } from "@/lib/utils";
 import {
   Eye,
@@ -76,12 +76,23 @@ export default function VisionTab() {
   }, [aboutUsData, reset]);
 
   const onSubmit = (values: VisionFormValues) => {
+    const extractHtml = (val: unknown) =>
+      typeof val === "object" && val !== null && "html" in val
+        ? (val as { html: string }).html
+        : (val as string);
+
     updateVisionSection({
       vision_title: { ar: values.vision_title_ar, en: values.vision_title_en },
-      vision_description: { ar: values.vision_description_ar, en: values.vision_description_en },
+      vision_description: { 
+        ar: extractHtml(values.vision_description_ar), 
+        en: extractHtml(values.vision_description_en) 
+      },
       vision_image: values.vision_image instanceof File ? values.vision_image : undefined,
       message_title: { ar: values.message_title_ar, en: values.message_title_en },
-      message_description: { ar: values.message_description_ar, en: values.message_description_en },
+      message_description: { 
+        ar: extractHtml(values.message_description_ar), 
+        en: extractHtml(values.message_description_en) 
+      },
       message_image: values.message_image instanceof File ? values.message_image : undefined,
     });
   };
@@ -122,7 +133,7 @@ export default function VisionTab() {
 
       <div className="space-y-20">
         {/* Section: Vision */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="space-y-10 items-start">
           <div className="lg:col-span-8 space-y-8">
             <div className="flex items-center gap-3 border-s-4 border-primary ps-4">
               <Eye className="w-6 h-6 text-primary" />
@@ -172,10 +183,12 @@ export default function VisionTab() {
                     <FieldLabel className="text-base font-bold flex items-center gap-2 justify-start">
                       ({t("ar")}) {t("vision_des")}
                     </FieldLabel>
-                    <Textarea
-                      {...field}
-                      className="min-h-[150px] rounded-2xl bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-4"
+                    <RichTextEditor
+                      key={aboutUsData ? "vision-ar-ready" : "vision-ar-loading"}
+                      value={field.value}
+                      onChange={field.onChange}
                       dir="rtl"
+                      placeholder={t("vision_des")}
                     />
                   </Field>
                 )}
@@ -188,9 +201,12 @@ export default function VisionTab() {
                     <FieldLabel className="text-base font-bold flex items-center gap-2">
                       {t("vision_des")} ({t("en")})
                     </FieldLabel>
-                    <Textarea
-                      {...field}
-                      className="min-h-[150px] rounded-2xl bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-4"
+                    <RichTextEditor
+                      key={aboutUsData ? "vision-en-ready" : "vision-en-loading"}
+                      value={field.value}
+                      onChange={field.onChange}
+                      dir="ltr"
+                      placeholder={t("vision_des")}
                     />
                   </Field>
                 )}
@@ -211,7 +227,7 @@ export default function VisionTab() {
                   
                   <div 
                     className={cn(
-                      "relative aspect-[4/3] rounded-[40px] border-2 border-dashed transition-all overflow-hidden bg-muted/5 flex flex-col items-center justify-center cursor-pointer group",
+                      "relative  rounded-[40px] border-2 border-dashed transition-all overflow-hidden bg-muted/5 flex flex-col items-center justify-center cursor-pointer group",
                       value ? "border-primary/20" : "border-border hover:border-primary/40"
                     )}
                     onClick={() => {
@@ -269,7 +285,7 @@ export default function VisionTab() {
         </div>
 
         {/* Section: Mission/Message */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start border-t pt-16">
+        <div className="space-y-12 items-start border-t pt-16">
           <div className="lg:col-span-8 space-y-8">
             <div className="flex items-center gap-3 border-s-4 border-primary ps-4">
               <Target className="w-6 h-6 text-primary" />
@@ -319,10 +335,12 @@ export default function VisionTab() {
                     <FieldLabel className="text-base font-bold flex items-center gap-2 justify-start">
                       ({t("ar")}) {t("message_des")}
                     </FieldLabel>
-                    <Textarea
-                      {...field}
-                      className="min-h-[150px] rounded-2xl bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-4"
+                    <RichTextEditor
+                      key={aboutUsData ? "mission-ar-ready" : "mission-ar-loading"}
+                      value={field.value}
+                      onChange={field.onChange}
                       dir="rtl"
+                      placeholder={t("message_des")}
                     />
                   </Field>
                 )}
@@ -335,9 +353,12 @@ export default function VisionTab() {
                     <FieldLabel className="text-base font-bold flex items-center gap-2">
                       {t("message_des")} ({t("en")})
                     </FieldLabel>
-                    <Textarea
-                      {...field}
-                      className="min-h-[150px] rounded-2xl bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-4"
+                    <RichTextEditor
+                      key={aboutUsData ? "mission-en-ready" : "mission-en-loading"}
+                      value={field.value}
+                      onChange={field.onChange}
+                      dir="ltr"
+                      placeholder={t("message_des")}
                     />
                   </Field>
                 )}
@@ -358,7 +379,7 @@ export default function VisionTab() {
                   
                   <div 
                     className={cn(
-                      "relative aspect-[4/3] rounded-[40px] border-2 border-dashed transition-all overflow-hidden bg-muted/5 flex flex-col items-center justify-center cursor-pointer group",
+                      "relative  rounded-[40px] border-2 border-dashed transition-all overflow-hidden bg-muted/5 flex flex-col items-center justify-center cursor-pointer group",
                       value ? "border-primary/20" : "border-border hover:border-primary/40"
                     )}
                     onClick={() => {

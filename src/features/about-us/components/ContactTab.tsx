@@ -100,7 +100,7 @@ export default function ContactTab() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className="space-y-10">
         <div className="lg:col-span-8 space-y-10">
           {/* Titles */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -195,6 +195,7 @@ export default function ContactTab() {
                 <Field>
                   <FieldLabel className="text-sm font-bold">{t("phone")}</FieldLabel>
                   <Input
+                  dir="ltr"
                     {...field}
                     placeholder="+20..."
                     className="h-14 rounded-2xl bg-white border-border/60 focus:ring-2 focus:ring-primary/20 transition-all shadow-sm font-mono"

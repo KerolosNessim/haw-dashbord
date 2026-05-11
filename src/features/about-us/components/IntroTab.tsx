@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/features/shared/components/editor";
 import { cn } from "@/lib/utils";
 import {
   AlignLeft,
@@ -59,9 +59,17 @@ export default function IntroTab() {
     }
   }, [aboutUsData, reset]);
   const onSubmit = (values: IntroFormValues) => {
+    const extractHtml = (val: unknown) =>
+      typeof val === "object" && val !== null && "html" in val
+        ? (val as { html: string }).html
+        : (val as string);
+
     updateIntroSection({
       title: { ar: values.title_ar, en: values.title_en },
-      description: { ar: values.description_ar, en: values.description_en },
+      description: { 
+        ar: extractHtml(values.description_ar), 
+        en: extractHtml(values.description_en) 
+      },
       image: values?.image instanceof File ? values?.image : undefined,
     });
   };
@@ -100,9 +108,9 @@ export default function IntroTab() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className=" space-y-10">
         {/* Left Column: Text Content */}
-        <div className="lg:col-span-8 space-y-10">
+        <div className="space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Controller
               name="title_ar"
@@ -151,10 +159,11 @@ export default function IntroTab() {
                     ({t("ar")}) {t("sec_des")}
                     <AlignLeft className="w-4 h-4 text-primary" />
                   </FieldLabel>
-                  <Textarea
-                    {...field}
+                  <RichTextEditor
+                    key={aboutUsData ? "ar-ready" : "ar-loading"}
+                    value={field.value}
+                    onChange={field.onChange}
                     placeholder="..."
-                    className="min-h-[200px] rounded-2xl bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-4"
                     dir="rtl"
                   />
                 </Field>
@@ -169,10 +178,12 @@ export default function IntroTab() {
                     <AlignLeft className="w-4 h-4 text-primary" />
                     {t("sec_des")} ({t("en")})
                   </FieldLabel>
-                  <Textarea
-                    {...field}
+                  <RichTextEditor
+                    key={aboutUsData ? "en-ready" : "en-loading"}
+                    value={field.value}
+                    onChange={field.onChange}
                     placeholder="..."
-                    className="min-h-[200px] rounded-2xl bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-4"
+                    dir="ltr"
                   />
                 </Field>
               )}
@@ -194,7 +205,7 @@ export default function IntroTab() {
 
                 <div
                   className={cn(
-                    "relative aspect-[4/5] rounded-[40px] border-2 border-dashed transition-all overflow-hidden bg-muted/5 flex flex-col items-center justify-center cursor-pointer group",
+                    "relative  rounded-[40px] border-2 border-dashed transition-all overflow-hidden bg-muted/5 flex flex-col items-center justify-center cursor-pointer group",
                     value
                       ? "border-primary/20"
                       : "border-border hover:border-primary/40",

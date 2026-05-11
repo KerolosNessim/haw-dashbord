@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/features/shared/components/editor";
 import { cn } from "@/lib/utils";
 import {
   AlignLeft,
@@ -80,9 +80,17 @@ export default function GeneralTab() {
   }, [aboutUsData, reset]);
 
   const onSubmit = (values: GeneralFormValues) => {
+    const extractHtml = (val: unknown) =>
+      typeof val === "object" && val !== null && "html" in val
+        ? (val as { html: string }).html
+        : (val as string);
+
     updateAboutUs({
       title: { ar: values.title_ar, en: values.title_en },
-      description: { ar: values.description_ar, en: values.description_en },
+      description: { 
+        ar: extractHtml(values.description_ar), 
+        en: extractHtml(values.description_en) 
+      },
       image: values.image instanceof File ? values.image : undefined,
       video_url: values.video_url,
       meta_title: { ar: values.meta_title_ar, en: values.meta_title_en },
@@ -124,7 +132,7 @@ export default function GeneralTab() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className="space-y-10">
         {/* Left Column: Basic Info & SEO */}
         <div className="lg:col-span-8 space-y-12">
           {/* Section: Content */}
@@ -182,10 +190,11 @@ export default function GeneralTab() {
                       ({t("ar")}) {t("sec_des")}
                       <AlignLeft className="w-4 h-4 text-primary" />
                     </FieldLabel>
-                    <Textarea
-                      {...field}
+                    <RichTextEditor
+                      key={aboutUsData ? "gen-ar-ready" : "gen-ar-loading"}
+                      value={field.value}
+                      onChange={field.onChange}
                       placeholder="..."
-                      className="min-h-[150px] rounded-2xl bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-4"
                       dir="rtl"
                     />
                   </Field>
@@ -200,10 +209,12 @@ export default function GeneralTab() {
                       <AlignLeft className="w-4 h-4 text-primary" />
                       {t("sec_des")} ({t("en")})
                     </FieldLabel>
-                    <Textarea
-                      {...field}
+                    <RichTextEditor
+                      key={aboutUsData ? "gen-en-ready" : "gen-en-loading"}
+                      value={field.value}
+                      onChange={field.onChange}
                       placeholder="..."
-                      className="min-h-[150px] rounded-2xl bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-4"
+                      dir="ltr"
                     />
                   </Field>
                 )}
@@ -261,9 +272,9 @@ export default function GeneralTab() {
                     <FieldLabel className="text-sm font-bold flex items-center gap-2 justify-start">
                       ({t("ar")}) {t("meta_description")}
                     </FieldLabel>
-                    <Textarea
+                    <textarea
                       {...field}
-                      className="min-h-[80px] rounded-xl bg-white border-border/60 resize-none"
+                      className="min-h-[80px] w-full rounded-xl bg-white border border-border/60 resize-none p-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all"
                       dir="rtl"
                     />
                   </Field>
@@ -277,9 +288,9 @@ export default function GeneralTab() {
                     <FieldLabel className="text-sm font-bold flex items-center gap-2">
                       {t("meta_description")} ({t("en")})
                     </FieldLabel>
-                    <Textarea
+                    <textarea
                       {...field}
-                      className="min-h-[80px] rounded-xl bg-white border-border/60 resize-none"
+                      className="min-h-[80px] w-full rounded-xl bg-white border border-border/60 resize-none p-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all"
                     />
                   </Field>
                 )}
@@ -309,7 +320,7 @@ export default function GeneralTab() {
                   
                   <div 
                     className={cn(
-                      "relative aspect-[4/3] rounded-[40px] border-2 border-dashed transition-all overflow-hidden bg-muted/5 flex flex-col items-center justify-center cursor-pointer group",
+                      "relative  rounded-[40px] border-2 border-dashed transition-all overflow-hidden bg-muted/5 flex flex-col items-center justify-center cursor-pointer group",
                       value ? "border-primary/20" : "border-border hover:border-primary/40"
                     )}
                     onClick={() => {
