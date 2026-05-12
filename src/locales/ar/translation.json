@@ -1,5 +1,46 @@
 {
   "welcome": "مرحباً بك في التطبيق",
+  "toasts": {
+    "login_success": "تم تسجيل الدخول بنجاح!",
+    "login_error": "بيانات الدخول غير صحيحة. حاول مرة أخرى.",
+    "logout_success": "تم تسجيل الخروج بنجاح!",
+    "logout_error": "فشل تسجيل الخروج! حاول مرة أخرى.",
+    "generic_updated": "تم التحديث بنجاح",
+    "generic_update_failed": "فشل التحديث",
+    "faq_created": "تم إنشاء السؤال بنجاح",
+    "faq_create_failed": "فشل إنشاء السؤال",
+    "faq_updated": "تم تحديث السؤال بنجاح",
+    "faq_update_failed": "فشل تحديث السؤال",
+    "faq_deleted": "تم حذف السؤال بنجاح",
+    "faq_delete_failed": "فشل حذف السؤال",
+    "about_updated": "تم تحديث صفحة من نحن بنجاح",
+    "about_update_failed": "فشل تحديث صفحة من نحن",
+    "about_intro_updated": "تم تحديث قسم المقدمة بنجاح",
+    "about_intro_update_failed": "فشل تحديث قسم المقدمة",
+    "about_vision_updated": "تم تحديث قسم الرؤية بنجاح",
+    "about_vision_update_failed": "فشل تحديث قسم الرؤية",
+    "about_why_us_updated": "تم تحديث قسم لماذا نحن بنجاح",
+    "about_why_us_update_failed": "فشل تحديث قسم لماذا نحن",
+    "about_contact_updated": "تم تحديث قسم التواصل بنجاح",
+    "about_contact_update_failed": "فشل تحديث قسم التواصل",
+    "items_updated": "تم تحديث العناصر بنجاح",
+    "solutions_updated": "تم تحديث الحلول بنجاح",
+    "solutions_update_failed": "فشل تحديث الحلول",
+    "solution_items_updated": "تم تحديث عناصر الحلول بنجاح",
+    "solution_items_update_failed": "فشل تحديث عناصر الحلول",
+    "create_success": "تم الإنشاء بنجاح!",
+    "service_save_error": "تعذر الحفظ. حاول مرة أخرى.",
+    "section_saved": "تم حفظ القسم!",
+    "section_save_error": "حدث خطأ أثناء حفظ القسم",
+    "stat_updated": "تم تحديث الإحصائية بنجاح",
+    "stat_update_failed": "فشل تحديث الإحصائية",
+    "accreditation_updated": "تم تحديث الاعتماد بنجاح",
+    "accreditation_update_failed": "فشل تحديث الاعتماد",
+    "clients_updated": "تم تحديث العملاء بنجاح",
+    "clients_update_failed": "فشل تحديث العملاء",
+    "hero_updated": "تم تحديث البانر الرئيسي بنجاح",
+    "hero_update_failed": "فشل تحديث البانر الرئيسي"
+  },
   "forms": {
     "smart_slug": {
       "linked": "مرتبط بالعنوان",
@@ -24,6 +65,7 @@
     "home_content": "محتوى الصفحة الرئيسية",
     "why_choose_us": "لماذا تختارنا",
     "solutions": "حلولنا",
+    "solution_categories": "تصنيفات الحلول",
     "help_you": "كيف نساعدك",
     "services": "الخدمات",
     "settings": "الإعدادات",
@@ -150,13 +192,15 @@
   "email_placeholder": "example@mail.com",
   "password_label": "كلمة المرور",
   "password_placeholder": "********",
+  "show_password": "إظهار كلمة المرور",
+  "hide_password": "إخفاء كلمة المرور",
   "login_button": "تسجيل الدخول",
   "validation": {
     "email_invalid": "البريد الإلكتروني غير صالح",
     "email_required": "البريد الإلكتروني مطلوب",
     "password_required": "كلمة المرور مطلوبة",
     "required": "هذا الحقل مطلوب",
-    "slug_format": "استخدم أحرفًا إنجليزية صغيرة وأرقام وشرطات فقط (مثل technology).",
+    "slug_format": "استخدم أحرفًا صغيرة (عربية أو إنجليزية) وأرقامًا وشرطات فقط (مثل technology أو تكنولوجيا).",
     "url_invalid": "أدخل رابطًا صالحًا يبدأ بـ http أو https، أو اترك الحقل فارغًا."
   },
   "faq": {
@@ -345,6 +389,7 @@
     "description": "أسماء بالعربية والإنجليزية، المسار، التفعيل، وبيانات SEO للتصفية وربط المقالات.",
     "add_button": "إضافة تصنيف",
     "all_categories": "كل تصنيفات المدونة",
+    "showing_info": "عرض {{start}} - {{end}} من {{total}}",
     "create_title": "تصنيف مدونة جديد",
     "create_description": "أنشئ تصنيفًا مثل التكنولوجيا مع التسميات والميتا باللغتين.",
     "edit_title": "تعديل تصنيف المدونة",
@@ -461,6 +506,7 @@
     "edit_title": "تعديل تصنيف الباقات",
     "edit_description": "حدّث بيانات التصنيف وحقول محركات البحث.",
     "load_error": "تعذر تحميل تصنيفات الباقات.",
+    "showing_info": "عرض {{start}} - {{end}} من {{total}}",
     "load_one_error": "تعذر تحميل هذا التصنيف.",
     "delete_confirm": "حذف تصنيف الباقات هذا؟",
     "table": {
@@ -483,6 +529,8 @@
       "title_ar": "اسم التصنيف (عربي)",
       "title_en": "اسم التصنيف (إنجليزي)",
       "slug": "المسار (Slug)",
+      "slug_ar": "المسار (عربي)",
+      "slug_en": "المسار (إنجليزي)",
       "sort_order": "ترتيب العرض",
       "is_active": "نشط",
       "is_default": "تبويب افتراضي (يُعرض أولاً)",
@@ -513,6 +561,7 @@
     "description": "إدارة بطاقات الباقات: النصوص بالعربي والإنجليزي، التصنيف، الزر والرابط، الأيقونة، التمييز، وSEO.",
     "add_button": "إضافة باقة",
     "all_packages": "جميع الباقات",
+    "showing_info": "عرض {{start}} - {{end}} من {{total}}",
     "create_title": "باقة جديدة",
     "create_description": "أنشئ بطاقة ضمن تصنيف مع محتوى عربي وإنجليزي.",
     "edit_title": "تعديل الباقة",
@@ -529,7 +578,12 @@
       "actions": "إجراءات",
       "yes": "نعم",
       "no": "لا",
-      "empty": "لا توجد باقات بعد."
+      "empty": "لا توجد باقات بعد.",
+      "single_delete_title": "حذف هذه الباقة؟",
+      "single_delete_description": "لا يمكن التراجع عن هذا الإجراء.",
+      "single_delete_type_label": "اكتب delete أو حذف للتأكيد:",
+      "single_delete_placeholder": "delete أو حذف",
+      "search_placeholder": "بحث بالعنوان أو الوصف…"
     },
     "form": {
       "basic_section": "المعلومات الأساسية",
@@ -539,10 +593,11 @@
       "title_en": "العنوان (إنجليزي)",
       "short_desc_ar": "وصف مختصر (عربي)",
       "short_desc_en": "وصف مختصر (إنجليزي)",
-      "button_ar": "نص الزر (عربي)",
-      "button_en": "نص الزر (إنجليزي)",
-      "details_url": "رابط التفاصيل / الزر",
+      "button_text_ar": "نص الزر (عربي)",
+      "button_text_en": "نص الزر (إنجليزي)",
       "slug": "مسار الصفحة (Slug)",
+      "slug_ar": "المسار — رابط عربي",
+      "slug_en": "المسار — رابط إنجليزي",
       "is_featured": "باقة مميزة (إطار مميز)",
       "is_active": "نشط",
       "price": "السعر (اختياري)",
@@ -550,11 +605,6 @@
       "icon_upload": "صورة الأيقونة",
       "choose_icon": "رفع أيقونة",
       "remove_icon": "إزالة",
-      "icon_preset": "أيقونة جاهزة (إن لم يُرفع ملف)",
-      "icon_none": "بدون (اعتماد الرفع فقط)",
-      "icon_target": "هدف",
-      "icon_gem": "ألماسة",
-      "icon_rocket": "صاروخ",
       "features_section": "أسطر المميزات (اختياري)",
       "add_feature": "إضافة سطر",
       "features_empty": "لا توجد أسطر مميزات. أضف صفوفاً لمطابقة واجهة البرمجة، أو اتركها فارغة.",
@@ -562,25 +612,18 @@
       "feature_title_en": "الميزة (إنجليزي)",
       "feature_included": "مضمّنة",
       "feature_sort_order": "ترتيب الميزة",
-      "seo_section": "SEO",
-      "seo_ar": "العربية",
-      "seo_en": "الإنجليزية",
-      "canonical_url": "الرابط الأساسي (Canonical)",
-      "meta_title_ar": "عنوان الميتا (عربي)",
-      "meta_title_en": "عنوان الميتا (إنجليزي)",
-      "meta_description_ar": "وصف الميتا (عربي)",
-      "meta_description_en": "وصف الميتا (إنجليزي)",
-      "meta_keywords_ar": "كلمات مفتاحية (عربي)",
-      "meta_keywords_en": "كلمات مفتاحية (إنجليزي)",
       "save": "حفظ الباقة",
-      "loading": "جاري التحميل…"
+      "loading": "جاري التحميل…",
+      "submit_validation_hint": "بعض الحقول غير صالحة أو ناقصة. راجع التصنيف، الحقول بالعربي والإنجليزي، ومساري الرابط (أحرف صغيرة وأرقام وشرطات فقط)."
     },
     "api": {
       "create_success": "تم إنشاء الباقة",
       "update_success": "تم تحديث الباقة",
       "save_error": "تعذر حفظ الباقة",
       "delete_success": "تم حذف الباقة",
-      "delete_error": "تعذر حذف الباقة"
+      "delete_error": "تعذر حذف الباقة",
+      "cancel": "إلغاء",
+      "delete": "حذف"
     }
   },
   "courses": {
@@ -590,11 +633,10 @@
     "all_courses": "كل الدورات",
     "create_title": "دورة جديدة",
     "create_description": "أنشئ دورة بلغتين مع صورة غلاف وسعر اختياري.",
-    "edit_title": "تعديل الدورة",
+    "edit_title": " تعديل الدورة التعليمية",
     "edit_description": "حدّث المحتوى والصورة والأسعار وأقسام الدروس.",
     "load_error": "تعذر تحميل الدورات.",
     "load_one_error": "تعذر تحميل هذه الدورة. تأكد أن الـ API يعيد بيانات الدورة كاملة (بالـ slug أو عبر القائمة).",
-    "delete_confirm": "حذف هذه الدورة؟",
     "table": {
       "title": "العنوان",
       "slug": "المسار",
@@ -606,6 +648,13 @@
       "basic_section": "تفاصيل الدورة",
       "title_ar": "العنوان (عربي)",
       "title_en": "العنوان (إنجليزي)",
+      "slug": "المسار (Slug)",
+      "slug_ar": "المسار (عربي)",
+      "slug_en": "المسار (إنجليزي)",
+      "slug_placeholder": "مثال: my-course",
+      "slug_placeholder_ar": "مثال: دورة-تدريبية",
+      "slug_hint": "المسار مطلوب باللغتين (يُرسل كـ slug[ar] و slug[en]). اترك أي خانة فارغة ليُولَّد المسار تلقائياً من العنوان المقابل.",
+      "is_active": "منشور (نشط)",
       "description_ar": "الوصف (عربي)",
       "description_en": "الوصف (إنجليزي)",
       "objectives_section": "مخرجات التعلّم (واجهة الموقع)",
@@ -643,21 +692,28 @@
       "actions": "إجراءات",
       "yes": "نعم",
       "no": "لا",
-      "delete_confirm": "حذف هذا القسم؟"
+      "delete_confirm_title": "حذف الدرس؟",
+      "delete_confirm": "سيتم إزالة هذا الدرس من الدورة. لا يمكن التراجع عن هذا الإجراء."
     },
     "sections_api": {
       "create_success": "تم إنشاء القسم",
       "update_success": "تم تحديث القسم",
       "delete_success": "تم حذف القسم",
       "save_error": "تعذر حفظ القسم",
-      "delete_error": "تعذر حذف القسم"
+      "delete_error": "تعذر حذف القسم",
+      "cancel": "إلغاء",
+      "delete": "حذف"
     },
     "api": {
       "create_success": "تم إنشاء الدورة",
       "update_success": "تم تحديث الدورة",
       "save_error": "تعذر حفظ الدورة",
       "delete_success": "تم حذف الدورة",
-      "delete_error": "تعذر حذف الدورة"
+      "delete_error": "تعذر حذف الدورة",
+      "delete_confirm_title": "حذف الدورة؟",
+      "delete_confirm": "حذف هذه الدورة؟ لا يمكن التراجع عن هذا الإجراء.",
+      "cancel": "إلغاء",
+      "delete": "حذف"
     }
   },
   "settings": {
@@ -728,7 +784,9 @@
       "save": "حفظ الوسيلة",
       "cancel": "إلغاء",
       "follow": "ظاهر في الموقع",
-      "unfollow": "غير ظاهر في الموقع"
+      "unfollow": "غير ظاهر في الموقع",
+      "delete_confirm_title": "إزالة المنصة؟",
+      "delete_confirm_description": "سيتم إزالة المنصة من القائمة. يمكنك إضافتها لاحقاً مجدداً."
     },
     "seo": {
       "title": "Meta Titles لكل صفحة",
@@ -832,7 +890,10 @@
   },
   "solutions": {
     "title": "حلولنا",
-    "description": "إدارة الحلول الاستراتيجية والخبرات التي نقدمها.",
+    "description": "إدارة الحلول الفردية والروابط وعنوان القسم الظاهر في الموقع.",
+    "section_settings": "عنوان القسم",
+    "manage_categories": "تصنيفات الحلول",
+    "add_solution": "إضافة حل",
     "tabs": {
       "general": "الإعدادات العامة",
       "content": "قائمة الحلول"
@@ -850,9 +911,90 @@
       "add_feature": "إضافة حل جديد",
       "feature_title": "عنوان الحل",
       "feature_description": "وصف الحل",
+      "slug_ar": "رابط الحل (عربي)",
+      "slug_en": "رابط الحل (إنجليزي)",
+      "slug_prefix": "/solutions/singles/",
       "image": "أيقونة / صورة الحل",
       "upload_image": "رفع صورة",
-      "save": "حفظ الحلول"
+      "save": "حفظ الحلول",
+      "category": "التصنيف",
+      "category_placeholder": "اختر تصنيفًا",
+      "category_none": "بدون تصنيف"
+    },
+    "table": {
+      "image": "الصورة",
+      "title": "العنوان",
+      "category": "التصنيف",
+      "slug_ar": "الرابط (عربي)",
+      "slug_en": "الرابط (إنجليزي)",
+      "description": "الوصف",
+      "status": "الحالة",
+      "actions": "إجراءات",
+      "active": "مفعّل",
+      "inactive": "غير مفعّل",
+      "empty": "لا توجد حلول بعد.",
+      "search_placeholder": "ابحث في الحلول…"
+    },
+    "api": {
+      "load_error": "تعذر تحميل الحلول.",
+      "create_success": "تم إنشاء الحل.",
+      "create_error": "تعذر إنشاء الحل.",
+      "update_success": "تم تحديث الحل.",
+      "update_error": "تعذر تحديث الحل.",
+      "delete_success": "تم حذف الحل.",
+      "delete_error": "تعذر حذف الحل.",
+      "delete_confirm_title": "حذف هذا الحل؟",
+      "delete_confirm": "لا يمكن التراجع عن هذا الإجراء.",
+      "cancel": "إلغاء",
+      "delete": "حذف"
+    },
+    "dialog": {
+      "create_title": "حل جديد",
+      "edit_title": "تعديل الحل",
+      "form_hint": "العناوين والروابط والأوصاف ثنائية اللغة. يمكنك رفع صورة عند الحاجة.",
+      "is_active": "ظاهر في الموقع",
+      "save": "حفظ",
+      "cancel": "إلغاء"
+    },
+    "section_dialog": {
+      "title": "عنوان قسم الحلول",
+      "description": "يظهر فوق قائمة الحلول في الصفحة الرئيسية.",
+      "save": "حفظ القسم"
+    }
+  },
+  "solution_categories": {
+    "title": "تصنيفات الحلول",
+    "description": "إدارة التصنيفات المستخدمة لتجميع الحلول الفردية (واجهة عامة: type=solutions).",
+    "add_category": "إضافة تصنيف",
+    "link_singles": "الحلول الفردية",
+    "table": {
+      "name": "الاسم",
+      "slug_ar": "الرابط (عربي)",
+      "slug_en": "الرابط (إنجليزي)",
+      "singles_count": "عدد الحلول",
+      "actions": "إجراءات",
+      "empty": "لا توجد تصنيفات بعد.",
+      "search_placeholder": "ابحث في التصنيفات…"
+    },
+    "api": {
+      "load_error": "تعذر تحميل التصنيفات.",
+      "create_success": "تم إنشاء التصنيف.",
+      "create_error": "تعذر إنشاء التصنيف.",
+      "update_success": "تم تحديث التصنيف.",
+      "update_error": "تعذر تحديث التصنيف."
+    },
+    "dialog": {
+      "create_title": "تصنيف جديد",
+      "edit_title": "تعديل التصنيف",
+      "form_hint": "الأسماء والروابط ثنائية اللغة. تُستخدم لتصفية الحلول العامة حسب التصنيف.",
+      "name": "اسم التصنيف",
+      "slug_ar": "رابط التصنيف (عربي)",
+      "slug_en": "رابط التصنيف (إنجليزي)",
+      "description": "الوصف",
+      "meta_title": "عنوان الميتا",
+      "meta_description": "وصف الميتا",
+      "save": "حفظ",
+      "cancel": "إلغاء"
     }
   },
   "help_you": {

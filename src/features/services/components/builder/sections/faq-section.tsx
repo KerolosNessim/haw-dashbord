@@ -39,6 +39,7 @@ interface FAQSectionProps {
 
 export default function FAQSection({ serviceId, initialData }: FAQSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
+  const { t: tToast } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { control, handleSubmit, formState: { errors } } = useForm<FAQValues>({
@@ -59,9 +60,9 @@ export default function FAQSection({ serviceId, initialData }: FAQSectionProps) 
     setIsSubmitting(true);
     try {
       const res = await saveFAQSection(serviceId, data);
-      toast.success(res?.data?.message || "Section Saved!");
+      toast.success(res?.data?.message || tToast("toasts.section_saved"));
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Error saving section");
+      toast.error(error?.response?.data?.message || tToast("toasts.section_save_error"));
       console.error(error);
     } finally {
       setIsSubmitting(false);

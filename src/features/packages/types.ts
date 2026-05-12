@@ -1,7 +1,5 @@
 export type LocalizedString = { ar: string; en: string };
 
-export type IconPreset = "target" | "gem" | "rocket" | "none";
-
 export type PackageFeatureRow = {
   title: LocalizedString;
   is_included: boolean;
@@ -12,21 +10,20 @@ export type PackageFormValues = {
   package_category_id: string;
   title: LocalizedString;
   description: LocalizedString;
+  /** CTA label — API: `button_text[ar]`, `button_text[en]` (required) */
   button_text: LocalizedString;
-  details_url: string;
-  slug: string;
-  canonical_url: string;
+  /** API: `slug[ar]`, `slug[en]` */
+  slug: LocalizedString;
   is_featured: boolean;
   is_active: boolean;
   price: string;
   currency: string;
-  icon_preset: IconPreset;
-  meta_title: LocalizedString;
-  meta_description: LocalizedString;
-  meta_keywords: LocalizedString;
   features: PackageFeatureRow[];
   /** Hydration-only: existing icon URL for edit preview — not sent on save */
   existing_icon_url?: string;
+  /** Hydration-only: selected category label for edit fallback — not sent on save */
+  categoryTitleAr?: string;
+  categoryTitleEn?: string;
 };
 
 export type PackageRow = {

@@ -33,6 +33,7 @@ interface ContactSectionProps {
 
 export default function ContactSection({ serviceId, initialData }: ContactSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
+  const { t: tToast } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { control, handleSubmit, formState: { errors } } = useForm<ContactValues>({
@@ -57,9 +58,9 @@ export default function ContactSection({ serviceId, initialData }: ContactSectio
       };
       const res = await saveContactSection(serviceId, finalData);
       console.log(res);
-      toast.success(res?.data?.message || "Section Saved!");
+      toast.success(res?.data?.message || tToast("toasts.section_saved"));
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Error saving section");
+      toast.error(error?.response?.data?.message || tToast("toasts.section_save_error"));
       console.error(error);
     } finally {
       setIsSubmitting(false);

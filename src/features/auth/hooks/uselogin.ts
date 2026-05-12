@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query"
 import { loginApi } from "../services/auth-api"
 import type { LoginValues } from "../components/login-form";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/user-store";
@@ -8,6 +9,7 @@ import type { AxiosError } from "axios";
 import type { LoginResponse } from "../types";
 
 export const useLogin = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
 
@@ -19,12 +21,13 @@ export const useLogin = () => {
         setAuth(user);
         localStorage.setItem("token", accessToken);
       }
-      toast.success(data?.message || "Login successful!");
+      toast.success(data?.message || t("toasts.login_success"));
       navigate("/");
     },
     onError: (error: AxiosError<LoginResponse>) => {
-      const message = error?.response?.data?.message || "Invalid credentials. Please try again.";
-      toast.error(message);
+      const raw = error?.response?.data?.message;
+      const fromApi = typeof raw === "string" ? raw.trim() : "";
+      toast.error(fromApi || t("toasts.login_error"));
     }
   })
 

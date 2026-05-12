@@ -1,3 +1,4 @@
+import { SmartSlugField } from "@/components/form/smart-slug-field";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -12,12 +13,13 @@ import {
 } from "@/components/ui/select";
 import { usePackageCategories } from "@/features/package-categories/hooks/usePackageCategories";
 import { useSavePackage } from "@/features/packages/hooks/useSavePackage";
-import type { IconPreset, PackageFormValues } from "@/features/packages/types";
+import type { PackageFormValues } from "@/features/packages/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Languages, Plus, Save, Search, Trash2, Upload } from "lucide-react";
+import { Languages, Link as LinkIcon, Plus, Save, Trash2, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm, type FieldErrors } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import * as z from "zod";
 
 const localizedRequired = z.object({
@@ -25,9 +27,19 @@ const localizedRequired = z.object({
   en: z.string().min(1, { message: "validation.required" }),
 });
 
-const localizedOptional = z.object({
-  ar: z.string().optional(),
-  en: z.string().optional(),
+const slugLatinPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const slugArabicPattern =
+  /^(?:[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:-[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)$/u;
+
+const localizedPackageSlug = z.object({
+  ar: z
+    .string()
+    .min(1, { message: "validation.required" })
+    .refine((s) => slugArabicPattern.test(s), { message: "validation.slug_format" }),
+  en: z
+    .string()
+    .min(1, { message: "validation.required" })
+    .refine((s) => slugLatinPattern.test(s), { message: "validation.slug_format" }),
 });
 
 const featureRowSchema = z.object({
@@ -41,17 +53,11 @@ const packageFormSchema = z.object({
   title: localizedRequired,
   description: localizedRequired,
   button_text: localizedRequired,
-  details_url: z.string().optional(),
-  slug: z.string().optional(),
-  canonical_url: z.string().optional(),
+  slug: localizedPackageSlug,
   is_featured: z.boolean(),
   is_active: z.boolean(),
   price: z.string().optional(),
   currency: z.string().optional(),
-  icon_preset: z.enum(["target", "gem", "rocket", "none"]),
-  meta_title: localizedOptional,
-  meta_description: localizedOptional,
-  meta_keywords: localizedOptional,
   features: z.array(featureRowSchema),
 });
 
@@ -63,17 +69,11 @@ function defaultFormValues(): PackageFormValues {
     title: { ar: "", en: "" },
     description: { ar: "", en: "" },
     button_text: { ar: "", en: "" },
-    details_url: "",
-    slug: "",
-    canonical_url: "",
+    slug: { ar: "", en: "" },
     is_featured: false,
     is_active: true,
     price: "",
     currency: "",
-    icon_preset: "none",
-    meta_title: { ar: "", en: "" },
-    meta_description: { ar: "", en: "" },
-    meta_keywords: { ar: "", en: "" },
     features: [],
   };
 }
@@ -105,6 +105,8 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
     control,
     handleSubmit,
     reset,
+    watch,
+    trigger,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(packageFormSchema),
@@ -121,6 +123,7 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
       const { existing_icon_url, ...rest } = initialValues;
       reset({
         ...rest,
+        package_category_id: rest.package_category_id ? String(rest.package_category_id).trim() : "",
         features: initialValues.features?.length ? initialValues.features : [],
       });
       setIconFile(null);
@@ -134,14 +137,28 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
 
   const translateError = (msg: string | undefined) => (msg ? commonT(msg) : undefined);
 
-  const categoryItems = useMemo(
-    () =>
-      categories.map((c) => ({
-        id: c.id,
-        label: i18n.language.startsWith("ar") ? c.titleAr || c.titleEn : c.titleEn || c.titleAr,
-      })),
-    [categories, i18n.language],
-  );
+  const watchTitleAr = watch("title.ar");
+  const watchTitleEn = watch("title.en");
+  const watchCategoryId = watch("package_category_id");
+
+  const categoryItems = useMemo(() => {
+    const items = categories.map((c) => ({
+      id: String(c.id),
+      label: i18n.language.startsWith("ar") ? c.titleAr || c.titleEn : c.titleEn || c.titleAr,
+    }));
+    const selectedId = (watchCategoryId || initialValues?.package_category_id || "").trim();
+    const hasSelected = selectedId ? items.some((item) => item.id === selectedId) : true;
+    if (selectedId && !hasSelected) {
+      const fallbackLabel = i18n.language.startsWith("ar")
+        ? initialValues?.categoryTitleAr || initialValues?.categoryTitleEn
+        : initialValues?.categoryTitleEn || initialValues?.categoryTitleAr;
+      items.unshift({
+        id: selectedId,
+        label: fallbackLabel || selectedId,
+      });
+    }
+    return items;
+  }, [categories, i18n.language, initialValues, watchCategoryId]);
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -168,44 +185,28 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
       title: data.title,
       description: data.description,
       button_text: data.button_text,
-      details_url: data.details_url?.trim() ?? "",
-      slug: data.slug?.trim() ?? "",
-      canonical_url: data.canonical_url?.trim() ?? "",
+      slug: { ar: data.slug.ar.trim(), en: data.slug.en.trim() },
       is_featured: data.is_featured,
       is_active: data.is_active,
       price: data.price ?? "",
       currency: data.currency ?? "",
-      icon_preset: data.icon_preset as IconPreset,
-      meta_title: {
-        ar: data.meta_title?.ar ?? "",
-        en: data.meta_title?.en ?? "",
-      },
-      meta_description: {
-        ar: data.meta_description?.ar ?? "",
-        en: data.meta_description?.en ?? "",
-      },
-      meta_keywords: {
-        ar: data.meta_keywords?.ar ?? "",
-        en: data.meta_keywords?.en ?? "",
-      },
       features: data.features,
     };
-    void saveMutation({ values: payload, iconFile });
+    void saveMutation({ values: payload, iconFile }).catch(() => {
+      /* Errors surfaced via useSavePackage onError toast */
+    });
+  };
+
+  const onValidationInvalid = (_errs: FieldErrors<FormValues>) => {
+    toast.error(t("submit_validation_hint"));
   };
 
   if (isInitialLoading && mode === "edit") {
     return <div className="rounded-[32px] border bg-white p-12 text-center text-muted-foreground">{t("loading")}</div>;
   }
 
-  const iconPresets: { value: IconPreset; label: string }[] = [
-    { value: "none", label: t("icon_none") },
-    { value: "target", label: t("icon_target") },
-    { value: "gem", label: t("icon_gem") },
-    { value: "rocket", label: t("icon_rocket") },
-  ];
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="animate-in fade-in space-y-10 duration-500">
+    <form onSubmit={handleSubmit(onSubmit, onValidationInvalid)} className="animate-in fade-in space-y-10 duration-500" noValidate>
       <div className="space-y-8 rounded-[32px] border bg-white p-8 shadow-sm">
         <div className="flex items-center gap-3 border-b pb-4">
           <Languages className="h-5 w-5 text-primary" />
@@ -218,7 +219,16 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
           render={({ field }) => (
             <Field>
               <FieldLabel className="font-bold text-gray-600">{t("category")}</FieldLabel>
-              <Select value={field.value} onValueChange={field.onChange} disabled={categoriesLoading}>
+              <Select
+                key={
+                  mode === "edit" && initialValues
+                    ? `pkg-${packageId}-${initialValues.package_category_id}`
+                    : "pkg-cat"
+                }
+                value={field.value?.trim() ? field.value : undefined}
+                onValueChange={(v) => field.onChange(v)}
+                disabled={categoriesLoading && categoryItems.length === 0}
+              >
                 <SelectTrigger className="h-12 rounded-xl">
                   <SelectValue placeholder={t("category_placeholder")} />
                 </SelectTrigger>
@@ -291,7 +301,7 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel>{t("button_ar")}</FieldLabel>
+                <FieldLabel>{t("button_text_ar")}</FieldLabel>
                 <Input {...field} dir="rtl" className="h-12 rounded-xl bg-muted/10" />
                 <FieldError errors={[{ message: translateError(errors.button_text?.ar?.message) }]} />
               </Field>
@@ -302,7 +312,7 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel>{t("button_en")}</FieldLabel>
+                <FieldLabel>{t("button_text_en")}</FieldLabel>
                 <Input {...field} dir="ltr" className="h-12 rounded-xl bg-muted/10" />
                 <FieldError errors={[{ message: translateError(errors.button_text?.en?.message) }]} />
               </Field>
@@ -311,27 +321,60 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <Controller
-            name="details_url"
+          <SmartSlugField<FormValues>
             control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>{t("details_url")}</FieldLabel>
-                <Input {...field} dir="ltr" className="h-12 rounded-xl bg-muted/10" placeholder="https://..." />
-              </Field>
-            )}
+            name="slug.ar"
+            slugLocale="ar"
+            titleEn={watchTitleAr ?? ""}
+            trigger={trigger}
+            label={
+              <span className="flex items-center gap-2 font-bold text-gray-600">
+                <LinkIcon className="h-3.5 w-3.5" />
+                {t("slug_ar")}
+              </span>
+            }
+            errorMessage={translateError(errors.slug?.ar?.message)}
+            inputClassName="bg-muted/10"
+            syncFromTitleWhenLocked={mode === "create"}
           />
-          <Controller
-            name="slug"
+          <SmartSlugField<FormValues>
             control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>{t("slug")}</FieldLabel>
-                <Input {...field} dir="ltr" className="h-12 rounded-xl bg-muted/10" />
-              </Field>
-            )}
+            name="slug.en"
+            slugLocale="en"
+            titleEn={watchTitleEn ?? ""}
+            trigger={trigger}
+            label={
+              <span className="flex items-center gap-2 font-bold text-gray-600">
+                <LinkIcon className="h-3.5 w-3.5" />
+                {t("slug_en")}
+              </span>
+            }
+            errorMessage={translateError(errors.slug?.en?.message)}
+            inputClassName="bg-muted/10"
+            syncFromTitleWhenLocked={mode === "create"}
           />
         </div>
+
+        <Field>
+          <FieldLabel>{t("icon_upload")}</FieldLabel>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="button" variant="outline" className="rounded-xl" asChild>
+              <label className="cursor-pointer">
+                <Upload className="mr-2 inline h-4 w-4" />
+                {t("choose_icon")}
+                <input type="file" accept="image/*,.svg" className="hidden" onChange={onFile} />
+              </label>
+            </Button>
+            {iconPreview && (
+              <Button type="button" variant="ghost" size="sm" onClick={clearIcon}>
+                {t("remove_icon")}
+              </Button>
+            )}
+          </div>
+          {iconPreview && (
+            <img src={iconPreview} alt="" className="mt-3 h-16 w-16 rounded-full border object-cover" />
+          )}
+        </Field>
 
         <div className="flex flex-wrap items-center gap-8">
           <Controller
@@ -374,51 +417,6 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
               <Field>
                 <FieldLabel>{t("currency")}</FieldLabel>
                 <Input {...field} dir="ltr" className="h-12 rounded-xl bg-muted/10" placeholder="$" />
-              </Field>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <Field>
-            <FieldLabel>{t("icon_upload")}</FieldLabel>
-            <div className="flex flex-wrap items-center gap-3">
-              <Button type="button" variant="outline" className="rounded-xl" asChild>
-                <label className="cursor-pointer">
-                  <Upload className="mr-2 inline h-4 w-4" />
-                  {t("choose_icon")}
-                  <input type="file" accept="image/*,.svg" className="hidden" onChange={onFile} />
-                </label>
-              </Button>
-              {iconPreview && (
-                <Button type="button" variant="ghost" size="sm" onClick={clearIcon}>
-                  {t("remove_icon")}
-                </Button>
-              )}
-            </div>
-            {iconPreview && (
-              <img src={iconPreview} alt="" className="mt-3 h-16 w-16 rounded-full border object-cover" />
-            )}
-          </Field>
-
-          <Controller
-            name="icon_preset"
-            control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>{t("icon_preset")}</FieldLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="h-12 rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {iconPresets.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>
-                        {p.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </Field>
             )}
           />
@@ -504,94 +502,6 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
               </Button>
             </div>
           ))}
-        </div>
-      </div>
-
-      <div className="space-y-8 rounded-[32px] border bg-white p-8 shadow-sm">
-        <div className="flex items-center gap-3 border-b pb-4">
-          <Search className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-bold text-gray-900">{t("seo_section")}</h2>
-        </div>
-
-        <Controller
-          name="canonical_url"
-          control={control}
-          render={({ field }) => (
-            <Field className="max-w-3xl">
-              <FieldLabel>{t("canonical_url")}</FieldLabel>
-              <Input {...field} dir="ltr" className="h-12 rounded-xl bg-muted/10" />
-            </Field>
-          )}
-        />
-
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-          <div className="space-y-6 rounded-2xl border border-dashed bg-muted/5 p-6">
-            <div className="text-xs font-bold uppercase tracking-widest text-primary/40">{t("seo_ar")}</div>
-            <Controller
-              name="meta_title.ar"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>{t("meta_title_ar")}</FieldLabel>
-                  <Input {...field} dir="rtl" className="h-12 rounded-xl bg-white" />
-                </Field>
-              )}
-            />
-            <Controller
-              name="meta_description.ar"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>{t("meta_description_ar")}</FieldLabel>
-                  <Textarea {...field} dir="rtl" className="min-h-[100px] resize-none rounded-xl bg-white" />
-                </Field>
-              )}
-            />
-            <Controller
-              name="meta_keywords.ar"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>{t("meta_keywords_ar")}</FieldLabel>
-                  <Input {...field} dir="rtl" className="h-12 rounded-xl bg-white" />
-                </Field>
-              )}
-            />
-          </div>
-
-          <div className="space-y-6 rounded-2xl border border-dashed bg-muted/5 p-6">
-            <div className="text-xs font-bold uppercase tracking-widest text-primary/40">{t("seo_en")}</div>
-            <Controller
-              name="meta_title.en"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>{t("meta_title_en")}</FieldLabel>
-                  <Input {...field} dir="ltr" className="h-12 rounded-xl bg-white" />
-                </Field>
-              )}
-            />
-            <Controller
-              name="meta_description.en"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>{t("meta_description_en")}</FieldLabel>
-                  <Textarea {...field} dir="ltr" className="min-h-[100px] resize-none rounded-xl bg-white" />
-                </Field>
-              )}
-            />
-            <Controller
-              name="meta_keywords.en"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>{t("meta_keywords_en")}</FieldLabel>
-                  <Input {...field} dir="ltr" className="h-12 rounded-xl bg-white" />
-                </Field>
-              )}
-            />
-          </div>
         </div>
       </div>
 

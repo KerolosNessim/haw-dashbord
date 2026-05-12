@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import * as aboutUsService from "../services/about-us";
 import type { AxiosError } from "axios";
 
 export const useAboutUs = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const getAboutUsQuery = useQuery({
@@ -24,10 +26,10 @@ export const useAboutUs = () => {
     mutationFn: aboutUsService.updateAboutUs,
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["about-us"] });
-      toast.success(res.message || "About Us updated successfully");
+      toast.success(res.message || t("toasts.about_updated"));
     },
     onError: (error: AxiosError<{ message: string }>) => {
-      toast.error(error?.response?.data?.message || "Failed to update About Us");
+      toast.error(error?.response?.data?.message || t("toasts.about_update_failed"));
     },
   });
 
@@ -35,10 +37,10 @@ export const useAboutUs = () => {
     mutationFn: aboutUsService.updateIntroSection,
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["about-us"] });
-      toast.success(res.message || "About Us Intro section updated successfully");
+      toast.success(res.message || t("toasts.about_intro_updated"));
     },
     onError: (error: AxiosError<{ message: string }>) => {
-      toast.error(error?.response?.data?.message || "Failed to update About Us Intro section");
+      toast.error(error?.response?.data?.message || t("toasts.about_intro_update_failed"));
     },
   });
 
@@ -46,10 +48,10 @@ export const useAboutUs = () => {
     mutationFn: aboutUsService.updateVisionSection,
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["about-us"] });
-      toast.success(res.message || "About Us Vision section updated successfully");
+      toast.success(res.message || t("toasts.about_vision_updated"));
     },
     onError: (error: AxiosError<{ message: string }>) => {
-      toast.error(error?.response?.data?.message || "Failed to update About Us Vision section");
+      toast.error(error?.response?.data?.message || t("toasts.about_vision_update_failed"));
     },
   });
 
@@ -57,11 +59,11 @@ export const useAboutUs = () => {
     mutationFn: aboutUsService.updateWhyUsSection,
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["about-us"] });
-      toast.success(res.message || "About Us Why Us section updated successfully");
+      toast.success(res.message || t("toasts.about_why_us_updated"));
     },
     onError: (error: AxiosError<{ message: string }>) => {
       console.log(error);
-      toast.error(error?.response?.data?.message || "Failed to update About Us Why Us section");
+      toast.error(error?.response?.data?.message || t("toasts.about_why_us_update_failed"));
     },
   });
 
@@ -69,10 +71,10 @@ export const useAboutUs = () => {
     mutationFn: aboutUsService.updateContactSection,
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["about-us"] });
-      toast.success(res.message || "About Us Contact section updated successfully");
+      toast.success(res.message || t("toasts.about_contact_updated"));
     },
     onError: (error: AxiosError<{ message: string }>) => {
-      toast.error(error?.response?.data?.message || "Failed to update About Us Contact section");
+      toast.error(error?.response?.data?.message || t("toasts.about_contact_update_failed"));
     },
   });
 

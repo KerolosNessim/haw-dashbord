@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { getTestimonialsGeneral, updateTestimonialsGeneral } from "../services/testimonials";
 import type { AxiosError } from "axios";
 
 export const useTestimonialsGeneral = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const getGeneralQuery = useQuery({
@@ -15,10 +17,10 @@ export const useTestimonialsGeneral = () => {
     mutationFn: updateTestimonialsGeneral,
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["testimonials-general"] });
-      toast.success(res.message || "Updated successfully");
+      toast.success(res.message || t("toasts.generic_updated"));
     },
     onError: (error: AxiosError<{message: string}>) => {
-      toast.error(error?.response?.data?.message || "Failed to update");
+      toast.error(error?.response?.data?.message || t("toasts.generic_update_failed"));
     },
   });
 

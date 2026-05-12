@@ -1,3 +1,14 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -38,7 +49,6 @@ interface SocialPlatform {
 
 export default function SocialMediaRepeater() {
   const { t } = useTranslation("translation", { keyPrefix: "settings.social" });
-  const { t: commonT } = useTranslation("translation");
 
   const [platforms, setPlatforms] = useState<SocialPlatform[]>([
     {
@@ -150,8 +160,8 @@ export default function SocialMediaRepeater() {
             <TableRow className="hover:bg-transparent border-none">
               <TableHead className="py-5 px-6 font-bold text-foreground text-start w-[250px]">{t("platform")}</TableHead>
               <TableHead className="font-bold text-foreground text-start">{t("link")}</TableHead>
-              <TableHead className="font-bold text-foreground text-center w-[120px]">{t("status")}</TableHead>
-              <TableHead className="py-5 px-6 font-bold text-foreground text-center w-[150px]">{t("actions")}</TableHead>
+              <TableHead className="font-bold text-foreground text-start w-[120px]">{t("status")}</TableHead>
+              <TableHead className="py-5 px-6 font-bold text-foreground text-start w-[150px]">{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -170,7 +180,7 @@ export default function SocialMediaRepeater() {
                     {p.link}
                   </span>
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell>
                   <Switch 
                     dir="ltr" 
                     checked={p.isActive} 
@@ -180,7 +190,7 @@ export default function SocialMediaRepeater() {
                   />
                 </TableCell>
                 <TableCell className="py-5 px-6">
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-start gap-2">
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -192,18 +202,34 @@ export default function SocialMediaRepeater() {
                     >
                       <Pencil className="w-4 h-4" />
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="w-10 h-10 rounded-xl text-muted-foreground hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all"
-                      onClick={() => {
-                         if(confirm(commonT("settings.offices.delete_confirm"))) {
-                            setPlatforms(platforms.filter(plat => plat.id !== p.id));
-                         }
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="w-10 h-10 rounded-xl text-muted-foreground hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="rounded-2xl">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{t("delete_confirm_title")}</AlertDialogTitle>
+                          <AlertDialogDescription>{t("delete_confirm_description")}</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="rounded-xl">{t("cancel")}</AlertDialogCancel>
+                          <AlertDialogAction
+                            variant="destructive"
+                            className="rounded-xl"
+                            onClick={() => setPlatforms(platforms.filter((plat) => plat.id !== p.id))}
+                          >
+                            {t("delete")}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </TableCell>
               </TableRow>

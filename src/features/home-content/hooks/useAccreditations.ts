@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import { getAccreditations, updateAccreditation } from "../services/dependacies";
 
 export const useAccreditations = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const getAccreditationsQuery = useQuery({
@@ -15,11 +17,11 @@ export const useAccreditations = () => {
     mutationFn: ({  data }: {  data: FormData }) =>
       updateAccreditation( data),
     onSuccess: (res) => {
-      toast.success(res?.message || "Accreditation updated successfully");
+      toast.success(res?.message || t("toasts.accreditation_updated"));
       queryClient.invalidateQueries({ queryKey: ["accreditations"] });
     },
     onError: (error: AxiosError<{ message: string }>) => {
-      toast.error(error?.response?.data?.message || "Failed to update accreditation");
+      toast.error(error?.response?.data?.message || t("toasts.accreditation_update_failed"));
     },
   });
 

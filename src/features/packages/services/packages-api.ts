@@ -1,6 +1,25 @@
 import { api } from "@/lib/api";
-import { pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
-import type { IconPreset, PackageFormValues, PackageRow } from "../types";
+import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
+import type { PackageFormValues, PackageRow } from "../types";
+
+export type PackageMeta = {
+  currentPage: number;
+  lastPage: number;
+  perPage: number;
+  total: number;
+};
+
+export type PackagePage = {
+  rows: PackageRow[];
+  meta: PackageMeta;
+};
+
+export type PackageListParams = {
+  page?: number;
+  perPage?: number;
+  /** Postman: `GET …/v1/admin/packages?search=` — filter by title/description */
+  search?: string;
+};
 
 function apiOriginFromEnv(): string {
   const raw = (import.meta.env.VITE_API_URL ?? "").trim().replace(/\/$/, "");
@@ -32,15 +51,17 @@ function resolvePackageIconPreview(r: Record<string, unknown>): string {
   return "";
 }
 
-function parseIconPreset(raw: unknown): IconPreset {
-  if (typeof raw !== "string" || !raw.trim()) return "none";
-  const s = raw.trim().toLowerCase();
-  if (s === "target" || s === "gem" || s === "rocket") return s;
-  return "none";
-}
-
 function asRecord(v: unknown): Record<string, unknown> | null {
   return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+}
+
+function toFiniteNumber(v: unknown, fallback = 0): number {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return fallback;
 }
 
 /** Laravel ApiResponse: HTTP 200 with `{ status: "false", message }` is still a failure. */
@@ -61,8 +82,16 @@ function pickPackagePayloadRecord(payload: unknown): Record<string, unknown> | n
   if (s === false || s === "false" || s === 0 || s === "0") return null;
 
   const id = rec.id;
-  const title = rec.title;
-  if ((typeof id === "number" || typeof id === "string") && title != null) return rec;
+  const title = rec.title ?? rec.name;
+  const looksLikePackage =
+    (typeof id === "number" || typeof id === "string") &&
+    (title != null ||
+      rec.package_category_id != null ||
+      rec.package_category != null ||
+      rec.category != null ||
+      rec.slug != null ||
+      rec.description != null);
+  if (looksLikePackage) return rec;
 
   const dataVal = rec.data;
   if (Array.isArray(dataVal) && dataVal.length === 1) {
@@ -88,6 +117,23 @@ function categoryLabel(cat: unknown, lang: "ar" | "en"): string {
   return pickLocalized(c.title, lang) || pickLocalized(c.name, lang) || String(c.slug ?? "");
 }
 
+/** Resolves category id from flat keys or nested `package_category` / `category` (scalar or object). */
+function readPackageCategoryId(r: Record<string, unknown>): string {
+  const flat = r.package_category_id ?? r.category_id;
+  if (typeof flat === "string" && flat.trim()) return flat.trim();
+  if (typeof flat === "number" && Number.isFinite(flat)) return String(flat);
+
+  const rel = r.package_category ?? r.category ?? r.packageCategory;
+  if (typeof rel === "string" && rel.trim()) return rel.trim();
+  if (typeof rel === "number" && Number.isFinite(rel)) return String(rel);
+  if (rel && typeof rel === "object" && !Array.isArray(rel)) {
+    const o = rel as Record<string, unknown>;
+    const cid = o.id ?? o.uuid;
+    if (cid != null) return String(cid);
+  }
+  return "";
+}
+
 function normalizePackageRecord(raw: unknown, locale: "ar" | "en" = "en"): PackageRow | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
@@ -96,20 +142,19 @@ function normalizePackageRecord(raw: unknown, locale: "ar" | "en" = "en"): Packa
   const pkgCat =
     r.package_category ??
     r.category ??
-    (typeof r.package_category_id === "object" ? r.package_category_id : null);
+    r.packageCategory ??
+    (typeof r.package_category_id === "object" && r.package_category_id !== null
+      ? r.package_category_id
+      : null);
 
-  const categoryIdRaw =
-    r.package_category_id ??
-    (pkgCat && typeof pkgCat === "object"
-      ? (pkgCat as Record<string, unknown>).id
-      : undefined);
-  const categoryId = categoryIdRaw != null ? String(categoryIdRaw) : "";
+  const categoryId = readPackageCategoryId(r);
 
+  const slugPair = pickBilingualSlug(r.slug);
   return {
     id,
     titleAr: pickLocalized(r.title, "ar"),
     titleEn: pickLocalized(r.title, "en"),
-    slug: typeof r.slug === "string" ? r.slug : "",
+    slug: slugPair.en || slugPair.ar || "",
     package_category_id: categoryId,
     categoryTitle:
       pkgCat && typeof pkgCat === "object"
@@ -135,19 +180,47 @@ export function normalizePackageListPayload(
     .filter((x): x is PackageRow => x != null);
 }
 
-export async function fetchPackages(locale: "ar" | "en"): Promise<PackageRow[]> {
+export function pickPackageMeta(payload: unknown): PackageMeta {
+  const root = asRecord(payload);
+  const dataRec = root ? asRecord(root.data) : null;
+  const meta = asRecord(dataRec?.meta) ?? asRecord(root?.meta);
+  return {
+    currentPage: toFiniteNumber(meta?.current_page, 1),
+    lastPage: toFiniteNumber(meta?.last_page, 1),
+    perPage: toFiniteNumber(meta?.per_page, 0),
+    total: toFiniteNumber(meta?.total, 0),
+  };
+}
+
+export async function fetchPackagesPage(
+  locale: "ar" | "en",
+  params: PackageListParams = {},
+): Promise<PackagePage> {
   const urls = ["/v1/admin/packages", "/v1/packages"];
+  const query: Record<string, string | number> = {};
+  if (params.page && params.page > 0) query.page = params.page;
+  if (params.perPage && params.perPage > 0) query.per_page = params.perPage;
+  const q = params.search?.trim();
+  if (q) query.search = q;
+
   let lastErr: unknown;
   for (const url of urls) {
     try {
-      const res = await api.get<unknown>(url);
+      const res = await api.get<unknown>(url, { params: query });
       const body = (res.data as { data?: unknown })?.data ?? res.data;
-      return normalizePackageListPayload(body, locale);
+      return {
+        rows: normalizePackageListPayload(body, locale),
+        meta: pickPackageMeta(res.data),
+      };
     } catch (e) {
       lastErr = e;
     }
   }
   throw lastErr;
+}
+
+export async function fetchPackages(locale: "ar" | "en"): Promise<PackageRow[]> {
+  return (await fetchPackagesPage(locale)).rows;
 }
 
 function appendLocalized(fd: FormData, prefix: string, value: { ar: string; en: string }) {
@@ -164,23 +237,16 @@ export function packageValuesToFormData(values: PackageFormValues, iconFile: Fil
   appendLocalized(fd, "title", v.title);
   appendLocalized(fd, "description", v.description);
   appendLocalized(fd, "button_text", v.button_text);
+  appendLocalized(fd, "slug", {
+    ar: v.slug.ar.trim(),
+    en: v.slug.en.trim(),
+  });
 
   fd.append("is_featured", v.is_featured ? "1" : "0");
   fd.append("is_active", v.is_active ? "1" : "0");
   if (v.price.trim()) fd.append("price", v.price.trim());
   if (v.currency.trim()) fd.append("currency", v.currency.trim());
 
-  if (v.slug.trim()) fd.append("slug", v.slug.trim());
-  if (v.details_url.trim()) fd.append("details_url", v.details_url.trim());
-  if (v.canonical_url.trim()) fd.append("canonical_url", v.canonical_url.trim());
-
-  appendLocalized(fd, "meta_title", v.meta_title);
-  appendLocalized(fd, "meta_description", v.meta_description);
-  appendLocalized(fd, "meta_keywords", v.meta_keywords);
-
-  if (v.icon_preset !== "none" && iconFile == null) {
-    fd.append("icon_preset", v.icon_preset);
-  }
   if (iconFile instanceof File) {
     fd.append("icon", iconFile);
   }
@@ -238,18 +304,14 @@ function parseFeatures(raw: unknown): PackageFormValues["features"] {
 export function recordToPackageFormValues(raw: unknown): PackageFormValues | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  const pkgCat = r.package_category ?? r.category;
-  let categoryId = "";
-  if (typeof r.package_category_id === "string" || typeof r.package_category_id === "number") {
-    categoryId = String(r.package_category_id);
-  } else if (pkgCat && typeof pkgCat === "object") {
-    const id = (pkgCat as Record<string, unknown>).id;
-    if (id != null) categoryId = String(id);
-  }
+  const pkgCat = r.package_category ?? r.category ?? r.packageCategory;
+  const categoryId = readPackageCategoryId(r);
 
   const iconPreview = resolvePackageIconPreview(r);
-  const preset = parseIconPreset(r.icon_preset);
-  const resolvedPreset: IconPreset = iconPreview ? "none" : preset === "none" ? "none" : preset;
+  const categoryTitleAr =
+    pkgCat && typeof pkgCat === "object" ? categoryLabel(pkgCat, "ar") : "";
+  const categoryTitleEn =
+    pkgCat && typeof pkgCat === "object" ? categoryLabel(pkgCat, "en") : "";
 
   return {
     package_category_id: categoryId,
@@ -259,31 +321,18 @@ export function recordToPackageFormValues(raw: unknown): PackageFormValues | nul
       en: pickLocalized(r.description, "en"),
     },
     button_text: {
-      ar: pickLocalized(r.button_text ?? r.cta_label, "ar"),
-      en: pickLocalized(r.button_text ?? r.cta_label, "en"),
+      ar: pickLocalized(r.button_text, "ar"),
+      en: pickLocalized(r.button_text, "en"),
     },
-    details_url: typeof r.details_url === "string" ? r.details_url : "",
-    slug: typeof r.slug === "string" ? r.slug : "",
-    canonical_url: typeof r.canonical_url === "string" ? r.canonical_url : "",
+    slug: pickBilingualSlug(r.slug),
     is_featured: Boolean(r.is_featured ?? r.is_popular ?? false),
     is_active: Boolean(r.is_active ?? true),
     price: r.price != null ? String(r.price) : "",
     currency: typeof r.currency === "string" ? r.currency : "",
-    icon_preset: resolvedPreset,
-    meta_title: {
-      ar: pickLocalized(r.meta_title, "ar"),
-      en: pickLocalized(r.meta_title, "en"),
-    },
-    meta_description: {
-      ar: pickLocalized(r.meta_description, "ar"),
-      en: pickLocalized(r.meta_description, "en"),
-    },
-    meta_keywords: {
-      ar: pickLocalized(r.meta_keywords, "ar"),
-      en: pickLocalized(r.meta_keywords, "en"),
-    },
     features: parseFeatures(r.features),
     ...(iconPreview ? { existing_icon_url: iconPreview } : {}),
+    ...(categoryTitleAr ? { categoryTitleAr } : {}),
+    ...(categoryTitleEn ? { categoryTitleEn } : {}),
   };
 }
 
@@ -309,17 +358,11 @@ export async function fetchPackageById(id: string): Promise<PackageFormValues | 
     title: { ar: row.titleAr, en: row.titleEn },
     description: { ar: "", en: "" },
     button_text: { ar: "", en: "" },
-    details_url: "",
-    slug: row.slug,
-    canonical_url: "",
+    slug: { ar: row.slug, en: row.slug },
     is_featured: row.is_featured,
     is_active: row.is_active,
     price: "",
     currency: "",
-    icon_preset: "none",
-    meta_title: { ar: "", en: "" },
-    meta_description: { ar: "", en: "" },
-    meta_keywords: { ar: "", en: "" },
     features: [],
   };
 }

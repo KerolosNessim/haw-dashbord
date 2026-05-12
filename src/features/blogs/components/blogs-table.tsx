@@ -1,7 +1,3 @@
-import { BulkDeleteConfirmationDialog } from "@/components/bulk-delete-confirmation-dialog";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,15 +10,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -32,12 +21,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useBlogCategories } from "@/features/blog-categories/hooks/useBlogCategories";
+import { BlogsTableBulkDelete } from "@/features/blogs/components/blogs-table-bulk-delete";
+import { BlogsTablePagination } from "@/features/blogs/components/blogs-table-pagination";
+import { buildBlogsTablePaginationState } from "@/features/blogs/components/blogs-table-pagination-meta";
+import { BlogsTableSearch } from "@/features/blogs/components/blogs-table-search";
 import { useAdminBlogs } from "@/features/blogs/hooks/useAdminBlogs";
 import { useDeleteBlog } from "@/features/blogs/hooks/useDeleteBlog";
 import { useDeleteBlogsBulk } from "@/features/blogs/hooks/useDeleteBlogsBulk";
 import { getHttpErrorMessage } from "@/lib/http-error-message";
 import { cn } from "@/lib/utils";
-import { Pencil, Search, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -48,13 +41,24 @@ export default function BlogsTable() {
   const isRtl = i18n.language.startsWith("ar");
   const [activeCategory, setActiveCategory] = useState("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
 
-  const { blogs, isLoading, isError, error } = useAdminBlogs();
+  const { blogs, meta, isLoading, isFetching, isError, error } = useAdminBlogs({ page });
   const { deleteBlogMutation, isPending: isDeleting } = useDeleteBlog();
   const { deleteBlogsBulkMutation, isPending: isBulkDeleting } = useDeleteBlogsBulk();
   const { data: categoryRows = [] } = useBlogCategories();
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeCategory, search]);
+
+  useEffect(() => {
+    if (meta.lastPage > 0 && page > meta.lastPage) {
+      setPage(meta.lastPage);
+    }
+  }, [meta.lastPage, page]);
 
   const categories = useMemo(() => {
     const labelCat = (ar: string, en: string) => (isRtl ? ar || en : en || ar);
@@ -78,7 +82,10 @@ export default function BlogsTable() {
     });
   }, [blogs, activeCategory, search]);
 
-  const total = filteredBlogs.length;
+  const { laravelMeta, rangeStart, rangeEnd, serverTotal } = buildBlogsTablePaginationState(
+    meta,
+    filteredBlogs.length,
+  );
 
   useEffect(() => {
     const allowed = new Set(filteredBlogs.map((b) => String(b.id)));
@@ -104,7 +111,6 @@ export default function BlogsTable() {
   const someFilteredSelected =
     filteredBlogs.some((b) => selectedIds.has(String(b.id))) && !allFilteredSelected;
   const selectedCount = selectedIds.size;
-  const confirmWord = t("table.bulk_delete_word");
 
   const toggleHeaderSelectAll = (checked: boolean) => {
     const ids = filteredBlogs.map((b) => String(b.id));
@@ -136,7 +142,7 @@ export default function BlogsTable() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide justify-center md:justify-start">
+      <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide justify-start">
         {categories.map((cat) => (
           <button
             key={cat.id}
@@ -156,27 +162,14 @@ export default function BlogsTable() {
 
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-border/40">
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto md:flex-1">
-          {selectedCount > 0 ? (
-            <Button
-              type="button"
-              variant="destructive"
-              size="lg"
-              className="rounded-xl shrink-0"
-              disabled={isBulkDeleting}
-              onClick={() => setBulkDialogOpen(true)}
-            >
-              {t("table.bulk_delete_selected", { count: selectedCount })}
-            </Button>
-          ) : null}
-          <div className="relative w-full md:flex-1 md:max-w-sm md:min-w-[200px]">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground opacity-60" />
-            <Input
-              placeholder={t("table.search_placeholder") || "Search..."}
-              className="h-11 pr-10 rounded-xl border-border/60 bg-muted/5 focus-visible:ring-primary/20"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+          <BlogsTableBulkDelete
+            selectedCount={selectedCount}
+            dialogOpen={bulkDialogOpen}
+            onDialogOpenChange={setBulkDialogOpen}
+            onConfirm={handleBulkDelete}
+            isPending={isBulkDeleting}
+          />
+          <BlogsTableSearch value={search} onChange={setSearch} />
         </div>
       </div>
 
@@ -192,8 +185,7 @@ export default function BlogsTable() {
             <TableHeader className="bg-muted/30">
               <TableRow className="hover:bg-transparent border-none">
                 <TableHead className="w-16 min-w-15 text-start align-middle p-2">
-                  {/* Inner wrapper: base Table applies :pr-0 on checkbox cells — use ps-6 for inline-start (right in RTL, left in LTR). */}
-                  <div className="flex items-center justify-center ps-6 pe-2">
+                  <div className="flex items-center justify-start ps-6 pe-2">
                     <Checkbox
                       disabled={filteredBlogs.length === 0 || isLoading}
                       aria-label={t("table.select_all")}
@@ -235,7 +227,7 @@ export default function BlogsTable() {
                 filteredBlogs.map((blog) => (
                   <TableRow key={String(blog.id)} className="group border-border/40 transition-colors hover:bg-muted/5">
                     <TableCell className="w-16 min-w-15 p-2 align-middle">
-                      <div className="flex items-center justify-center ps-6 pe-2">
+                      <div className="flex items-center justify-start ps-6 pe-2">
                         <Checkbox
                           aria-label={t("table.select_row")}
                           checked={selectedIds.has(String(blog.id))}
@@ -334,7 +326,7 @@ export default function BlogsTable() {
                 ))}
               {!isLoading && filteredBlogs.length === 0 && !isError && (
                 <TableRow>
-                  <TableCell colSpan={11} className="py-16 text-center text-muted-foreground">
+                  <TableCell colSpan={11} className="py-16 text-start text-muted-foreground">
                     —
                   </TableCell>
                 </TableRow>
@@ -343,45 +335,16 @@ export default function BlogsTable() {
           </Table>
         </div>
 
-        <div className="flex flex-col md:flex-row items-center justify-between p-6 bg-muted/10 border-t border-border/40 gap-4">
-          <p className="text-sm text-muted-foreground order-2 md:order-1">
-            {t("showing_info", { start: total ? 1 : 0, end: total, total })}
-          </p>
-          <div className="order-1 md:order-2">
-            <Pagination>
-              <PaginationContent className="gap-1">
-                <PaginationItem>
-                  <PaginationPrevious text={""} href="#" className={cn("rounded-xl border-border/60 h-9 px-3", isRtl && "rotate-180")} />
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#" isActive className="rounded-xl h-9 w-9 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 font-bold">
-                    1
-                  </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationNext text={""} href="#" className={cn("rounded-xl border-border/60 h-9 px-3", isRtl && "rotate-180")} />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        </div>
+        <BlogsTablePagination
+          laravelMeta={laravelMeta}
+          rangeStart={rangeStart}
+          rangeEnd={rangeEnd}
+          serverTotal={serverTotal}
+          onPageChange={setPage}
+          disabled={isLoading || isFetching}
+          isRtl={isRtl}
+        />
       </div>
-
-      <BulkDeleteConfirmationDialog
-        open={bulkDialogOpen}
-        onOpenChange={setBulkDialogOpen}
-        title={t("table.bulk_delete_title")}
-        description={t("table.bulk_delete_description", { count: selectedCount })}
-        confirmationPhrase={confirmWord}
-        typePhraseLabel={t("table.bulk_delete_type_label", { word: confirmWord })}
-        cancelLabel={apiT("cancel")}
-        deleteLabel={apiT("delete")}
-        isPending={isBulkDeleting}
-        onConfirm={handleBulkDelete}
-      />
     </div>
   );
 }

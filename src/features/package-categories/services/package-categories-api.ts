@@ -1,16 +1,43 @@
 import { api } from "@/lib/api";
-import { pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
+import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
 import type { PackageCategoryFormValues, PackageCategoryRow } from "../types";
+
+/** Laravel paginator summary from `data.meta` (snake_case → camelCase). */
+export type PackageCategoryMeta = {
+  currentPage: number;
+  lastPage: number;
+  perPage: number;
+  total: number;
+};
+
+export type PackageCategoryPage = {
+  rows: PackageCategoryRow[];
+  meta: PackageCategoryMeta;
+};
+
+export type PackageCategoryListParams = {
+  page?: number;
+  perPage?: number;
+};
 
 /**
  * Admin package categories — Postman: `GET|POST …/v1/admin/packages/categories`,
- * show/update/delete `…/categories/{id}`. Store/Update use **multipart** (`title[ar]`, `title[en]`, …).
+ * show/update/delete `…/categories/{id}`. Store/Update use **multipart** (`title[ar|en]`, `slug[ar|en]`, `sort_order`, `is_active`, …).
  * Update is sent as `POST` + `_method=PUT` (Laravel spoof) like other multipart admin forms.
  */
 const ADMIN_PACKAGE_CATEGORIES_BASE = "/v1/admin/packages/categories";
 
 function asRecord(v: unknown): Record<string, unknown> | null {
   return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+}
+
+function toFiniteNumber(v: unknown, fallback = 0): number {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return fallback;
 }
 
 /** Laravel ApiResponse: HTTP 2xx with `status: "false"` must surface as failure. */
@@ -37,7 +64,12 @@ function pickPackageCategoryRecord(payload: unknown): Record<string, unknown> | 
 
   const id = rec.id;
   const slugVal = rec.slug;
-  if (id != null && typeof slugVal === "string" && slugVal.trim() !== "") {
+  const slugLooksPresent =
+    (typeof slugVal === "string" && slugVal.trim() !== "") ||
+    (slugVal != null && typeof slugVal === "object" && !Array.isArray(slugVal)) ||
+    (Array.isArray(slugVal) &&
+      slugVal.some((s) => typeof s === "string" && String(s).trim() !== ""));
+  if (id != null && slugLooksPresent) {
     return rec;
   }
 
@@ -63,14 +95,14 @@ function normalizeCategoryRecord(raw: unknown): PackageCategoryRow | null {
   const r = raw as Record<string, unknown>;
   const id = readId(r);
   if (!id) return null;
+  const slug = pickBilingualSlug(r.slug);
   return {
     id,
     titleAr: pickLocalized(r.title, "ar") || pickLocalized(r.name, "ar"),
     titleEn: pickLocalized(r.title, "en") || pickLocalized(r.name, "en"),
-    slug: typeof r.slug === "string" ? r.slug : "",
+    slug: slug.en || slug.ar,
     sort_order: typeof r.sort_order === "number" ? r.sort_order : Number(r.sort_order) || 0,
     is_active: Boolean(r.is_active ?? r.isActive ?? true),
-    is_default: Boolean(r.is_default ?? r.isDefault ?? false),
   };
 }
 
@@ -80,14 +112,46 @@ export function normalizeCategoryListPayload(payload: unknown): PackageCategoryR
     .filter((x): x is PackageCategoryRow => x != null);
 }
 
-export async function fetchPackageCategories(): Promise<PackageCategoryRow[]> {
+function pickCategoryListMeta(payload: unknown): PackageCategoryMeta {
+  const root = asRecord(payload);
+  const dataRec = root ? asRecord(root.data) : null;
+  const meta = asRecord(dataRec?.meta) ?? asRecord(root?.meta);
+  return {
+    currentPage: toFiniteNumber(meta?.current_page, 1),
+    lastPage: toFiniteNumber(meta?.last_page, 1),
+    perPage: toFiniteNumber(meta?.per_page, 0),
+    total: toFiniteNumber(meta?.total),
+  };
+}
+
+async function fetchPackageCategoriesPageFromUrl(
+  url: string,
+  page?: number,
+  perPage?: number,
+): Promise<PackageCategoryPage> {
+  const params: Record<string, number> = {};
+  if (page && page > 0) params.page = page;
+  if (perPage && perPage > 0) params.per_page = perPage;
+  const res = await api.get<unknown>(url, { params });
+  const body = (res.data as { data?: unknown })?.data ?? res.data;
+  return {
+    rows: normalizeCategoryListPayload(body),
+    meta: pickCategoryListMeta(res.data),
+  };
+}
+
+/**
+ * Single list page (`GET …/categories?page=&per_page=`).
+ * Response shape: `{ data: { data: [...], meta } }`.
+ */
+export async function fetchPackageCategoriesPage(
+  params: PackageCategoryListParams = {},
+): Promise<PackageCategoryPage> {
   const tryUrls = [ADMIN_PACKAGE_CATEGORIES_BASE, "/v1/packages/categories"];
   let lastErr: unknown;
   for (const url of tryUrls) {
     try {
-      const res = await api.get<unknown>(url);
-      const body = (res.data as { data?: unknown })?.data ?? res.data;
-      return normalizeCategoryListPayload(body);
+      return await fetchPackageCategoriesPageFromUrl(url, params.page, params.perPage);
     } catch (e) {
       lastErr = e;
     }
@@ -95,20 +159,41 @@ export async function fetchPackageCategories(): Promise<PackageCategoryRow[]> {
   throw lastErr;
 }
 
-/** Postman multipart fields + optional SEO / default flags the dashboard collects. */
+export async function fetchPackageCategories(): Promise<PackageCategoryRow[]> {
+  const tryUrls = [ADMIN_PACKAGE_CATEGORIES_BASE, "/v1/packages/categories"];
+  let lastErr: unknown;
+  for (const url of tryUrls) {
+    try {
+      const first = await fetchPackageCategoriesPageFromUrl(url);
+      if (first.meta.lastPage <= 1) return first.rows;
+      const remainingPages = Array.from(
+        { length: first.meta.lastPage - 1 },
+        (_, i) => i + 2,
+      );
+      const rest = await Promise.all(
+        remainingPages.map((p) =>
+          fetchPackageCategoriesPageFromUrl(url, p, first.meta.perPage || undefined),
+        ),
+      );
+      return rest.reduce<PackageCategoryRow[]>(
+        (acc, page) => acc.concat(page.rows),
+        first.rows,
+      );
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
+}
+
+/** Multipart for Store/Update — `title[ar|en]`, `slug[ar|en]`, `sort_order`, `is_active`. */
 function appendPackageCategoryFormFields(fd: FormData, values: PackageCategoryFormValues) {
   fd.append("title[ar]", values.title.ar.trim());
   fd.append("title[en]", values.title.en.trim());
-  fd.append("slug", values.slug.trim());
+  fd.append("slug[ar]", values.slug.ar.trim());
+  fd.append("slug[en]", values.slug.en.trim());
   fd.append("sort_order", String(values.sort_order ?? 0));
   fd.append("is_active", values.is_active ? "1" : "0");
-  fd.append("is_default", values.is_default ? "1" : "0");
-  fd.append("meta_title[ar]", values.meta_title.ar.trim());
-  fd.append("meta_title[en]", values.meta_title.en.trim());
-  fd.append("meta_description[ar]", values.meta_description.ar.trim());
-  fd.append("meta_description[en]", values.meta_description.en.trim());
-  fd.append("meta_keywords[ar]", values.meta_keywords.ar.trim());
-  fd.append("meta_keywords[en]", values.meta_keywords.en.trim());
 }
 
 export async function createPackageCategory(values: PackageCategoryFormValues) {
@@ -142,31 +227,16 @@ export function recordToFormValues(raw: unknown): PackageCategoryFormValues | nu
   const r = asRecord(raw);
   if (!r) return null;
   const titleObj = r.title;
-  const metaTitleObj = r.meta_title;
-  const metaDescObj = r.meta_description;
-  const metaKwObj = r.meta_keywords;
+  const slug = pickBilingualSlug(r.slug);
   return {
     title: {
       ar: pickLocalized(titleObj, "ar"),
       en: pickLocalized(titleObj, "en"),
     },
-    slug: typeof r.slug === "string" ? r.slug : "",
+    slug: { ar: slug.ar, en: slug.en },
     sort_order:
       typeof r.sort_order === "number" ? r.sort_order : Number(r.sort_order) || 0,
     is_active: Boolean(r.is_active ?? true),
-    is_default: Boolean(r.is_default ?? false),
-    meta_title: {
-      ar: pickLocalized(metaTitleObj, "ar"),
-      en: pickLocalized(metaTitleObj, "en"),
-    },
-    meta_description: {
-      ar: pickLocalized(metaDescObj, "ar"),
-      en: pickLocalized(metaDescObj, "en"),
-    },
-    meta_keywords: {
-      ar: pickLocalized(metaKwObj, "ar"),
-      en: pickLocalized(metaKwObj, "en"),
-    },
   };
 }
 
@@ -191,13 +261,9 @@ export async function fetchPackageCategoryById(id: string): Promise<PackageCateg
     if (!row) return null;
     return {
       title: { ar: row.titleAr, en: row.titleEn },
-      slug: row.slug,
+      slug: { ar: row.slug, en: row.slug },
       sort_order: row.sort_order,
       is_active: row.is_active,
-      is_default: row.is_default,
-      meta_title: { ar: "", en: "" },
-      meta_description: { ar: "", en: "" },
-      meta_keywords: { ar: "", en: "" },
     };
   } catch {
     return null;

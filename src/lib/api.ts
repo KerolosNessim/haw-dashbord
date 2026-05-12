@@ -1,6 +1,13 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios"
+import i18n from "@/i18n"
+import { clearPersistedAuth } from "@/features/auth/utils/clear-client-session"
 
 const baseUrl = import.meta.env.VITE_API_URL
+
+function acceptLanguageFromDashboard(): "ar" | "en" {
+  const lang = i18n.language ?? i18n.resolvedLanguage ?? "en"
+  return lang.toLowerCase().startsWith("ar") ? "ar" : "en"
+}
 
 export const api = axios.create({
   baseURL: baseUrl,
@@ -16,6 +23,10 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
 
+    if (config.headers) {
+      config.headers["Accept-Language"] = acceptLanguageFromDashboard()
+    }
+
     return config
   },
   (error: AxiosError) => Promise.reject(error)
@@ -25,7 +36,7 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401 && !error.config?.url?.includes("/login")) {
-      localStorage.removeItem("token")
+      clearPersistedAuth()
       window.location.href = "/login"
     }
 

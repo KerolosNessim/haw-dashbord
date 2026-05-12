@@ -1,3 +1,4 @@
+import { SmartSlugField } from "@/components/form/smart-slug-field";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -85,6 +86,8 @@ export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
     control,
     handleSubmit,
     setValue,
+    watch,
+    trigger,
     formState: { errors },
   } = useForm<BasicInfoValues>({
     resolver: zodResolver(basicInfoSchema),
@@ -150,6 +153,8 @@ export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
     return message.includes("validation.") ? t(message) : message;
   };
 
+  const watchTitleEn = watch("title.en");
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -165,24 +170,20 @@ export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
 
         {/* Global Settings: Slug, Active Status */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <Controller
-            name="slug"
+          <SmartSlugField<BasicInfoValues>
             control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 opacity-40" /> {t("slug")}
-                </FieldLabel>
-                <Input
-                  {...field}
-                  placeholder={t("placeholders.slug")}
-                  className="h-12 rounded-2xl bg-muted/20 border-border/50"
-                />
-                <FieldError
-                  errors={[{ message: translateError(errors.slug) }]}
-                />
-              </Field>
-            )}
+            name="slug"
+            slugLocale="en"
+            titleEn={watchTitleEn ?? ""}
+            trigger={trigger}
+            label={
+              <span className="flex items-center gap-2">
+                <Globe className="w-4 h-4 opacity-40" /> {t("slug")}
+              </span>
+            }
+            placeholder={t("placeholders.slug")}
+            errorMessage={translateError(errors.slug)}
+            inputClassName="rounded-2xl bg-muted/20 border-border/50"
           />
 
           <Controller
