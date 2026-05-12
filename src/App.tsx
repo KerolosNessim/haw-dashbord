@@ -36,6 +36,7 @@ import EditPackagePage from "./pages/packages/EditPackagePage"
 import CoursesPage from "./pages/courses/CoursesPage"
 import CreateCoursePage from "./pages/courses/CreateCoursePage"
 import EditCoursePage from "./pages/courses/EditCoursePage"
+import CountriesPage from "./pages/countreies/CountriesPage"
 
 const router = createBrowserRouter([
   {
@@ -69,6 +70,10 @@ const router = createBrowserRouter([
       {
         path: "/help-you",
         element: <HelpYouPage />,
+      },
+      {
+        path: "/countries",
+        element: <CountriesPage />,
       },
       {
         path: "/package-categories",

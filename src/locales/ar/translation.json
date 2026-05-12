@@ -67,6 +67,7 @@
     "solutions": "حلولنا",
     "solution_categories": "تصنيفات الحلول",
     "help_you": "كيف نساعدك",
+    "countries": "الدول",
     "services": "الخدمات",
     "settings": "الإعدادات",
     "faq": "الأسئلة الشائعة",
@@ -78,8 +79,32 @@
     "courses": "الدورات",
     "testimonials": "آراء العملاء",
     "about_us": "من نحن",
-    "logout": "تسجيل الخروج"
+    "logout": "Log out"
   },
+  "countries": {
+    "title": "الدول",
+    "description": "إدارة الدول وتفعيلها في النظام.",
+    "add_button": "إضافة دولة",
+    "edit_country": "تعديل دولة",
+    "delete_confirm": "هل أنت متأكد من حذف هذه الدولة؟",
+    "table": {
+      "name_ar": "الاسم (عربي)",
+      "name_en": "الاسم (إنجليزي)",
+      "image": "الصورة",
+      "status": "الحالة",
+      "actions": "الإجراءات"
+    },
+    "form": {
+      "name_ar": "الاسم بالعربي",
+      "name_en": "الاسم بالإنجليزي",
+      "image": "صورة الدولة",
+      "is_active": "نشط",
+      "save": "حفظ الدولة",
+      "upload_image": "رفع صورة"
+    }
+  },
+
+
   "services":{
     "title": "الخدمات",
     "add_service": "إضافة خدمة",
@@ -745,6 +770,12 @@
       "title": "معلومات التواصل",
       "phones": "أرقام الجوال",
       "add_phone": "إضافة رقم جوال",
+      "phones_list": "قائمة أرقام التواصل",
+      "label": "تسمية الرقم",
+      "number": "رقم الهاتف",
+      "type": "نوع التواصل",
+      "phone_type": "هاتف",
+      "whatsapp_type": "واتساب",
       "phone": "رقم الجوال",
       "email": "البريد الإلكتروني",
       "save_changes": "حفظ التغييرات"

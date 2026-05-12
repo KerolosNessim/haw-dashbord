@@ -1,15 +1,23 @@
 
 
 
-export interface Country {
+
+export type CountryName = {
+  ar: string;
+  en: string;
+}
+
+export type Country = {
   id: number;
-  name: string;
+  name: CountryName;
   image: string;
   is_active: boolean;
 }
 
-export interface GetCountriesResponse {
+export type GetCountriesResponse = {
   status: string;
   message: string;
   data: Country[];
 }
+
+
