@@ -17,6 +17,7 @@ import {
   REDO_COMMAND,
   UNDO_COMMAND
 } from "lexical";
+import { TOGGLE_LINK_COMMAND } from "@lexical/link";
 import {
   AlignCenter,
   AlignJustify,
@@ -28,6 +29,7 @@ import {
   Heading2,
   Heading3,
   Italic,
+  Link2,
   List,
   ListOrdered,
   Quote,
@@ -112,6 +114,19 @@ export default function Toolbar() {
       <ToolbarButton
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code")}
         icon={Code}
+      />
+
+      <div className="w-px h-6 bg-border mx-1 self-center" />
+
+      <ToolbarButton
+        title="Insert / edit link"
+        onClick={() => {
+          const current = window.prompt("URL (leave empty to remove link):");
+          if (current === null) return;
+          const trimmed = current.trim();
+          editor.dispatchCommand(TOGGLE_LINK_COMMAND, trimmed === "" ? null : trimmed);
+        }}
+        icon={Link2}
       />
 
       <div className="w-px h-6 bg-border mx-1 self-center" />

@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { useAdminBlogs } from "@/features/blogs/hooks/useAdminBlogs";
 import { BookText, CheckCircle2, FileX2, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -33,25 +34,30 @@ function StatsCard({ label, value, icon: Icon, colorClass, iconColorClass, unit 
 
 export default function BlogsStats() {
   const { t } = useTranslation("translation", { keyPrefix: "blogs" });
+  const { blogs, isLoading } = useAdminBlogs();
+
+  const allCount = blogs.length;
+  const publishedCount = blogs.filter((b) => b.status === "published").length;
+  const draftCount = blogs.filter((b) => b.status === "draft").length;
 
   const stats = [
     {
       label: t("all_blogs"),
-      value: "42",
+      value: isLoading ? "…" : allCount,
       icon: BookText,
       colorClass: "bg-indigo-50",
       iconColorClass: "text-indigo-600",
     },
     {
       label: t("active_blogs"),
-      value: "35",
+      value: isLoading ? "…" : publishedCount,
       icon: CheckCircle2,
       colorClass: "bg-emerald-50",
       iconColorClass: "text-emerald-600",
     },
     {
       label: t("inactive_blogs"),
-      value: "7",
+      value: isLoading ? "…" : draftCount,
       icon: FileX2,
       colorClass: "bg-rose-50",
       iconColorClass: "text-rose-600",
