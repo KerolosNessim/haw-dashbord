@@ -7,8 +7,10 @@ import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
+import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
+import { LinkNode } from "@lexical/link";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { $generateHtmlFromNodes, $generateNodesFromDOM } from "@lexical/html";
 import { useEffect } from "react";
@@ -42,6 +44,7 @@ const editorTheme = {
     underlineStrikethrough: "underline line-through",
     code: "bg-gray-100 p-1 rounded font-mono text-sm",
   },
+  link: "text-primary underline underline-offset-2 cursor-pointer",
 };
 
 type Props = {
@@ -60,7 +63,7 @@ export default function RichTextEditor({
   const config = {
     namespace: "editor",
     theme: editorTheme,
-    nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode],
+    nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode],
     onError: console.error,
     editorState: () => {
       if (!value) return;
@@ -114,6 +117,7 @@ export default function RichTextEditor({
 
         <HistoryPlugin />
         <ListPlugin />
+        <LinkPlugin />
         <AutoFocusPlugin />
 
         <LoadContentPlugin value={value} />

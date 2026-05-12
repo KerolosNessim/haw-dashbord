@@ -11,6 +11,10 @@ import CreateFaqPage from "./pages/faq/CreateFaqPage"
 import EditFaqPage from "./pages/faq/EditFaqPage"
 import BlogsPage from "./pages/blogs/BlogsPage"
 import CreateBlogPage from "./pages/blogs/CreateBlogPage"
+import EditBlogPage from "./pages/blogs/EditBlogPage"
+import BlogCategoriesPage from "./pages/blog-categories/BlogCategoriesPage"
+import CreateBlogCategoryPage from "./pages/blog-categories/CreateBlogCategoryPage"
+import EditBlogCategoryPage from "./pages/blog-categories/EditBlogCategoryPage"
 import CategoriesPage from "./pages/categories/CategoriesPage"
 import CreateCategoryPage from "./pages/categories/CreateCategoryPage"
 
@@ -21,6 +25,15 @@ import SolutionsPage from "./pages/solutions/SolutionsPage"
 import HelpYouPage from "./pages/help-you/HelpYouPage"
 import TestimonialsPage from "./pages/testimonials/TestimonialsPage"
 import AboutUsPage from "./pages/about/AboutUsPage"
+import PackageCategoriesPage from "./pages/package-categories/PackageCategoriesPage"
+import CreatePackageCategoryPage from "./pages/package-categories/CreatePackageCategoryPage"
+import EditPackageCategoryPage from "./pages/package-categories/EditPackageCategoryPage"
+import PackagesPage from "./pages/packages/PackagesPage"
+import CreatePackagePage from "./pages/packages/CreatePackagePage"
+import EditPackagePage from "./pages/packages/EditPackagePage"
+import CoursesPage from "./pages/courses/CoursesPage"
+import CreateCoursePage from "./pages/courses/CreateCoursePage"
+import EditCoursePage from "./pages/courses/EditCoursePage"
 
 const router = createBrowserRouter([
   {
@@ -48,6 +61,42 @@ const router = createBrowserRouter([
         element: <HelpYouPage />,
       },
       {
+        path: "/package-categories",
+        element: <PackageCategoriesPage />,
+      },
+      {
+        path: "/package-categories/create",
+        element: <CreatePackageCategoryPage />,
+      },
+      {
+        path: "/package-categories/edit/:id",
+        element: <EditPackageCategoryPage />,
+      },
+      {
+        path: "/packages",
+        element: <PackagesPage />,
+      },
+      {
+        path: "/packages/create",
+        element: <CreatePackagePage />,
+      },
+      {
+        path: "/packages/edit/:id",
+        element: <EditPackagePage />,
+      },
+      {
+        path: "/courses",
+        element: <CoursesPage />,
+      },
+      {
+        path: "/courses/create",
+        element: <CreateCoursePage />,
+      },
+      {
+        path: "/courses/edit/:id",
+        element: <EditCoursePage />,
+      },
+      {
         path: "/settings",
         element: <SettingsPage />,
       },
@@ -70,6 +119,22 @@ const router = createBrowserRouter([
       {
         path: "/blogs/create",
         element: <CreateBlogPage/>,
+      },
+      {
+        path: "/blogs/edit/:id",
+        element: <EditBlogPage/>,
+      },
+      {
+        path: "/blog-categories",
+        element: <BlogCategoriesPage />,
+      },
+      {
+        path: "/blog-categories/create",
+        element: <CreateBlogCategoryPage />,
+      },
+      {
+        path: "/blog-categories/edit/:id",
+        element: <EditBlogCategoryPage />,
       },
       {
         path: "/categories",

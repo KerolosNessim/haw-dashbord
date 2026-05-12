@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { LayoutGrid, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import BlogsStats from "@/features/blogs/components/blogs-stats";
@@ -16,15 +16,28 @@ export default function BlogsPage() {
           <h1 className="text-4xl font-black tracking-tight text-gray-900">{t("title")}</h1>
         </div>
 
-        <Link to="/blogs/create">
-          <Button
-            size="lg"
-            className="rounded-xl px-8 h-12 shadow-xl shadow-primary/20 hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all duration-300 font-bold text-base"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            {t("add_blog")}
-          </Button>
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link to="/blog-categories">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="rounded-xl px-6 h-12 font-bold text-base border-border/60 hover:bg-muted/40"
+            >
+              <LayoutGrid className="w-5 h-5 mr-2" />
+              {t("manage_categories")}
+            </Button>
+          </Link>
+          <Link to="/blogs/create">
+            <Button
+              size="lg"
+              className="rounded-xl px-8 h-12 shadow-xl shadow-primary/20 hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all duration-300 font-bold text-base"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              {t("add_blog")}
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <BlogsStats />

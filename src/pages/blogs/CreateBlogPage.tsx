@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import CreateBlogForm from "@/features/blogs/components/create-blog-form";
+import BlogForm from "@/features/blogs/components/blog-form";
 
 export default function CreateBlogPage() {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "blogs" });
@@ -25,7 +25,7 @@ export default function CreateBlogPage() {
         </div>
       </div>
 
-      <CreateBlogForm />
+      <BlogForm mode="create" />
     </div>
   );
 }

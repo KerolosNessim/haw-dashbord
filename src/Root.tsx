@@ -16,10 +16,7 @@ export default function Root() {
 
   return (
     <QueryProvider>
-      <DirectionProvider
-        direction={dir as "ltr" | "rtl"}
-        dir={dir as "ltr" | "rtl"}
-      >
+      <DirectionProvider direction={dir as "ltr" | "rtl"}>
         <App />
         <Toaster position="top-center" richColors />
       </DirectionProvider>
