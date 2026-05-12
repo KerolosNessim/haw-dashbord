@@ -2,82 +2,82 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Pencil, Plus, Trash2, MapPin, X, Check } from "lucide-react";
-import { useState } from "react";
+import { Pencil, Plus, Trash2, MapPin, X, Check, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-
-interface Office {
-  id: string;
-  title_ar: string;
-  title_en: string;
-  address_ar: string;
-  address_en: string;
-  flag: string;
-}
+import { useSettings, useSaveOffice, useDeleteOffice } from "../hooks/useSettings";
+import { toast } from "sonner";
+import type { Office } from "../types";
 
 export default function OfficesRepeater() {
   const { t } = useTranslation("translation", { keyPrefix: "settings.offices" });
+  const { t: commonT } = useTranslation("translation");
   
-  const [offices, setOffices] = useState<Office[]>([
-    {
-      id: "1",
-      title_ar: "مكتب تركيا",
-      title_en: "Turkey Office",
-      address_ar: "اسطنبول - بليك دوزو - جمهوريات مهلسي - مجمع الاكاروس",
-      address_en: "Istanbul - Beylikduzu - Cumhuriyet Mahallesi - Alkaros Complex",
-      flag: "🇹🇷",
-    },
-    {
-      id: "2",
-      title_ar: "مكتب سلطنة عمان",
-      title_en: "Oman Office",
-      address_ar: "مسقط - السيب - الخوض\nمبنى 304 - مجمع رقم 333 - رقم الطريق 1002",
-      address_en: "Muscat - Seeb - Al Khoudh\nBuilding 304 - Complex 333 - Road 1002",
-      flag: "🇴🇲",
-    },
-    {
-      id: "3",
-      title_ar: "مكتب جمهورية مصر العربية",
-      title_en: "Egypt Office",
-      address_ar: "القاهرة - 6 أكتوبر - الحي الأول - المجاورة الأولى",
-      address_en: "Cairo - 6th of October - First District - First Neighborhood",
-      flag: "🇪🇬",
-    },
-  ]);
+  const { data: settingsData, isLoading } = useSettings();
+  const { mutateAsync: saveOffice, isPending: isSaving } = useSaveOffice();
+  const { mutateAsync: deleteOffice, isPending: isDeleting } = useDeleteOffice();
 
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [localOffices, setLocalOffices] = useState<Office[]>([]);
+  const [editingId, setEditingId] = useState<number | string | null>(null);
 
-  const handleSave = (id: string, e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (settingsData?.data?.offices) {
+      setLocalOffices(settingsData.data.offices);
+    }
+  }, [settingsData]);
+
+  const handleSave = async (id: number | string, e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const officeData = {
+    const officeData: Partial<Office> = {
       title_ar: formData.get("title_ar") as string,
       title_en: formData.get("title_en") as string,
       address_ar: formData.get("address_ar") as string,
       address_en: formData.get("address_en") as string,
     };
 
-    setOffices(offices.map(o => o.id === id ? { ...o, ...officeData } : o));
-    setEditingId(null);
+    if (typeof id === "number") {
+      officeData.id = id;
+    }
+
+    try {
+      await saveOffice(officeData);
+      toast.success(commonT("success_message") || "Saved successfully");
+      setEditingId(null);
+    } catch (error) {
+      toast.error(commonT("error_message") || "Something went wrong");
+    }
   };
 
-  const handleDelete = (id: string) => {
-    
-      setOffices(offices.filter(o => o.id !== id));
+  const handleDelete = async (id: number | string) => {
+    if (typeof id === "string") {
+      // It's a temporary unsaved office
+      setLocalOffices(localOffices.filter(o => o.id !== id));
+      return;
+    }
+
+    try {
+      await deleteOffice(id);
+      toast.success(commonT("success_message") || "Deleted successfully");
+    } catch (error) {
+      toast.error(commonT("error_message") || "Something went wrong");
+    }
   };
 
   const handleAdd = () => {
-    const newId = Date.now().toString();
-    setOffices([{
-      id: newId,
+    const tempId = `temp-${Date.now()}`;
+    const newOffice: any = {
+      id: tempId,
       title_ar: "",
       title_en: "",
       address_ar: "",
       address_en: "",
-      flag: "📍",
-    }, ...offices]);
-    setEditingId(newId);
+    };
+    setLocalOffices([newOffice, ...localOffices]);
+    setEditingId(tempId);
   };
+
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -86,6 +86,7 @@ export default function OfficesRepeater() {
         
         <Button 
           onClick={handleAdd}
+          disabled={isSaving || isDeleting}
           className="rounded-xl px-6 h-11 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95"
         >
           <Plus className="w-5 h-5 mr-2" />
@@ -94,7 +95,7 @@ export default function OfficesRepeater() {
       </div>
 
       <div className="space-y-6">
-        {offices.map((office) => (
+        {localOffices.map((office) => (
           <div 
             key={office.id} 
             className={`p-6 rounded-[32px] border transition-all duration-500 ${
@@ -127,16 +128,20 @@ export default function OfficesRepeater() {
                 </div>
                 <div className="flex justify-end gap-3 pt-2">
                   <Button type="button" variant="ghost" onClick={() => {
-                    if (!office.title_ar && !office.title_en) {
-                      setOffices(offices.filter(o => o.id !== office.id));
+                    if (typeof office.id === "string") {
+                      setLocalOffices(localOffices.filter(o => o.id !== office.id));
                     }
                     setEditingId(null);
                   }} className="h-11 px-6 rounded-xl font-bold text-gray-500">
                     <X className="w-4 h-4 mr-2" />
                     {t("cancel")}
                   </Button>
-                  <Button type="submit" className="h-11 px-8 rounded-xl font-bold">
-                    <Check className="w-4 h-4 mr-2" />
+                  <Button type="submit" disabled={isSaving} className="h-11 px-8 rounded-xl font-bold">
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4 mr-2" />
+                    )}
                     {t("save")}
                   </Button>
                 </div>
@@ -144,7 +149,7 @@ export default function OfficesRepeater() {
             ) : (
               <div className="flex items-start gap-6">
                 <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center text-3xl border border-primary/10 shadow-inner group-hover:scale-110 transition-transform duration-500">
-                  {office.flag || <MapPin className="w-8 h-8 text-primary/40" />}
+                  <MapPin className="w-8 h-8 text-primary/40" />
                 </div>
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2 border-r pr-8">
@@ -170,6 +175,7 @@ export default function OfficesRepeater() {
                   <Button 
                     variant="ghost" 
                     size="icon" 
+                    disabled={isSaving || isDeleting}
                     className="w-10 h-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 border border-transparent hover:border-primary/10 transition-all"
                     onClick={() => setEditingId(office.id)}
                   >
@@ -178,6 +184,7 @@ export default function OfficesRepeater() {
                   <Button 
                     variant="ghost" 
                     size="icon" 
+                    disabled={isSaving || isDeleting}
                     className="w-10 h-10 rounded-xl text-muted-foreground hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all"
                     onClick={() => handleDelete(office.id)}
                   >

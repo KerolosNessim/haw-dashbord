@@ -12,7 +12,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { useCountries } from "@/features/countries/hooks/useCountries";
+import { useAdminCountries } from "@/features/countries/hooks/useCountries";
 import RichTextEditor from "@/features/shared/components/editor";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -72,9 +72,11 @@ interface BasicInfoFormProps {
 }
 
 export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
-  const { t } = useTranslation("translation", { keyPrefix: "services.form" });
-  const { data } = useCountries();
+  const { t, i18n } = useTranslation("translation", { keyPrefix: "services.form" });
+  const { data } = useAdminCountries();
+  console.log("data", data);
   const countries = data?.data ?? [];
+  console.log("countries", countries);  
   const { basicFormMutation, isPending } = useBasicForm();
 
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -202,9 +204,10 @@ export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
                         const country = countries.find(
                           (c) => String(c.id) === val,
                         );
+                        const countryName = country ? (i18n.language === "ar" ? country.name.ar : country.name.en) : val;
                         return (
                           <ComboboxChip key={val} value={val}>
-                            {country?.name || val}
+                            {countryName}
                           </ComboboxChip>
                         );
                       })}
@@ -222,7 +225,7 @@ export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
                           key={country.id}
                           value={String(country.id)}
                         >
-                          {country.name}
+                          {i18n.language === "ar" ? country.name.ar : country.name.en}
                         </ComboboxItem>
                       ))}
                     </ComboboxList>

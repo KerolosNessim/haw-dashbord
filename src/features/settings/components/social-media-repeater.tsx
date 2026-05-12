@@ -11,117 +11,122 @@ import { Switch } from "@/components/ui/switch";
 import {
   Pencil,
   Plus,
-  Trash2
+  Trash2,
+  Loader2,
+  Globe,
 } from "lucide-react";
 import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube, FaTwitter } from "react-icons/fa";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useSettings, useSaveSocial, useDeleteSocial } from "../hooks/useSettings";
+import { toast } from "sonner";
+import type { SocialMedia } from "../types";
 
-interface SocialPlatform {
-  id: string;
-  name: string;
-  link: string;
-  isActive: boolean;
-  icon: any;
-  color: string;
-}
+const getPlatformIcon = (platform: string) => {
+  const p = platform.toLowerCase();
+  if (p.includes("facebook")) return FaFacebook;
+  if (p.includes("instagram")) return FaInstagram;
+  if (p.includes("linkedin")) return FaLinkedin;
+  if (p.includes("youtube")) return FaYoutube;
+  if (p.includes("twitter") || p === "x") return FaTwitter;
+  return Globe;
+};
+
+const getPlatformColor = (platform: string) => {
+  const p = platform.toLowerCase();
+  if (p.includes("facebook")) return "text-blue-600 bg-blue-50";
+  if (p.includes("instagram")) return "text-pink-600 bg-pink-50";
+  if (p.includes("linkedin")) return "text-blue-700 bg-blue-50";
+  if (p.includes("youtube")) return "text-red-600 bg-red-50";
+  if (p.includes("twitter") || p === "x") return "text-black bg-gray-50";
+  return "text-primary bg-primary/5";
+};
 
 export default function SocialMediaRepeater() {
   const { t } = useTranslation("translation", { keyPrefix: "settings.social" });
   const { t: commonT } = useTranslation("translation");
 
-  const [platforms, setPlatforms] = useState<SocialPlatform[]>([
-    {
-      id: "1",
-      name: "فيسبوك",
-      link: "https://facebook.com/yourpage",
-      isActive: true,
-      icon: FaFacebook,
-      color: "text-blue-600 bg-blue-50",
-    },
-    {
-      id: "2",
-      name: "انستقرام",
-      link: "https://instagram.com/yourpage",
-      isActive: true,
-      icon: FaInstagram,
-      color: "text-pink-600 bg-pink-50",
-    },
-    {
-      id: "3",
-      name: "لينكدان",
-      link: "https://linkedin.com/company/yourpage",
-      isActive: true,
-      icon: FaLinkedin,
-      color: "text-blue-700 bg-blue-50",
-    },
-    {
-      id: "4",
-      name: "يوتيوب",
-      link: "https://youtube.com/@yourpage",
-      isActive: true,
-      icon: FaYoutube,
-      color: "text-red-600 bg-red-50",
-    },
-    {
-      id: "5",
-      name: "(تويتر) X",
-      link: "https://x.com/yourpage",
-      isActive: false,
-      icon: FaTwitter,
-      color: "text-black bg-gray-50",
-    },
-  ]);
+  const { data: settingsData, isLoading } = useSettings();
+  const { mutateAsync: saveSocial, isPending: isSaving } = useSaveSocial();
+  const { mutateAsync: deleteSocial, isPending: isDeleting } = useDeleteSocial();
 
+  const [platforms, setPlatforms] = useState<SocialMedia[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [editingPlatform, setEditingPlatform] = useState<SocialPlatform | null>(null);
+  const [editingPlatform, setEditingPlatform] = useState<SocialMedia | null>(null);
 
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (settingsData?.data?.social_media) {
+      setPlatforms(settingsData.data.social_media);
+    }
+  }, [settingsData]);
+
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const data = {
-      name: formData.get("name") as string,
+    const data: Partial<SocialMedia> = {
+      platform: formData.get("platform") as string,
       link: formData.get("link") as string,
+      is_active: editingPlatform ? editingPlatform.is_active : true,
     };
 
     if (editingPlatform) {
-      setPlatforms(platforms.map(p => p.id === editingPlatform.id ? { ...p, ...data } : p));
-    } else {
-      setPlatforms([...platforms, { 
-        id: Date.now().toString(), 
-        ...data, 
-        isActive: true, 
-        icon: GlobeIcon, 
-        color: "text-primary bg-primary/5" 
-      }]);
+      data.id = editingPlatform.id;
     }
-    
-    setIsOpen(false);
-    setEditingPlatform(null);
+
+    try {
+      await saveSocial(data);
+      toast.success(commonT("success_message") || "Saved successfully");
+      setIsOpen(false);
+      setEditingPlatform(null);
+    } catch (error) {
+      toast.error(commonT("error_message") || "Something went wrong");
+    }
   };
+
+  const handleToggle = async (platform: SocialMedia, active: boolean) => {
+    try {
+      await saveSocial({ ...platform, is_active: active });
+      toast.success(commonT("success_message") || "Status updated");
+    } catch (error) {
+      toast.error(commonT("error_message") || "Something went wrong");
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteSocial(id);
+      toast.success(commonT("success_message") || "Deleted successfully");
+    } catch (error) {
+      toast.error(commonT("error_message") || "Something went wrong");
+    }
+  };
+
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex items-center justify-between border-b pb-4">
         <h2 className="text-xl font-bold text-gray-900">{t("title")}</h2>
         
+        <Button 
+          onClick={() => { setEditingPlatform(null); setIsOpen(true); }}
+          disabled={isSaving || isDeleting}
+          className="rounded-xl px-6 h-11 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          {t("add_button")}
+        </Button>
+
         <Dialog open={isOpen} onOpenChange={(val) => { setIsOpen(val); if(!val) setEditingPlatform(null); }}>
-          <DialogTrigger asChild>
-            <Button className="rounded-xl px-6 h-11 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95">
-              <Plus className="w-5 h-5 mr-2" />
-              {t("add_button")}
-            </Button>
-          </DialogTrigger>
           <DialogContent className="rounded-[32px] max-w-xl p-8">
             <DialogHeader className="mb-6">
               <DialogTitle className="text-2xl font-black">{editingPlatform ? t("edit") : t("add_button")}</DialogTitle>
@@ -129,14 +134,16 @@ export default function SocialMediaRepeater() {
             <form onSubmit={handleSave} className="space-y-6">
               <Field>
                 <FieldLabel>{t("platform")}</FieldLabel>
-                <Input name="name" defaultValue={editingPlatform?.name} className="h-12 rounded-xl bg-muted/5 border-border/40 focus:bg-white" required />
+                <Input name="platform" defaultValue={editingPlatform?.platform} className="h-12 rounded-xl bg-muted/5 border-border/40 focus:bg-white" required />
               </Field>
               <Field>
                 <FieldLabel>{t("link")}</FieldLabel>
                 <Input name="link" defaultValue={editingPlatform?.link} className="h-12 rounded-xl bg-muted/5 border-border/40 focus:bg-white" required dir="ltr" />
               </Field>
               <div className="flex gap-3 pt-4">
-                <Button type="submit" className="flex-1 h-12 rounded-xl font-bold">{t("save")}</Button>
+                <Button type="submit" disabled={isSaving} className="flex-1 h-12 rounded-xl font-bold">
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("save")}
+                </Button>
                 <Button type="button" variant="outline" className="flex-1 h-12 rounded-xl font-bold" onClick={() => setIsOpen(false)}>{t("cancel")}</Button>
               </div>
             </form>
@@ -155,59 +162,59 @@ export default function SocialMediaRepeater() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {platforms.map((p) => (
-              <TableRow key={p.id} className="group border-border/40 transition-colors hover:bg-muted/5">
-                <TableCell className="py-5 px-6">
-                  <div className="flex items-center gap-3">
-                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110", p.color)}>
-                      <p.icon className="w-5 h-5" />
+            {platforms.map((p) => {
+              const Icon = getPlatformIcon(p.platform);
+              return (
+                <TableRow key={p.id} className="group border-border/40 transition-colors hover:bg-muted/5">
+                  <TableCell className="py-5 px-6">
+                    <div className="flex items-center gap-3">
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110", getPlatformColor(p.platform))}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="font-bold text-gray-900">{p.platform}</span>
                     </div>
-                    <span className="font-bold text-gray-900">{p.name}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-start">
-                  <span className="text-muted-foreground font-medium underline underline-offset-4 decoration-primary/20 hover:text-primary transition-colors cursor-pointer dir-ltr inline-block">
-                    {p.link}
-                  </span>
-                </TableCell>
-                <TableCell className="text-center">
-                  <Switch 
-                    dir="ltr" 
-                    checked={p.isActive} 
-                    onCheckedChange={(val) => {
-                      setPlatforms(platforms.map(plat => plat.id === p.id ? { ...plat, isActive: val } : plat));
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="py-5 px-6">
-                  <div className="flex items-center justify-center gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="w-10 h-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all"
-                      onClick={() => {
-                        setEditingPlatform(p);
-                        setIsOpen(true);
-                      }}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="w-10 h-10 rounded-xl text-muted-foreground hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all"
-                      onClick={() => {
-                         if(confirm(commonT("settings.offices.delete_confirm"))) {
-                            setPlatforms(platforms.filter(plat => plat.id !== p.id));
-                         }
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell className="text-start">
+                    <span className="text-muted-foreground font-medium underline underline-offset-4 decoration-primary/20 hover:text-primary transition-colors cursor-pointer dir-ltr inline-block">
+                      {p.link}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Switch 
+                      dir="ltr" 
+                      checked={p.is_active} 
+                      onCheckedChange={(val) => handleToggle(p, val)}
+                      disabled={isSaving}
+                    />
+                  </TableCell>
+                  <TableCell className="py-5 px-6">
+                    <div className="flex items-center justify-center gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        disabled={isSaving || isDeleting}
+                        className="w-10 h-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all"
+                        onClick={() => {
+                          setEditingPlatform(p);
+                          setIsOpen(true);
+                        }}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        disabled={isSaving || isDeleting}
+                        className="w-10 h-10 rounded-xl text-muted-foreground hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all"
+                        onClick={() => handleDelete(p.id)}
+                      >
+                        {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
@@ -225,24 +232,3 @@ export default function SocialMediaRepeater() {
     </div>
   );
 }
-
-function GlobeIcon(props: any) {
-   return (
-     <svg
-       {...props}
-       xmlns="http://www.w3.org/2000/svg"
-       width="24"
-       height="24"
-       viewBox="0 0 24 24"
-       fill="none"
-       stroke="currentColor"
-       strokeWidth="2"
-       strokeLinecap="round"
-       strokeLinejoin="round"
-     >
-       <circle cx="12" cy="12" r="10" />
-       <path d="M12 2a14.5 14.5 0 0 0 0 20" />
-       <path d="M2 12h20" />
-     </svg>
-   )
- }

@@ -26,6 +26,7 @@
     "solutions": "Our Solutions",
     "help_you": "How We Help You",
     "services": "Services",
+    "countries": "Countries",
     "settings": "Settings",
     "faq": "FAQ",
     "blogs": "Blogs",
@@ -38,6 +39,29 @@
     "about_us": "About Us",
     "logout": "Log out"
   },
+  "countries": {
+    "title": "Countries",
+    "description": "Manage countries and their status in the system.",
+    "add_button": "Add Country",
+    "edit_country": "Edit Country",
+    "delete_confirm": "Are you sure you want to delete this country?",
+    "table": {
+      "name_ar": "Name (AR)",
+      "name_en": "Name (EN)",
+      "image": "Image",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "form": {
+      "name_ar": "Name in Arabic",
+      "name_en": "Name in English",
+      "image": "Country Image",
+      "is_active": "Active",
+      "save": "Save Country",
+      "upload_image": "Upload Image"
+    }
+  },
+
   "services":{
     "title": "Services",
     "add_service": "Add Service",
@@ -688,6 +712,12 @@
       "title": "Contact Information",
       "phones": "Mobile Numbers",
       "add_phone": "Add Mobile Number",
+      "phones_list": "Contact Numbers List",
+      "label": "Phone Label",
+      "number": "Phone Number",
+      "type": "Communication Type",
+      "phone_type": "Phone",
+      "whatsapp_type": "WhatsApp",
       "phone": "Mobile Number",
       "email": "Email Address",
       "save_changes": "Save Changes"

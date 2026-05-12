@@ -7,97 +7,36 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pencil, Save, X, Check, Search, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Pencil, Save, X, Check, Search, Plus, Trash2, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
-interface SeoPage {
-  id: string;
-  name_ar: string;
-  name_en: string;
-  metaTitle_ar: string;
-  metaTitle_en: string;
-  description_ar: string;
-  description_en: string;
-}
+import { useSettings, useSaveSeo, useDeleteSeo } from "../hooks/useSettings";
+import { toast } from "sonner";
+import type { SeoSettings } from "../types";
 
 export default function SeoSettingsRepeater() {
   const { t } = useTranslation("translation", { keyPrefix: "settings.seo" });
+  const { t: commonT } = useTranslation("translation");
 
-  const [pages, setPages] = useState<SeoPage[]>([
-    {
-      id: "home",
-      name_ar: "الرئيسية",
-      name_en: "Home",
-      metaTitle_ar: "الصفحة الرئيسية | حلول احترافية",
-      metaTitle_en: "Home | Professional Solutions",
-      description_ar: "حلول احترافية وخدمات متميزة",
-      description_en: "Professional solutions and outstanding services",
-    },
-    {
-      id: "about",
-      name_ar: "من نحن",
-      name_en: "About Us",
-      metaTitle_ar: "من نحن | رؤيتنا ورسالتنا",
-      metaTitle_en: "About Us | Our Vision & Mission",
-      description_ar: "تعرف على رؤيتنا ورسالتنا وفريقنا",
-      description_en: "Get to know our vision, mission, and team",
-    },
-    {
-      id: "portfolio",
-      name_ar: "نماذج العملاء",
-      name_en: "Portfolio",
-      metaTitle_ar: "نماذج العملاء | نجاحات حقيقية",
-      metaTitle_en: "Portfolio | Real Successes",
-      description_ar: "اكتشف نماذج من أعمالنا الناجحة",
-      description_en: "Discover some of our successful works",
-    },
-    {
-      id: "blog",
-      name_ar: "المدونة",
-      name_en: "Blog",
-      metaTitle_ar: "المدونة | مقالات وأخبار",
-      metaTitle_en: "Blog | Articles & News",
-      description_ar: "أحدث المقالات والأخبار في مجالنا",
-      description_en: "Latest articles and news in our field",
-    },
-    {
-      id: "courses",
-      name_ar: "الدورات",
-      name_en: "Courses",
-      metaTitle_ar: "الدورات | طور مهاراتك",
-      metaTitle_en: "Courses | Develop Your Skills",
-      description_ar: "تصفح على دوراتنا وطور مهاراتك",
-      description_en: "Browse our courses and develop your skills",
-    },
-    {
-      id: "faq",
-      name_ar: "الأسئلة الشائعة",
-      name_en: "FAQ",
-      metaTitle_ar: "الأسئلة الشائعة | إجابات سريعة",
-      metaTitle_en: "FAQ | Quick Answers",
-      description_ar: "إجابات على أكثر الأسئلة شيوعاً",
-      description_en: "Answers to the most common questions",
-    },
-    {
-      id: "contact",
-      name_ar: "اتصل بنا",
-      name_en: "Contact Us",
-      metaTitle_ar: "اتصل بنا | تواصل معنا",
-      metaTitle_en: "Contact Us | Get in Touch",
-      description_ar: "تواصل معنا وسنرد عليك في أقرب وقت",
-      description_en: "Contact us and we will respond as soon as possible",
-    },
-  ]);
+  const { data: settingsData, isLoading } = useSettings();
+  const { mutateAsync: saveSeo, isPending: isSaving } = useSaveSeo();
+  const { mutateAsync: deleteSeo, isPending: isDeleting } = useDeleteSeo();
 
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [pages, setPages] = useState<SeoSettings[]>([]);
+  const [editingId, setEditingId] = useState<number | string | null>(null);
 
-  const handleSave = (id: string, e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (settingsData?.data?.seo) {
+      setPages(settingsData.data.seo);
+    }
+  }, [settingsData]);
+
+  const handleSave = async (id: number | string, e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const data = {
+    const data: Partial<SeoSettings> = {
       name_ar: formData.get("name_ar") as string,
       name_en: formData.get("name_en") as string,
       metaTitle_ar: formData.get("metaTitle_ar") as string,
@@ -106,28 +45,49 @@ export default function SeoSettingsRepeater() {
       description_en: formData.get("description_en") as string,
     };
 
-    setPages(pages.map(p => p.id === id ? { ...p, ...data } : p));
-    setEditingId(null);
+    if (typeof id === "number") {
+      data.id = id;
+    }
+
+    try {
+      await saveSeo(data);
+      toast.success(commonT("success_message") || "Saved successfully");
+      setEditingId(null);
+    } catch (error) {
+      toast.error(commonT("error_message") || "Something went wrong");
+    }
   };
 
-  const handleDelete = (id: string) => {
-
+  const handleDelete = async (id: number | string) => {
+    if (typeof id === "string") {
       setPages(pages.filter(p => p.id !== id));
+      return;
+    }
+
+    try {
+      await deleteSeo(id);
+      toast.success(commonT("success_message") || "Deleted successfully");
+    } catch (error) {
+      toast.error(commonT("error_message") || "Something went wrong");
+    }
   };
 
   const handleAdd = () => {
-    const newId = Date.now().toString();
-    setPages([{
-      id: newId,
+    const tempId = `temp-${Date.now()}`;
+    const newPage: any = {
+      id: tempId,
       name_ar: "",
       name_en: "",
       metaTitle_ar: "",
       metaTitle_en: "",
       description_ar: "",
       description_en: "",
-    }, ...pages]);
-    setEditingId(newId);
+    };
+    setPages([newPage, ...pages]);
+    setEditingId(tempId);
   };
+
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -135,6 +95,7 @@ export default function SeoSettingsRepeater() {
         <h2 className="text-xl font-bold text-gray-900">{t("title")}</h2>
         <Button 
           onClick={handleAdd}
+          disabled={isSaving || isDeleting}
           className="rounded-xl px-6 h-11 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95"
         >
           <Plus className="w-5 h-5 mr-2" />
@@ -214,7 +175,7 @@ export default function SeoSettingsRepeater() {
                       </div>
                       <div className="flex justify-end gap-3 pt-4 border-t">
                         <Button type="button" variant="ghost" onClick={() => {
-                          if (!p.name_ar && !p.name_en) {
+                          if (typeof p.id === "string") {
                             setPages(pages.filter(page => page.id !== p.id));
                           }
                           setEditingId(null);
@@ -222,8 +183,8 @@ export default function SeoSettingsRepeater() {
                           <X className="w-4 h-4 mr-2" />
                           {t("cancel")}
                         </Button>
-                        <Button type="submit" className="h-11 px-8 rounded-xl font-bold shadow-lg shadow-primary/20">
-                          <Check className="w-4 h-4 mr-2" />
+                        <Button type="submit" disabled={isSaving} className="h-11 px-8 rounded-xl font-bold shadow-lg shadow-primary/20">
+                          {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
                           {t("save")}
                         </Button>
                       </div>
@@ -290,6 +251,7 @@ export default function SeoSettingsRepeater() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          disabled={isSaving || isDeleting}
                           className="w-11 h-11 rounded-2xl text-muted-foreground hover:text-primary hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all shadow-sm bg-white"
                           onClick={() => setEditingId(p.id)}
                         >
@@ -298,10 +260,11 @@ export default function SeoSettingsRepeater() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          disabled={isSaving || isDeleting}
                           className="w-11 h-11 rounded-2xl text-muted-foreground hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all shadow-sm bg-white"
                           onClick={() => handleDelete(p.id)}
                         >
-                          <Trash2 className="w-5 h-5" />
+                          {isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
                         </Button>
                       </div>
                     </TableCell>
@@ -312,16 +275,7 @@ export default function SeoSettingsRepeater() {
           </TableBody>
         </Table>
       </div>
-
-      <div className="flex justify-start pt-6 border-t mt-12">
-        <Button
-          size="lg"
-          className="rounded-xl px-12 h-12 font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
-        >
-          <Save className="w-5 h-5 mr-2" />
-          {t("save")}
-        </Button>
-      </div>
     </div>
   );
 }
+
