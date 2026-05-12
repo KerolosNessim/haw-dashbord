@@ -1,24 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Save, Image as ImageIcon, Globe, Clock, Languages } from "lucide-react";
+import { Globe, Image as ImageIcon, Save } from "lucide-react";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
-import { useState } from "react";
 
 const generalSchema = z.object({
-  site_name: z.string().min(1, { message: "validation.required" }),
-  timezone: z.string().min(1, { message: "validation.required" }),
-  default_language: z.string().min(1, { message: "validation.required" }),
+  site_name_ar: z.string().min(1, { message: "validation.required" }),
+  site_name_en: z.string().min(1, { message: "validation.required" }),
+  site_description_ar: z.string().min(1, { message: "validation.required" }),
+  site_description_en: z.string().min(1, { message: "validation.required" }),
 });
 
 type GeneralFormValues = z.infer<typeof generalSchema>;
@@ -36,9 +31,10 @@ export default function GeneralSettingsForm() {
   } = useForm<GeneralFormValues>({
     resolver: zodResolver(generalSchema),
     defaultValues: {
-      site_name: "Howeyah",
-      timezone: "Asia/Riyadh",
-      default_language: "ar",
+      site_name_ar: "هوية",
+      site_name_en: "Howeyah",
+      site_description_ar: "",
+      site_description_en: ""
     },
   });
 
@@ -53,18 +49,57 @@ export default function GeneralSettingsForm() {
             <h2 className="text-xl font-bold text-gray-900">{t("title")}</h2>
          </div>
 
-         {/* Site Name */}
-         <Controller
-            name="site_name"
-            control={control}
-            render={({ field }) => (
-               <Field >
-                  <FieldLabel className="text-gray-600 font-bold mb-2">{t("site_name")}</FieldLabel>
-                  <Input {...field} className="h-12 rounded-xl bg-muted/10 border-border/40 focus:bg-white transition-all" />
-                  <FieldError errors={[{ message: errors.site_name?.message ? commonT(errors.site_name.message) : undefined }]} />
-               </Field>
-            )}
-         />
+         {/* Site Names */}
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Controller
+               name="site_name_ar"
+               control={control}
+               render={({ field }) => (
+                  <Field >
+                     <FieldLabel className="text-gray-600 font-bold mb-2">{t("site_name_ar")}</FieldLabel>
+                     <Input {...field} className="h-12 rounded-xl bg-muted/10 border-border/40 focus:bg-white transition-all" />
+                     <FieldError errors={[{ message: errors.site_name_ar?.message ? commonT(errors.site_name_ar.message) : undefined }]} />
+                  </Field>
+               )}
+            />
+            <Controller
+               name="site_name_en"
+               control={control}
+               render={({ field }) => (
+                  <Field >
+                     <FieldLabel className="text-gray-600 font-bold mb-2">{t("site_name_en")}</FieldLabel>
+                     <Input {...field} className="h-12 rounded-xl bg-muted/10 border-border/40 focus:bg-white transition-all" />
+                     <FieldError errors={[{ message: errors.site_name_en?.message ? commonT(errors.site_name_en.message) : undefined }]} />
+                  </Field>
+               )}
+            />
+         </div>
+
+         {/* Site Descriptions */}
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Controller
+               name="site_description_ar"
+               control={control}
+               render={({ field }) => (
+                  <Field >
+                     <FieldLabel className="text-gray-600 font-bold mb-2">{t("site_description_ar")}</FieldLabel>
+                     <Textarea {...field} className="min-h-[120px] rounded-xl bg-muted/10 border-border/40 focus:bg-white transition-all resize-none" />
+                     <FieldError errors={[{ message: errors.site_description_ar?.message ? commonT(errors.site_description_ar.message) : undefined }]} />
+                  </Field>
+               )}
+            />
+            <Controller
+               name="site_description_en"
+               control={control}
+               render={({ field }) => (
+                  <Field >
+                     <FieldLabel className="text-gray-600 font-bold mb-2">{t("site_description_en")}</FieldLabel>
+                     <Textarea {...field} className="min-h-[120px] rounded-xl bg-muted/10 border-border/40 focus:bg-white transition-all resize-none" />
+                     <FieldError errors={[{ message: errors.site_description_en?.message ? commonT(errors.site_description_en.message) : undefined }]} />
+                  </Field>
+               )}
+            />
+         </div>
 
          {/* Logo Selection */}
          <div className="grid grid-cols-1 md:grid-cols-2 gap-12  py-4 border-t border-dashed">
@@ -139,51 +174,7 @@ export default function GeneralSettingsForm() {
             </div>
          </div>
 
-         {/* Timezone & Language */}
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-8  pt-8 border-t">
-            <Controller
-               name="timezone"
-               control={control}
-               render={({ field }) => (
-                  <Field>
-                     <FieldLabel className="text-gray-600 font-bold mb-2 flex items-center gap-2">
-                        <Clock className="w-4 h-4" /> {t("timezone")}
-                     </FieldLabel>
-                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <SelectTrigger className="h-12 rounded-xl bg-muted/10 border-border/40">
-                           <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                           <SelectItem value="Asia/Riyadh">الرياض (GMT+03:00)</SelectItem>
-                           <SelectItem value="Asia/Dubai">دبي (GMT+04:00)</SelectItem>
-                           <SelectItem value="UTC">UTC</SelectItem>
-                        </SelectContent>
-                     </Select>
-                  </Field>
-               )}
-            />
 
-            <Controller
-               name="default_language"
-               control={control}
-               render={({ field }) => (
-                  <Field>
-                     <FieldLabel className="text-gray-600 font-bold mb-2 flex items-center gap-2">
-                        <Languages className="w-4 h-4" /> {t("default_language")}
-                     </FieldLabel>
-                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <SelectTrigger className="h-12 rounded-xl bg-muted/10 border-border/40">
-                           <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                           <SelectItem value="ar">العربية</SelectItem>
-                           <SelectItem value="en">English</SelectItem>
-                        </SelectContent>
-                     </Select>
-                  </Field>
-               )}
-            />
-         </div>
       </div>
 
       <div className="flex justify-start pt-6">

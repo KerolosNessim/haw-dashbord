@@ -2,16 +2,14 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Save, Clock } from "lucide-react";
+import { Clock, Save } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
@@ -21,14 +19,12 @@ const workingHoursSchema = z.object({
   to_day: z.string().min(1, { message: "validation.required" }),
   from_hour: z.string().min(1, { message: "validation.required" }),
   to_hour: z.string().min(1, { message: "validation.required" }),
-  show_on_site: z.boolean().default(true),
 });
 
 type WorkingHoursFormValues = z.infer<typeof workingHoursSchema>;
 
 export default function WorkingHoursForm() {
   const { t } = useTranslation("translation", { keyPrefix: "settings.working_hours" });
-  const { t: commonT } = useTranslation("translation");
 
   const {
     control,
@@ -40,7 +36,6 @@ export default function WorkingHoursForm() {
       to_day: "thursday",
       from_hour: "10:00 AM",
       to_hour: "06:00 PM",
-      show_on_site: true,
     },
   });
 
@@ -131,24 +126,7 @@ export default function WorkingHoursForm() {
             />
          </div>
 
-         {/* Toggle */}
-         <Controller
-            name="show_on_site"
-            control={control}
-            render={({ field }) => (
-               <div className="flex items-center justify-between p-6 rounded-2xl bg-muted/5 border border-border/40 max-w-4xl hover:bg-white transition-all group">
-                  <Label className="font-bold text-gray-700 cursor-pointer text-lg" htmlFor="show_on_site">
-                     {t("show_on_site")}
-                  </Label>
-                  <Switch 
-                    id="show_on_site" 
-                    dir="ltr"
-                    checked={field.value} 
-                    onCheckedChange={field.onChange} 
-                  />
-               </div>
-            )}
-         />
+
       </div>
 
       <div className="flex justify-start pt-6 border-t mt-12">
