@@ -1,6 +1,7 @@
 import { TypeToConfirmDeleteAlertDialog } from "@/components/type-to-confirm-delete-alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LaravelResourcePagination } from "@/components/ui/laravel-resource-pagination";
 import {
   Table,
   TableBody,
@@ -10,9 +11,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useDeletePackageCategory } from "@/features/package-categories/hooks/useDeletePackageCategory";
-import { usePackageCategories } from "@/features/package-categories/hooks/usePackageCategories";
+import { usePackageCategoriesPaged } from "@/features/package-categories/hooks/usePackageCategoriesPaged";
+import type { LaravelPaginationMeta } from "@/lib/laravel-pagination";
 import { Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -20,10 +22,32 @@ export default function PackageCategoriesTable() {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "package_categories" });
   const { t: tbl } = useTranslation("translation", { keyPrefix: "package_categories.table" });
   const { t: apiT } = useTranslation("translation", { keyPrefix: "package_categories.api" });
-  const { data: rows = [], isLoading, isError, error } = usePackageCategories();
+  const [page, setPage] = useState(1);
+  const { rows, meta, isLoading, isFetching, isError, error } = usePackageCategoriesPaged({ page });
   const { deleteMutation, isPending: isDeleting } = useDeletePackageCategory();
   const [singleDeleteId, setSingleDeleteId] = useState<string | null>(null);
   const isAr = i18n.language.startsWith("ar");
+
+  useEffect(() => {
+    if (meta.lastPage > 0 && page > meta.lastPage) {
+      setPage(meta.lastPage);
+    }
+  }, [meta.lastPage, page]);
+
+  const serverTotal = meta.total;
+  const perPage = meta.perPage > 0 ? meta.perPage : Math.max(rows.length, 1);
+  const rangeStart = serverTotal === 0 ? 0 : (meta.currentPage - 1) * perPage + 1;
+  const rangeEnd =
+    serverTotal === 0 ? 0 : Math.min(rangeStart + rows.length - 1, serverTotal);
+  const paginationMeta: LaravelPaginationMeta = {
+    current_page: meta.currentPage || 1,
+    last_page: meta.lastPage || 1,
+    per_page: perPage,
+    total: serverTotal,
+    from: rangeStart || null,
+    to: rangeEnd || null,
+    path: "",
+  };
 
   const label = (titleAr: string, titleEn: string) => (isAr ? titleAr || titleEn : titleEn || titleAr);
 
@@ -49,17 +73,16 @@ export default function PackageCategoriesTable() {
           <TableRow className="border-none hover:bg-transparent">
             <TableHead className="py-6 ps-8 font-bold">{tbl("name")}</TableHead>
             <TableHead className="font-bold">{tbl("slug")}</TableHead>
-            <TableHead className="text-center font-bold">{tbl("sort")}</TableHead>
-            <TableHead className="text-center font-bold">{tbl("active")}</TableHead>
-            <TableHead className="text-center font-bold">{tbl("default")}</TableHead>
-            <TableHead className="w-[180px] py-6 pe-8 text-center font-bold">{tbl("actions")}</TableHead>
+            <TableHead className="font-bold">{tbl("sort")}</TableHead>
+            <TableHead className="font-bold">{tbl("active")}</TableHead>
+            <TableHead className="w-[180px] py-6 pe-8 font-bold">{tbl("actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading &&
             Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={`s-${i}`}>
-                {[...Array(6)].map((__, j) => (
+                {[...Array(5)].map((__, j) => (
                   <TableCell key={j}>
                     <div className="h-8 animate-pulse rounded-lg bg-muted/40" />
                   </TableCell>
@@ -72,8 +95,8 @@ export default function PackageCategoriesTable() {
               <TableRow key={row.id} className="border-border/40">
                 <TableCell className="py-6 ps-8 font-bold text-gray-900">{label(row.titleAr, row.titleEn)}</TableCell>
                 <TableCell className="font-mono text-sm text-muted-foreground">{row.slug || "—"}</TableCell>
-                <TableCell className="text-center">{row.sort_order}</TableCell>
-                <TableCell className="text-center">
+                <TableCell>{row.sort_order}</TableCell>
+                <TableCell>
                   <Badge
                     variant="secondary"
                     className={
@@ -85,13 +108,8 @@ export default function PackageCategoriesTable() {
                     {row.is_active ? tbl("yes") : tbl("no")}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-center">
-                  <Badge variant={row.is_default ? "default" : "outline"} className="font-bold">
-                    {row.is_default ? tbl("yes") : tbl("no")}
-                  </Badge>
-                </TableCell>
                 <TableCell className="py-6 pe-8">
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-start gap-2">
                     <Button variant="ghost" size="icon" className="rounded-xl" asChild>
                       <Link to={`/package-categories/edit/${row.id}`}>
                         <Pencil className="h-4 w-4" />
@@ -113,13 +131,34 @@ export default function PackageCategoriesTable() {
 
           {!isLoading && rows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="py-16 text-center text-muted-foreground">
+              <TableCell colSpan={5} className="py-16 text-start text-muted-foreground">
                 {tbl("empty")}
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
+
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-t border-border/40 bg-muted/10 p-6">
+        <p className="order-2 text-sm text-muted-foreground md:order-1">
+          {t("showing_info", {
+            start: rangeStart,
+            end: rangeEnd,
+            total: serverTotal,
+          })}
+        </p>
+        <div className="order-1 md:order-2">
+          <LaravelResourcePagination
+            meta={paginationMeta}
+            onPageChange={setPage}
+            disabled={isLoading || isFetching}
+            isRtl={isAr}
+            showSummary={false}
+            previousLabel=""
+            nextLabel=""
+          />
+        </div>
+      </div>
 
       <TypeToConfirmDeleteAlertDialog
         open={singleDeleteId !== null}

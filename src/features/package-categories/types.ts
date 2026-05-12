@@ -2,13 +2,9 @@ export type LocalizedString = { ar: string; en: string };
 
 export type PackageCategoryFormValues = {
   title: LocalizedString;
-  slug: string;
+  slug: LocalizedString;
   sort_order: number;
   is_active: boolean;
-  is_default: boolean;
-  meta_title: LocalizedString;
-  meta_description: LocalizedString;
-  meta_keywords: LocalizedString;
 };
 
 export type PackageCategoryRow = {
@@ -18,5 +14,4 @@ export type PackageCategoryRow = {
   slug: string;
   sort_order: number;
   is_active: boolean;
-  is_default: boolean;
 };

@@ -20,11 +20,11 @@ export function useDeletePackage() {
       void queryClient.invalidateQueries({ queryKey: PACKAGES_QUERY_KEY });
     },
     onError: (error: Error | AxiosError<unknown>) => {
-      const msg =
+      const fromAxios =
         axios.isAxiosError(error) && error.response
           ? axiosResponseErrorSummary(error.response?.data)
-          : error.message;
-      toast.error(msg || t("delete_error"));
+          : undefined;
+      toast.error(fromAxios?.trim() || t("delete_error"));
     },
   });
 

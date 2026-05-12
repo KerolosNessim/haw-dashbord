@@ -1,11 +1,23 @@
+/**
+ * Admin courses & course-sections — aligned with the live Laravel API:
+ * - Course create: `POST /v1/admin/courses` multipart (`title[ar|en]`, `slug[ar|en]`, `price`, `is_active`, …).
+ * - Course update: `PUT /v1/admin/courses/{id}` JSON (`slug: { ar, en }`) when no new cover; multipart + `_method=PUT` when uploading image (Laravel).
+ * - Section create: `POST /v1/admin/course-sections` multipart (`course_id`, `title[ar|en]`, `sort_order`, …).
+ * - Section update: `PUT /v1/admin/course-sections/{id}` JSON (`title`, `sort_order`, …).
+ *
+ * NOTE: The shipped Postman collection still shows `slug` as a single string, but
+ * the current server rejects that with `حقل slug يجب أن يكون مصفوفة` and requires
+ * `slug[ar]` / `slug[en]` (matching blog-categories).
+ */
 import { api } from "@/lib/api";
-import { pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
+import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
 import type {
   CourseDetailForForm,
   CourseFormValues,
   CourseRow,
   CourseSectionFormValues,
   CourseSectionRow,
+  LocalizedString,
 } from "../types";
 
 function unwrapEntity(payload: unknown): Record<string, unknown> | null {
@@ -126,6 +138,50 @@ function stringField(r: Record<string, unknown>, keys: string[]): string {
   return "";
 }
 
+function readIsActive(r: Record<string, unknown>): boolean {
+  const v = r.is_active ?? r.isActive;
+  if (v === false || v === 0 || v === "0") return false;
+  if (v === true || v === 1 || v === "1") return true;
+  return true;
+}
+
+/** ASCII slug from English title when the user leaves the English slug empty. */
+export function slugifyCourseSlugFromEn(titleEn: string): string {
+  const t = titleEn.trim().toLowerCase();
+  if (!t) return "course";
+  const s = t
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return s || "course";
+}
+
+/** Arabic slug fallback from the Arabic title — keeps Arabic letters + digits. */
+function slugifyCourseSlugFromAr(titleAr: string): string {
+  const t = titleAr.trim().toLowerCase();
+  if (!t) return "course";
+  const s = t
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF-]/gu, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return s || "course";
+}
+
+/**
+ * Resolves the localized slug, generating sensible fallbacks per locale when
+ * either field is left empty so the API never receives an empty `slug[ar]` / `slug[en]`.
+ */
+function resolvedCourseSlug(values: CourseFormValues): LocalizedString {
+  const ar = values.slug.ar.trim();
+  const en = values.slug.en.trim();
+  return {
+    ar: ar || slugifyCourseSlugFromAr(values.title.ar) || slugifyCourseSlugFromEn(values.title.en),
+    en: en || slugifyCourseSlugFromEn(values.title.en),
+  };
+}
+
 export function assetUrlFromApiPath(path: string): string {
   const t = path.trim();
   if (!t) return "";
@@ -160,7 +216,10 @@ function normalizeCourseRecord(raw: unknown): CourseRow | null {
   const r = raw as Record<string, unknown>;
   const id = readId(r);
   if (!id) return null;
-  const slug = stringField(r, ["slug", "url_slug"]);
+  // Server now serialises slug as `{ ar, en }`. Fall back to legacy single-string
+  // `slug` / `url_slug` values so the table keeps rendering during rollouts.
+  const bilingual = pickBilingualSlug(r.slug ?? r.url_slug);
+  const slug = bilingual.en || bilingual.ar || stringField(r, ["slug", "url_slug"]);
   const priceRaw = r.price ?? r.amount;
   let priceLabel =
     priceRaw != null && String(priceRaw).trim() !== ""
@@ -240,6 +299,8 @@ export function recordToCourseFormValues(raw: Record<string, unknown>): CourseDe
         en: pickLocalized(raw.title, "en"),
       },
       description: desc,
+      slug: pickBilingualSlug(raw.slug ?? raw.url_slug),
+      is_active: readIsActive(raw),
       price: raw.price != null ? String(raw.price) : "",
       compare_price: readComparePriceFromRecord(raw),
       currency: stringField(raw, ["currency"]),
@@ -265,8 +326,12 @@ export async function fetchCourseDetailForEdit(id: string): Promise<CourseDetail
 
 export function courseValuesToFormData(values: CourseFormValues, imageFile: File | null): FormData {
   const fd = new FormData();
+  const slug = resolvedCourseSlug(values);
   fd.append("title[ar]", values.title.ar);
   fd.append("title[en]", values.title.en);
+  fd.append("slug[ar]", slug.ar);
+  fd.append("slug[en]", slug.en);
+  fd.append("is_active", values.is_active ? "1" : "0");
   fd.append("description", JSON.stringify(values.description));
   if (values.price.trim()) fd.append("price", values.price.trim());
   if (values.compare_price.trim()) fd.append("compare_at_price", values.compare_price.trim());
@@ -284,6 +349,31 @@ export function courseValuesToFormData(values: CourseFormValues, imageFile: File
   return fd;
 }
 
+function courseUpdateJsonBody(values: CourseFormValues): Record<string, unknown> {
+  const slug = resolvedCourseSlug(values);
+  const body: Record<string, unknown> = {
+    title: values.title,
+    slug,
+    is_active: values.is_active ? 1 : 0,
+    description: values.description,
+  };
+  if (values.price.trim()) body.price = values.price.trim();
+  if (values.compare_price.trim()) body.compare_at_price = values.compare_price.trim();
+  if (values.currency.trim()) body.currency = values.currency.trim();
+
+  const objJson = objectivesPayloadFromForm(values.objectives);
+  if (objJson !== "[]") {
+    try {
+      const parsed = JSON.parse(objJson) as unknown;
+      body.objectives = parsed;
+      body.learning_objectives = parsed;
+    } catch {
+      /* ignore malformed objectives */
+    }
+  }
+  return body;
+}
+
 export async function createCourse(values: CourseFormValues, imageFile: File | null) {
   const fd = courseValuesToFormData(values, imageFile);
   const res = await api.post("/v1/admin/courses", fd, {
@@ -293,11 +383,15 @@ export async function createCourse(values: CourseFormValues, imageFile: File | n
 }
 
 export async function updateCourse(courseId: string, values: CourseFormValues, imageFile: File | null) {
-  const fd = courseValuesToFormData(values, imageFile);
-  fd.append("_method", "PUT");
-  const res = await api.post(`/v1/admin/courses/${courseId}`, fd, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  if (imageFile instanceof File) {
+    const fd = courseValuesToFormData(values, imageFile);
+    fd.append("_method", "PUT");
+    const res = await api.post(`/v1/admin/courses/${courseId}`, fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
+  }
+  const res = await api.put(`/v1/admin/courses/${courseId}`, courseUpdateJsonBody(values));
   return res.data;
 }
 
@@ -341,31 +435,38 @@ export async function fetchCourseSections(courseId: string): Promise<CourseSecti
     .sort((a, b) => a.sort_order - b.sort_order);
 }
 
-export async function createCourseSection(courseIdNum: number, values: CourseSectionFormValues) {
-  const body: Record<string, unknown> = {
-    course_id: courseIdNum,
-    title: values.title,
-    video_url: values.video_url.trim(),
-    is_free: values.is_free ? 1 : 0,
-    sort_order: values.sort_order,
-  };
+function courseSectionFormData(courseIdNum: number, values: CourseSectionFormValues): FormData {
+  const fd = new FormData();
+  fd.append("course_id", String(courseIdNum));
+  fd.append("title[ar]", values.title.ar);
+  fd.append("title[en]", values.title.en);
+  fd.append("sort_order", String(values.sort_order));
+  const v = values.video_url.trim();
+  if (v) fd.append("video_url", v);
   const d = values.duration.trim();
-  if (d) body.duration = d;
+  if (d) fd.append("duration", d);
+  fd.append("is_free", values.is_free ? "1" : "0");
+  return fd;
+}
 
-  const res = await api.post("/v1/admin/course-sections", body);
+export async function createCourseSection(courseIdNum: number, values: CourseSectionFormValues) {
+  const fd = courseSectionFormData(courseIdNum, values);
+  const res = await api.post("/v1/admin/course-sections", fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return res.data;
 }
 
-export async function updateCourseSection(sectionId: string, courseIdNum: number, values: CourseSectionFormValues) {
+export async function updateCourseSection(sectionId: string, _courseIdNum: number, values: CourseSectionFormValues) {
   const body: Record<string, unknown> = {
-    course_id: courseIdNum,
     title: values.title,
-    video_url: values.video_url.trim(),
-    is_free: values.is_free ? 1 : 0,
     sort_order: values.sort_order,
   };
+  const v = values.video_url.trim();
+  if (v) body.video_url = v;
   const d = values.duration.trim();
   if (d) body.duration = d;
+  body.is_free = values.is_free ? 1 : 0;
 
   const res = await api.put(`/v1/admin/course-sections/${sectionId}`, body);
   return res.data;

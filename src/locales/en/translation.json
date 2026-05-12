@@ -1,5 +1,46 @@
 {
   "welcome": "Welcome to the application",
+  "toasts": {
+    "login_success": "Login successful!",
+    "login_error": "Invalid credentials. Please try again.",
+    "logout_success": "Logout successful!",
+    "logout_error": "Logout failed! Please try again.",
+    "generic_updated": "Updated successfully",
+    "generic_update_failed": "Failed to update",
+    "faq_created": "FAQ created successfully",
+    "faq_create_failed": "Failed to create FAQ",
+    "faq_updated": "FAQ updated successfully",
+    "faq_update_failed": "Failed to update FAQ",
+    "faq_deleted": "FAQ deleted successfully",
+    "faq_delete_failed": "Failed to delete FAQ",
+    "about_updated": "About Us updated successfully",
+    "about_update_failed": "Failed to update About Us",
+    "about_intro_updated": "About Us intro section updated successfully",
+    "about_intro_update_failed": "Failed to update About Us intro section",
+    "about_vision_updated": "About Us vision section updated successfully",
+    "about_vision_update_failed": "Failed to update About Us vision section",
+    "about_why_us_updated": "About Us Why Us section updated successfully",
+    "about_why_us_update_failed": "Failed to update About Us Why Us section",
+    "about_contact_updated": "About Us contact section updated successfully",
+    "about_contact_update_failed": "Failed to update About Us contact section",
+    "items_updated": "Items updated successfully",
+    "solutions_updated": "Solutions updated successfully",
+    "solutions_update_failed": "Failed to update solutions",
+    "solution_items_updated": "Solution items updated successfully",
+    "solution_items_update_failed": "Failed to update solution items",
+    "create_success": "Created successfully!",
+    "service_save_error": "Could not save. Please try again.",
+    "section_saved": "Section saved!",
+    "section_save_error": "Error saving section",
+    "stat_updated": "Stat updated successfully",
+    "stat_update_failed": "Failed to update stat",
+    "accreditation_updated": "Accreditation updated successfully",
+    "accreditation_update_failed": "Failed to update accreditation",
+    "clients_updated": "Clients updated successfully",
+    "clients_update_failed": "Failed to update clients",
+    "hero_updated": "Hero updated successfully",
+    "hero_update_failed": "Failed to update hero"
+  },
   "forms": {
     "smart_slug": {
       "linked": "Linked to Title",
@@ -24,6 +65,7 @@
     "home_content": "Home Page Content",
     "why_choose_us": "Why Choose Us",
     "solutions": "Our Solutions",
+    "solution_categories": "Solution categories",
     "help_you": "How We Help You",
     "services": "Services",
     "countries": "Countries",
@@ -173,13 +215,15 @@
   "email_placeholder": "m@example.com",
   "password_label": "Password",
   "password_placeholder": "********",
+  "show_password": "Show password",
+  "hide_password": "Hide password",
   "login_button": "Sign In",
   "validation": {
     "email_invalid": "Invalid email address",
     "email_required": "Email is required",
     "password_required": "Password is required",
     "required": "This field is required",
-    "slug_format": "Use lowercase letters, numbers, and hyphens only (e.g. technology).",
+    "slug_format": "Use lowercase letters (Arabic or English), digits, and hyphens only (e.g. technology or تكنولوجيا).",
     "url_invalid": "Enter a valid http(s) URL or leave empty."
   },
 "faq": {
@@ -368,6 +412,7 @@
     "description": "Bilingual names, URL slug, active state, and SEO for blog filters and assignments.",
     "add_button": "Add category",
     "all_categories": "All blog categories",
+    "showing_info": "Showing {{start}} - {{end}} of {{total}}",
     "create_title": "New blog category",
     "create_description": "Create a category such as Technology with Arabic and English labels and meta fields.",
     "edit_title": "Edit blog category",
@@ -484,6 +529,7 @@
     "edit_title": "Edit package category",
     "edit_description": "Update this category and its SEO fields.",
     "load_error": "Could not load package categories.",
+    "showing_info": "Showing {{start}} - {{end}} of {{total}}",
     "load_one_error": "Could not load this category.",
     "delete_confirm": "Delete this package category?",
     "table": {
@@ -506,6 +552,8 @@
       "title_ar": "Category name (Arabic)",
       "title_en": "Category name (English)",
       "slug": "Slug (URL)",
+      "slug_ar": "Slug (Arabic URL)",
+      "slug_en": "Slug (English URL)",
       "sort_order": "Display order",
       "is_active": "Active",
       "is_default": "Default tab (shown first)",
@@ -536,6 +584,7 @@
     "description": "Manage package cards: bilingual copy, category, CTA, icon, featured state, and SEO.",
     "add_button": "Add package",
     "all_packages": "All packages",
+    "showing_info": "Showing {{start}} - {{end}} of {{total}}",
     "create_title": "New package",
     "create_description": "Create a card for a category with Arabic and English content.",
     "edit_title": "Edit package",
@@ -552,7 +601,12 @@
       "actions": "Actions",
       "yes": "Yes",
       "no": "No",
-      "empty": "No packages yet."
+      "empty": "No packages yet.",
+      "single_delete_title": "Delete this package?",
+      "single_delete_description": "This action cannot be undone.",
+      "single_delete_type_label": "Type delete or حذف to confirm:",
+      "single_delete_placeholder": "delete or حذف",
+      "search_placeholder": "Search by title or description…"
     },
     "form": {
       "basic_section": "Basic information",
@@ -562,10 +616,11 @@
       "title_en": "Title (English)",
       "short_desc_ar": "Short description (Arabic)",
       "short_desc_en": "Short description (English)",
-      "button_ar": "Button label (Arabic)",
-      "button_en": "Button label (English)",
-      "details_url": "Details / CTA link",
+      "button_text_ar": "Button label (Arabic)",
+      "button_text_en": "Button label (English)",
       "slug": "Package slug (detail page URL)",
+      "slug_ar": "Slug (Arabic URL)",
+      "slug_en": "Slug (English URL)",
       "is_featured": "Featured (highlighted card)",
       "is_active": "Active",
       "price": "Price (optional)",
@@ -573,11 +628,6 @@
       "icon_upload": "Icon image",
       "choose_icon": "Upload icon",
       "remove_icon": "Remove",
-      "icon_preset": "Built-in icon (if no file)",
-      "icon_none": "None (use upload only)",
-      "icon_target": "Target",
-      "icon_gem": "Gem",
-      "icon_rocket": "Rocket",
       "features_section": "Feature lines (optional)",
       "add_feature": "Add feature",
       "features_empty": "No feature lines. Add rows to match the API feature list, or leave empty.",
@@ -585,25 +635,18 @@
       "feature_title_en": "Feature (English)",
       "feature_included": "Included",
       "feature_sort_order": "Feature order",
-      "seo_section": "SEO",
-      "seo_ar": "Arabic",
-      "seo_en": "English",
-      "canonical_url": "Canonical URL",
-      "meta_title_ar": "Meta title (Arabic)",
-      "meta_title_en": "Meta title (English)",
-      "meta_description_ar": "Meta description (Arabic)",
-      "meta_description_en": "Meta description (English)",
-      "meta_keywords_ar": "Meta keywords (Arabic)",
-      "meta_keywords_en": "Meta keywords (English)",
       "save": "Save package",
-      "loading": "Loading…"
+      "loading": "Loading…",
+      "submit_validation_hint": "Some fields are invalid or incomplete. Check category, Arabic/English fields, and both URL slugs (format: lowercase letters, digits, hyphens)."
     },
     "api": {
       "create_success": "Package created",
       "update_success": "Package updated",
       "save_error": "Could not save package",
       "delete_success": "Package deleted",
-      "delete_error": "Could not delete package"
+      "delete_error": "Could not delete package",
+      "cancel": "Cancel",
+      "delete": "Delete"
     }
   },
   "courses": {
@@ -617,7 +660,6 @@
     "edit_description": "Update course content, image, price, and lesson sections.",
     "load_error": "Could not load courses.",
     "load_one_error": "Could not load this course. Check that the API returns full course data (by slug or list).",
-    "delete_confirm": "Delete this course?",
     "table": {
       "title": "Title",
       "slug": "Slug",
@@ -629,6 +671,13 @@
       "basic_section": "Course details",
       "title_ar": "Title (Arabic)",
       "title_en": "Title (English)",
+      "slug": "Slug / URL",
+      "slug_ar": "Slug (Arabic)",
+      "slug_en": "Slug (English)",
+      "slug_placeholder": "e.g. my-course",
+      "slug_placeholder_ar": "مثال: دورة-تدريبية",
+      "slug_hint": "Bilingual URL slugs are required (sent as slug[ar] and slug[en]). Leave a field empty to auto-generate it from the matching title.",
+      "is_active": "Published (active)",
       "description_ar": "Description (Arabic)",
       "description_en": "Description (English)",
       "objectives_section": "What you will learn (storefront)",
@@ -666,21 +715,28 @@
       "actions": "Actions",
       "yes": "Yes",
       "no": "No",
-      "delete_confirm": "Delete this section?"
+      "delete_confirm_title": "Delete lesson?",
+      "delete_confirm": "This removes the lesson from the course. This cannot be undone."
     },
     "sections_api": {
       "create_success": "Section created",
       "update_success": "Section updated",
       "delete_success": "Section deleted",
       "save_error": "Could not save section",
-      "delete_error": "Could not delete section"
+      "delete_error": "Could not delete section",
+      "cancel": "Cancel",
+      "delete": "Delete"
     },
     "api": {
       "create_success": "Course created",
       "update_success": "Course updated",
       "save_error": "Could not save course",
       "delete_success": "Course deleted",
-      "delete_error": "Could not delete course"
+      "delete_error": "Could not delete course",
+      "delete_confirm_title": "Delete course?",
+      "delete_confirm": "Delete this course? This cannot be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete"
     }
   },
   "settings": {
@@ -757,7 +813,9 @@
       "save": "Save Platform",
       "cancel": "Cancel",
       "follow": "Follow (Shown on site)",
-      "unfollow": "Unfollow (Hidden on site)"
+      "unfollow": "Unfollow (Hidden on site)",
+      "delete_confirm_title": "Remove platform?",
+      "delete_confirm_description": "This removes the platform from the list. You can add it again later."
     },
     "seo": {
       "title": "Meta Titles for each page",
@@ -861,7 +919,10 @@
   },
   "solutions": {
     "title": "Our Solutions",
-    "description": "Manage the strategic solutions and expertise we provide.",
+    "description": "Manage solution singles, slugs, and the section heading shown on the site.",
+    "section_settings": "Section heading",
+    "manage_categories": "Solution categories",
+    "add_solution": "Add solution",
     "tabs": {
       "general": "General Settings",
       "content": "Solutions List"
@@ -879,9 +940,90 @@
       "add_feature": "Add New Solution",
       "feature_title": "Solution Title",
       "feature_description": "Solution Description",
+      "slug_ar": "URL slug (Arabic)",
+      "slug_en": "URL slug (English)",
+      "slug_prefix": "/solutions/singles/",
       "image": "Solution Icon/Image",
       "upload_image": "Upload Image",
-      "save": "Save Solutions"
+      "save": "Save Solutions",
+      "category": "Category",
+      "category_placeholder": "Select a category",
+      "category_none": "No category"
+    },
+    "table": {
+      "image": "Image",
+      "title": "Title",
+      "category": "Category",
+      "slug_ar": "Slug (AR)",
+      "slug_en": "Slug (EN)",
+      "description": "Description",
+      "status": "Status",
+      "actions": "Actions",
+      "active": "Active",
+      "inactive": "Inactive",
+      "empty": "No solutions yet.",
+      "search_placeholder": "Search solutions…"
+    },
+    "api": {
+      "load_error": "Could not load solutions.",
+      "create_success": "Solution created.",
+      "create_error": "Could not create solution.",
+      "update_success": "Solution updated.",
+      "update_error": "Could not update solution.",
+      "delete_success": "Solution deleted.",
+      "delete_error": "Could not delete solution.",
+      "delete_confirm_title": "Delete this solution?",
+      "delete_confirm": "This cannot be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    },
+    "dialog": {
+      "create_title": "New solution",
+      "edit_title": "Edit solution",
+      "form_hint": "Titles, slugs, and descriptions are bilingual. Upload an image if needed.",
+      "is_active": "Visible on site",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "section_dialog": {
+      "title": "Solutions section heading",
+      "description": "Shown above the solutions list on the landing page.",
+      "save": "Save section"
+    }
+  },
+  "solution_categories": {
+    "title": "Solution categories",
+    "description": "Manage taxonomy used to group solution singles (public API: type=solutions).",
+    "add_category": "Add category",
+    "link_singles": "Solution singles",
+    "table": {
+      "name": "Name",
+      "slug_ar": "Slug (AR)",
+      "slug_en": "Slug (EN)",
+      "singles_count": "Singles",
+      "actions": "Actions",
+      "empty": "No categories yet.",
+      "search_placeholder": "Search categories…"
+    },
+    "api": {
+      "load_error": "Could not load categories.",
+      "create_success": "Category created.",
+      "create_error": "Could not create category.",
+      "update_success": "Category updated.",
+      "update_error": "Could not update category."
+    },
+    "dialog": {
+      "create_title": "New category",
+      "edit_title": "Edit category",
+      "form_hint": "Names and slugs are bilingual. Used to filter public solution singles by category.",
+      "name": "Category name",
+      "slug_ar": "URL slug (Arabic)",
+      "slug_en": "URL slug (English)",
+      "description": "Description",
+      "meta_title": "Meta title",
+      "meta_description": "Meta description",
+      "save": "Save",
+      "cancel": "Cancel"
     }
   },
   "help_you": {

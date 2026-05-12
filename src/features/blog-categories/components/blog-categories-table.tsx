@@ -2,6 +2,7 @@ import { TypeToConfirmDeleteAlertDialog } from "@/components/type-to-confirm-del
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { LaravelResourcePagination } from "@/components/ui/laravel-resource-pagination";
 import {
   Table,
   TableBody,
@@ -10,9 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useBlogCategories } from "@/features/blog-categories/hooks/useBlogCategories";
+import { useBlogCategoriesPaged } from "@/features/blog-categories/hooks/useBlogCategoriesPaged";
 import { useDeleteBlogCategory } from "@/features/blog-categories/hooks/useDeleteBlogCategory";
 import { useDeleteBlogCategoriesBulk } from "@/features/blog-categories/hooks/useDeleteBlogCategoriesBulk";
+import type { LaravelPaginationMeta } from "@/lib/laravel-pagination";
 import { Pencil, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,14 +24,38 @@ export default function BlogCategoriesTable() {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "blog_categories" });
   const { t: tbl } = useTranslation("translation", { keyPrefix: "blog_categories.table" });
   const { t: apiT } = useTranslation("translation", { keyPrefix: "blog_categories.api" });
-  const { data: rows = [], isLoading, isError, error } = useBlogCategories();
-  const { deleteMutation, isPending: isDeleting } = useDeleteBlogCategory();
-  const { deleteCategoriesBulkMutation, isPending: isBulkDeleting } = useDeleteBlogCategoriesBulk();
   const isAr = i18n.language.startsWith("ar");
 
+  const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [singleDeleteId, setSingleDeleteId] = useState<string | null>(null);
+
+  const { rows, meta, isLoading, isFetching, isError, error } = useBlogCategoriesPaged({ page });
+  const { deleteMutation, isPending: isDeleting } = useDeleteBlogCategory();
+  const { deleteCategoriesBulkMutation, isPending: isBulkDeleting } = useDeleteBlogCategoriesBulk();
+
+  // Snap back to the last valid page (e.g. after deleting the only row on a trailing page).
+  useEffect(() => {
+    if (meta.lastPage > 0 && page > meta.lastPage) {
+      setPage(meta.lastPage);
+    }
+  }, [meta.lastPage, page]);
+
+  const serverTotal = meta.total;
+  const perPage = meta.perPage > 0 ? meta.perPage : Math.max(rows.length, 1);
+  const rangeStart = serverTotal === 0 ? 0 : (meta.currentPage - 1) * perPage + 1;
+  const rangeEnd =
+    serverTotal === 0 ? 0 : Math.min(rangeStart + rows.length - 1, serverTotal);
+  const paginationMeta: LaravelPaginationMeta = {
+    current_page: meta.currentPage || 1,
+    last_page: meta.lastPage || 1,
+    per_page: perPage,
+    total: serverTotal,
+    from: rangeStart || null,
+    to: rangeEnd || null,
+    path: "",
+  };
 
   const label = (nameAr: string, nameEn: string) => (isAr ? nameAr || nameEn : nameEn || nameAr);
 
@@ -118,7 +144,7 @@ export default function BlogCategoriesTable() {
             <TableRow className="border-none hover:bg-transparent">
               <TableHead className="w-16 min-w-15 text-start align-middle p-2">
                 {/* Inner wrapper: base Table applies :pr-0 on checkbox cells — use ps-6 for inline-start (right in RTL, left in LTR). */}
-                <div className="flex items-center justify-center ps-6 pe-2">
+                <div className="flex items-center justify-start ps-6 pe-2">
                   <Checkbox
                     disabled={rows.length === 0 || isLoading}
                     aria-label={tbl("select_all")}
@@ -149,7 +175,7 @@ export default function BlogCategoriesTable() {
               rows.map((row) => (
                 <TableRow key={row.id} className="border-border/40">
                   <TableCell className="w-16 min-w-15 p-2 align-middle">
-                    <div className="flex items-center justify-center ps-6 pe-2">
+                    <div className="flex items-center justify-start ps-6 pe-2">
                       <Checkbox
                         aria-label={tbl("select_row")}
                         checked={selectedIds.has(row.id)}
@@ -208,13 +234,34 @@ export default function BlogCategoriesTable() {
 
             {!isLoading && rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="py-16 text-center text-muted-foreground">
+                <TableCell colSpan={5} className="py-16 text-start text-muted-foreground">
                   {tbl("empty")}
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
+
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-t border-border/40 bg-muted/10 p-6">
+          <p className="order-2 text-sm text-muted-foreground md:order-1">
+            {t("showing_info", {
+              start: rangeStart,
+              end: rangeEnd,
+              total: serverTotal,
+            })}
+          </p>
+          <div className="order-1 md:order-2">
+            <LaravelResourcePagination
+              meta={paginationMeta}
+              onPageChange={setPage}
+              disabled={isLoading || isFetching}
+              isRtl={isAr}
+              showSummary={false}
+              previousLabel=""
+              nextLabel=""
+            />
+          </div>
+        </div>
       </div>
 
       <TypeToConfirmDeleteAlertDialog

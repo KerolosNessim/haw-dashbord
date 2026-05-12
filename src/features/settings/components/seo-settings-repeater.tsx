@@ -116,7 +116,7 @@ export default function SeoSettingsRepeater() {
               <TableHead className="font-black text-foreground text-start">
                 {t("description_ar")} / {t("description_en")}
               </TableHead>
-              <TableHead className="py-6 px-8 font-black text-foreground text-center w-[150px]">
+              <TableHead className="py-6 px-8 font-black text-foreground text-start w-[150px]">
                 {t("actions")}
               </TableHead>
             </TableRow>
@@ -247,7 +247,7 @@ export default function SeoSettingsRepeater() {
                     </TableCell>
 
                     <TableCell className="py-8 px-8 align-top">
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center justify-start gap-2">
                         <Button
                           variant="ghost"
                           size="icon"

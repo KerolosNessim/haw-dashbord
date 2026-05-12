@@ -3,6 +3,14 @@ export type LocalizedString = { ar: string; en: string };
 export type CourseFormValues = {
   title: LocalizedString;
   description: LocalizedString;
+  /**
+   * Bilingual URL slugs. The admin API expects `slug[ar]` and `slug[en]`
+   * on multipart create and `slug: { ar, en }` on JSON update — older
+   * single-string slugs are rejected with a 422 (`slug must be an array`).
+   */
+  slug: LocalizedString;
+  /** Postman documents `is_active` as `"1"` / `"0"` on multipart create. */
+  is_active: boolean;
   /** Main price amount (storefront formats with optional `currency`). */
   price: string;
   /** Listed / old price for strikethrough on the storefront sidebar. */
