@@ -1,9 +1,18 @@
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import ServiceForm from "@/features/services/components/builder/service-form";
 
 export default function EditServicesPage() {
   const { id } = useParams();
-  console.log("Service ID:", id);
+  const { t } = useTranslation("translation", { keyPrefix: "services" });
+
   return (
-    <div>EditServicesPage {id}</div>
-  )
+    <div className="flex-1 space-y-8">
+      <div className="flex flex-col gap-1 mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">{t("edit_service")}</h1>
+      </div>
+
+      <ServiceForm initialId={id ? Number(id) : undefined} />
+    </div>
+  );
 }

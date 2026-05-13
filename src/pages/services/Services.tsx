@@ -11,7 +11,7 @@ import { Link } from "react-router-dom";
 export default function ServicesPage() {
   const { t } = useTranslation("translation", { keyPrefix: "services" });
   const { data, isLoading } = useGetServices()
-  const services = data?.data ?? []
+  const services = data?.data?.data ?? []
 
   if(isLoading) return <Loader />
 

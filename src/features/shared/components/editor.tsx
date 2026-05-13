@@ -186,8 +186,8 @@ function LoadContentPlugin({ value }: { value: any }) {
           paragraph.append($createTextNode(value));
           root.append(paragraph);
         }
-      } else if (typeof value === "object" && value !== null && "json" in value) {
-        editor.setEditorState(editor.parseEditorState(value.json));
+      } else if (typeof value === "object" && value !== null && "json" in value && (value as any).json) {
+        editor.setEditorState(editor.parseEditorState((value as any).json));
       }
     });
   }, [value, editor]);

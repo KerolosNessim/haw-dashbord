@@ -19,6 +19,10 @@ import {
   Shapes,
   Sparkles,
   Tags,
+  Scale,
+  ShieldCheck,
+  FileText,
+  Handshake,
 } from "lucide-react"
 
 export type NavLinkDef = {
@@ -27,7 +31,7 @@ export type NavLinkDef = {
   icon: LucideIcon
 }
 
-export type NavGroupId = "landing" | "catalog" | "content"
+export type NavGroupId = "landing" | "catalog" | "content" | "legal"
 
 export type NavGroupDef = {
   id: NavGroupId
@@ -113,6 +117,28 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
       },
       { titleKey: "testimonials", href: "/testimonials", icon: Quote },
       { titleKey: "about_us", href: "/about", icon: Info },
+    ],
+  },
+  {
+    id: "legal",
+    titleKey: "legal.title",
+    icon: Scale,
+    links: [
+      {
+        titleKey: "legal.privacy-policy",
+        href: "/privacy-policy",
+        icon: ShieldCheck,
+      },
+      {
+        titleKey: "legal.terms-of-use",
+        href: "/terms-of-use",
+        icon: FileText,
+      },
+      {
+        titleKey: "legal.refund-policy",
+        href: "/refund-policy",
+        icon: Handshake,
+      },
     ],
   },
 ] satisfies readonly NavGroupDef[]

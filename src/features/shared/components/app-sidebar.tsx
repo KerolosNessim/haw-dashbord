@@ -51,6 +51,7 @@ export function AppSidebar() {
         landing: hasMatch ? Boolean(fromPath.landing) : true,
         catalog: hasMatch ? Boolean(fromPath.catalog) : true,
         content: hasMatch ? Boolean(fromPath.content) : true,
+        legal: hasMatch ? Boolean(fromPath.legal) : true,
         ...fromPath,
       }
     },

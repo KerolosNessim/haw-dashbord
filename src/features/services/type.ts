@@ -1,24 +1,44 @@
 import type { Country } from "../countries/types";
 
-export interface Service {
-            id: number,
-            slug: string,
-            image: string,
-            title: string,
-            description: string,
-            sort_order: number,
-            is_active: boolean,
-            highlight_description: string,
-            media_url: string,
-            media_type: string,
-            meta_title: string,
-            meta_description: string,
-            countries : Country[],
-            created_at: string
-        }
+export interface LocalizedString {
+  ar: string;
+  en: string;
+}
 
-        export interface GetServicesResponse {
-    status: "true",
-    message: string,
-    data: Service[]
-        }
+export interface Service {
+  id: number;
+  slug: LocalizedString;
+  image: string;
+  title: LocalizedString;
+  description: LocalizedString;
+  highlight_description: LocalizedString;
+  meta_title: LocalizedString;
+  meta_description: LocalizedString;
+  is_active: boolean;
+  show_footer: boolean;
+  sort_order: number;
+  countries: Country[];
+  created_at: string;
+  
+  // Sections (Optional)
+  benefits?: any;
+  faqs?: any;
+  packages?: any;
+  steps?: any;
+  tools?: any;
+  ctas?: any;
+}
+
+export interface GetServicesResponse {
+  status: string;
+  message: string;
+  data: {
+    data: Service[];
+  };
+}
+
+export interface GetServiceResponse {
+  status: string;
+  message: string;
+  data: Service;
+}

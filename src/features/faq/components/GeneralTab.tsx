@@ -1,10 +1,5 @@
 import { useEffect } from "react";
-import {
-  Save,
-  Search,
-  Settings as SettingsIcon,
-  Loader2,
-} from "lucide-react";
+import { Save, Search, Settings as SettingsIcon, Loader2 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -12,6 +7,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useFaqGeneral } from "../hooks/useFaqGeneral";
+import { slugify, slugifyAr } from "@/lib/slugify";
 
 interface GeneralFormValues {
   title_ar: string;
@@ -33,7 +29,7 @@ export default function GeneralTab() {
   });
 
   const { getGeneralQuery, updateGeneral, isUpdating } = useFaqGeneral();
-  const { data: faqData, isLoading, isError } = getGeneralQuery;
+  const { data: faqData, isLoading } = getGeneralQuery;
 
   const { control, handleSubmit, reset } = useForm<GeneralFormValues>({
     defaultValues: {
@@ -56,7 +52,7 @@ export default function GeneralTab() {
         title_ar: d.title?.ar || "",
         title_en: d.title?.en || "",
         description_ar: d.description?.ar || "",
-        description_en: d.description?.en || "" ,
+        description_en: d.description?.en || "",
         meta_title_ar: d.meta_title?.ar || "",
         meta_title_en: d.meta_title?.en || "",
         meta_description_ar: d.meta_description?.ar || "",
@@ -70,7 +66,11 @@ export default function GeneralTab() {
       title: { ar: values.title_ar, en: values.title_en },
       description: { ar: values.description_ar, en: values.description_en },
       meta_title: { ar: values.meta_title_ar, en: values.meta_title_en },
-      meta_description: { ar: values.meta_description_ar, en: values.meta_description_en },
+      meta_description: {
+        ar: values.meta_description_ar,
+        en: values.meta_description_en,
+      },
+      slug: { ar: slugifyAr(values.title_ar), en: slugify(values.title_en) },
     };
     updateGeneral(payload);
   };
@@ -83,13 +83,7 @@ export default function GeneralTab() {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="h-[400px] flex items-center justify-center text-destructive font-bold">
-        Failed to load FAQ data.
-      </div>
-    );
-  }
+
 
   return (
     <form
@@ -193,8 +187,14 @@ export default function GeneralTab() {
                 control={control}
                 render={({ field }) => (
                   <Field>
-                    <FieldLabel className="text-sm font-bold justify-start">Meta Title (AR)</FieldLabel>
-                    <Input {...field} className="h-11 rounded-xl bg-muted/5" dir="rtl" />
+                    <FieldLabel className="text-sm font-bold justify-start">
+                      Meta Title (AR)
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      className="h-11 rounded-xl bg-muted/5"
+                      dir="rtl"
+                    />
                   </Field>
                 )}
               />
@@ -203,8 +203,14 @@ export default function GeneralTab() {
                 control={control}
                 render={({ field }) => (
                   <Field>
-                    <FieldLabel className="text-sm font-bold justify-start">Meta Description (AR)</FieldLabel>
-                    <Textarea {...field} className="min-h-[100px] rounded-xl bg-muted/5 resize-none" dir="rtl" />
+                    <FieldLabel className="text-sm font-bold justify-start">
+                      Meta Description (AR)
+                    </FieldLabel>
+                    <Textarea
+                      {...field}
+                      className="min-h-[100px] rounded-xl bg-muted/5 resize-none"
+                      dir="rtl"
+                    />
                   </Field>
                 )}
               />
@@ -215,7 +221,9 @@ export default function GeneralTab() {
                 control={control}
                 render={({ field }) => (
                   <Field>
-                    <FieldLabel className="text-sm font-bold">Meta Title (EN)</FieldLabel>
+                    <FieldLabel className="text-sm font-bold">
+                      Meta Title (EN)
+                    </FieldLabel>
                     <Input {...field} className="h-11 rounded-xl bg-muted/5" />
                   </Field>
                 )}
@@ -225,8 +233,13 @@ export default function GeneralTab() {
                 control={control}
                 render={({ field }) => (
                   <Field>
-                    <FieldLabel className="text-sm font-bold">Meta Description (EN)</FieldLabel>
-                    <Textarea {...field} className="min-h-[100px] rounded-xl bg-muted/5 resize-none" />
+                    <FieldLabel className="text-sm font-bold">
+                      Meta Description (EN)
+                    </FieldLabel>
+                    <Textarea
+                      {...field}
+                      className="min-h-[100px] rounded-xl bg-muted/5 resize-none"
+                    />
                   </Field>
                 )}
               />
@@ -243,7 +256,11 @@ export default function GeneralTab() {
           disabled={isUpdating}
           className="px-12 rounded-[20px] h-16 font-black text-xl shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all gap-3 bg-primary text-white"
         >
-          {isUpdating ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
+          {isUpdating ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : (
+            <Save className="w-6 h-6" />
+          )}
           {t("save")}
         </Button>
       </div>

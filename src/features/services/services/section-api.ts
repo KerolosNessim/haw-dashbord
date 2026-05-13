@@ -46,6 +46,11 @@ export const saveFullSection = async (serviceId: number, data: any) => {
     formData.append(`items[${index}][title][en]`, item.title.en);
     formData.append(`items[${index}][description][ar]`, item.description.ar);
     formData.append(`items[${index}][description][en]`, item.description.en);
+    formData.append(`items[${index}][sort_order]`, String(item.sort_order ?? 0));
+    
+    if (item.image instanceof File) {
+      formData.append(`items[${index}][image]`, item.image);
+    }
   });
 
   return api.post(`/v1/admin/services/${serviceId}/steps`, formData, {

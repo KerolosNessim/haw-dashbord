@@ -38,10 +38,10 @@ export default function ContactSection({ serviceId, initialData }: ContactSectio
 
   const { control, handleSubmit, formState: { errors } } = useForm<ContactValues>({
     resolver: zodResolver(contactSchema),
-    defaultValues: {
+    values: {
       title: initialData?.title || { ar: "", en: "" },
       phone_number: initialData?.phone_number || initialData?.phone || "",
-      description: initialData?.description || undefined,
+      description: initialData?.description || { ar: null, en: null },
     },
   });
 

@@ -79,6 +79,12 @@
     "courses": "Courses",
     "testimonials": "Testimonials",
     "about_us": "About Us",
+    "legal": {
+      "title": "Legal Pages",
+      "privacy-policy": "Privacy Policy",
+      "terms-of-use": "Terms of Use",
+      "refund-policy": "Refund Policy"
+    },
     "logout": "Log out"
   },
   "countries": {
@@ -109,6 +115,10 @@
     "add_service": "Add Service",
     "edit_service": "Edit",
     "delete_service": "Delete",
+    "delete_confirm": "Are you sure you want to delete this service?",
+    "delete_confirm_description": "This action cannot be undone. The service and all its data will be permanently deleted.",
+    "delete_success": "Service deleted successfully",
+    "delete_error": "An error occurred while deleting the service",
     "save_first": "Save the basic information first to be able to add page sections",
     "form": {
       "country": "Country",
@@ -129,6 +139,7 @@
       "seo_settings": "SEO Settings",
       "media_settings": "Media Settings",
       "slug": "Slug/URL",
+      "cancel": "Cancel",
       "is_active": "Is Active",
       "status_online": "Status Online",
       "sort_order": "Sort Order",
@@ -138,6 +149,7 @@
       "image_icon": "Icon",
       "media_url_cover": "Cover Image",
       "upload_icon": "Upload Icon",
+      "show_footer": "Show Footer",
       "upload_cover": "Upload Cover",
       "arabic": "In Arabic",
       "english": "In English",
@@ -176,7 +188,8 @@
           "full_section": "Full Section Builder",
           "dual_desc": "Dual Description",
           "faq": "Questions (FAQ)",
-          "contact": "Contact Information"
+          "contact": "Contact Information",
+          "packages": "Pricing Packages"
         },
         "fields": {
           "title": "Title",
@@ -203,6 +216,25 @@
         "image_required": "Please upload an image",
         "content_required": "Content is required"
       }
+    }
+  },
+  "legal": {
+    "title": "Legal Pages",
+    "privacy-policy": "Privacy Policy",
+    "terms-of-use": "Terms of Use",
+    "refund-policy": "Refund Policy",
+    "form": {
+      "title_ar": "Title (Arabic)",
+      "title_en": "Title (English)",
+      "description_ar": "Content (Arabic)",
+      "description_en": "Content (English)",
+      "meta_title_ar": "Meta Title (Arabic)",
+      "meta_title_en": "Meta Title (English)",
+      "meta_description_ar": "Meta Description (Arabic)",
+      "meta_description_en": "Meta Description (English)",
+      "slug": "Slug",
+      "image": "Page Image",
+      "save": "Save Changes"
     }
   },
   "welcome_dashboard": "Dashboard",

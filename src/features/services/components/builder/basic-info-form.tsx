@@ -34,6 +34,8 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
 import { useBasicForm } from "../../hooks/useBasicForm";
+import { useAdminService } from "../../hooks/useAdminService";
+import { useEffect } from "react";
 
 // --- Static Schema Definition (Outside) ---
 const localizedSchema = z.object({
@@ -42,13 +44,9 @@ const localizedSchema = z.object({
 });
 
 const localizedEditorSchema = z.object({
-  ar: z
-    .any()
-    .refine((val) => val && !val.isEmpty, { message: "validation.required" }),
-  en: z
-    .any()
-    .refine((val) => val && !val.isEmpty, { message: "validation.required" }),
-});
+  ar: z.any().optional(),
+  en: z.any().optional(),
+}).optional();
 
 const basicInfoSchema = z.object({
   slug: z.string().min(1, { message: "validation.slug_required" }),
@@ -57,31 +55,33 @@ const basicInfoSchema = z.object({
     .min(1, { message: "validation.country_required" }),
   is_active: z.boolean(),
   title: localizedSchema,
+  slug: localizedSchema,
   description: localizedSchema,
   highlight_description: localizedEditorSchema,
   meta_title: localizedSchema,
   meta_description: localizedSchema,
   image: z
     .any()
-    .refine((file) => !!file, { message: "validation.cover_image_required" }),
+    .refine((val) => !!val, { message: "validation.cover_image_required" }),
+  show_footer: z.boolean(),
 });
 
 export type BasicInfoValues = z.infer<typeof basicInfoSchema>;
 
 interface BasicInfoFormProps {
   onSuccess?: (id: number) => void;
+  initialId?: number;
 }
 
-export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
+export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormProps) {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "services.form" });
-  const { data } = useAdminCountries();
-  console.log("data", data);
-  const countries = data?.data ?? [];
-  console.log("countries", countries);  
-  const { basicFormMutation, isPending } = useBasicForm();
+  const { data: countriesData } = useAdminCountries();
+  const countries = countriesData?.data?.data ?? [];
+  
+  const { service, isLoading: isFetching } = useAdminService(initialId);
+  const { basicFormMutation, isPending } = useBasicForm(initialId);
 
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
-
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -90,13 +90,15 @@ export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
     setValue,
     watch,
     trigger,
+    reset,
     formState: { errors },
   } = useForm<BasicInfoValues>({
     resolver: zodResolver(basicInfoSchema),
     defaultValues: {
-      slug: "",
+      slug: { ar: "", en: "" },
       country_ids: [],
       is_active: true,
+      show_footer: true,
       title: { ar: "", en: "" },
       description: { ar: "", en: "" },
       highlight_description: { ar: null, en: null },
@@ -105,6 +107,46 @@ export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
       image: null,
     },
   });
+
+  // Populate form when service data is loaded (edit mode)
+  useEffect(() => {
+    if (service) {
+      reset({
+        slug: {
+          ar: service.slug?.ar ?? "",
+          en: service.slug?.en ?? "",
+        },
+        country_ids: service.countries?.map((c: any) => String(c.id)) ?? [],
+        is_active: service.is_active ?? true,
+        show_footer: service.show_footer ?? true,
+        title: {
+          ar: service.title?.ar ?? "",
+          en: service.title?.en ?? "",
+        },
+        description: {
+          ar: service.description?.ar ?? "",
+          en: service.description?.en ?? "",
+        },
+        highlight_description: {
+          ar: service.highlight_description?.ar ?? null,
+          en: service.highlight_description?.en ?? null,
+        },
+        meta_title: {
+          ar: service.meta_title?.ar ?? "",
+          en: service.meta_title?.en ?? "",
+        },
+        meta_description: {
+          ar: service.meta_description?.ar ?? "",
+          en: service.meta_description?.en ?? "",
+        },
+        image: service.image ?? null,
+      });
+
+      if (service.image) {
+        setCoverPreview(service.image);
+      }
+    }
+  }, [service]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -125,19 +167,22 @@ export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
   };
 
   const onSubmit = async (data: BasicInfoValues) => {
-    // Transform highlight_description to send only HTML strings
+    // Transform highlight_description - handle both string (from API) and object (from editor)
+    const getHtml = (val: any): string => {
+      if (!val) return "";
+      if (typeof val === "string") return val; // already HTML string from API
+      return val?.html || "";
+    };
+
     const finalData = {
       ...data,
       highlight_description: {
-        ar: data.highlight_description.ar?.html || "",
-        en: data.highlight_description.en?.html || "",
+        ar: getHtml(data.highlight_description?.ar),
+        en: getHtml(data.highlight_description?.en),
       },
     };
     const res = await basicFormMutation(finalData);
-    console.log(res);
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    onSuccess?.( res?.data?.id);
+    onSuccess?.(res?.data?.id);
   };
 
   /**
@@ -155,6 +200,7 @@ export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
     return message.includes("validation.") ? t(message) : message;
   };
 
+  const watchTitleAr = watch("title.ar");
   const watchTitleEn = watch("title.en");
 
   return (
@@ -171,96 +217,132 @@ export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
         </div>
 
         {/* Global Settings: Slug, Active Status */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <SmartSlugField<BasicInfoValues>
-            control={control}
-            name="slug"
-            slugLocale="en"
-            titleEn={watchTitleEn ?? ""}
-            trigger={trigger}
-            label={
-              <span className="flex items-center gap-2">
-                <Globe className="w-4 h-4 opacity-40" /> {t("slug")}
-              </span>
-            }
-            placeholder={t("placeholders.slug")}
-            errorMessage={translateError(errors.slug)}
-            inputClassName="rounded-2xl bg-muted/20 border-border/50"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2">
+            <SmartSlugField<BasicInfoValues>
+              control={control}
+              name="slug.ar"
+              slugLocale="ar"
+              titleEn={watchTitleAr ?? ""}
+              trigger={trigger}
+              label={
+                <span className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 opacity-40" /> {t("slug")} (AR)
+                </span>
+              }
+              placeholder={t("placeholders.slug")}
+              errorMessage={translateError(errors.slug?.ar)}
+              inputClassName="rounded-2xl bg-background border-border/50 text-right"
+            />
+            <SmartSlugField<BasicInfoValues>
+              control={control}
+              name="slug.en"
+              slugLocale="en"
+              titleEn={watchTitleEn ?? ""}
+              trigger={trigger}
+              label={
+                <span className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 opacity-40" /> {t("slug")} (EN)
+                </span>
+              }
+              placeholder={t("placeholders.slug")}
+              errorMessage={translateError(errors.slug?.en)}
+              inputClassName="rounded-2xl bg-background border-border/50"
+            />
+          </div>
 
-          <Controller
-            name="country_ids"
-            control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>{t("country")}</FieldLabel>
-                <Combobox
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  multiple
-                >
-                  <ComboboxChips className="min-h-12 rounded-2xl bg-muted/20 border-border/50 p-2">
-                    {Array.isArray(field.value) &&
-                      field.value.map((val: string) => {
-                        const country = countries.find(
-                          (c) => String(c.id) === val,
-                        );
-                        const countryName = country ? (i18n.language === "ar" ? country.name.ar : country.name.en) : val;
-                        return (
-                          <ComboboxChip key={val} value={val}>
-                            {countryName}
-                          </ComboboxChip>
-                        );
-                      })}
-                    <ComboboxChipsInput
-                      placeholder={
-                        field.value.length === 0 ? t("country_placeholder") : ""
-                      }
-                      className="bg-transparent border-none focus:ring-0"
-                    />
-                  </ComboboxChips>
-                  <ComboboxContent className="w-[--anchor-width]">
-                    <ComboboxList>
-                      {countries.map((country) => (
-                        <ComboboxItem
-                          key={country.id}
-                          value={String(country.id)}
-                        >
-                          {i18n.language === "ar" ? country.name.ar : country.name.en}
-                        </ComboboxItem>
-                      ))}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>
-                <FieldError
-                  errors={[{ message: translateError(errors.country_ids) }]}
-                />
-              </Field>
-            )}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-1">
+            <Controller
+              name="is_active"
+              control={control}
+              render={({ field }) => (
+                <Field className="flex flex-row items-center justify-between p-4 rounded-2xl bg-background border border-dashed border-border/50">
+                  <div className="space-y-0.5">
+                    <FieldLabel className="flex items-center gap-2 m-0 text-sm">
+                      <Activity className="w-4 h-4 opacity-40" /> {t("is_active")}
+                    </FieldLabel>
+                  </div>
+                  <Switch
+                    dir="ltr"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </Field>
+              )}
+            />
+            <Controller
+              name="show_footer"
+              control={control}
+              render={({ field }) => (
+                <Field className="flex flex-row items-center justify-between p-4 rounded-2xl bg-background border border-dashed border-border/50">
+                  <div className="space-y-0.5">
+                    <FieldLabel className="flex items-center gap-2 m-0 text-sm">
+                      <Layout className="w-4 h-4 opacity-40" /> {t("show_footer")}
+                    </FieldLabel>
+                  </div>
+                  <Switch
+                    dir="ltr"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </Field>
+              )}
+            />
+          </div>
 
-          <Controller
-            name="is_active"
-            control={control}
-            render={({ field }) => (
-              <Field className="flex flex-row items-center justify-between p-4 rounded-2xl bg-muted/10 border border-dashed border-border/50">
-                <div className="space-y-0.5">
-                  <FieldLabel className="flex items-center gap-2 m-0">
-                    <Activity className="w-4 h-4 opacity-40" /> {t("is_active")}
-                  </FieldLabel>
-                  <p className="text-[10px] opacity-40 uppercase font-bold tracking-tight">
-                    {t("status_online")}
-                  </p>
-                </div>
-                <Switch
-                  dir="ltr"
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </Field>
-            )}
-          />
-        </div>
+
+
+          <div className="md:col-span-2">
+            <Controller
+              name="country_ids"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>{t("country")}</FieldLabel>
+                  <Combobox
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    multiple
+                  >
+                    <ComboboxChips className="min-h-12 rounded-2xl bg-background border-border/50 p-2">
+                      {Array.isArray(field.value) &&
+                        field.value.map((val: string) => {
+                          const country = countries.find(
+                            (c) => String(c.id) === val,
+                          );
+                          const countryName = country ? (i18n.language === "ar" ? country.name.ar : country.name.en) : val;
+                          return (
+                            <ComboboxChip key={val} value={val}>
+                              {countryName}
+                            </ComboboxChip>
+                          );
+                        })}
+                      <ComboboxChipsInput
+                        placeholder={
+                          field.value.length === 0 ? t("country_placeholder") : ""
+                        }
+                        className="bg-transparent border-none focus:ring-0"
+                      />
+                    </ComboboxChips>
+                    <ComboboxContent className="w-[--anchor-width]">
+                      <ComboboxList>
+                        {countries.map((country) => (
+                          <ComboboxItem
+                            key={country.id}
+                            value={String(country.id)}
+                          >
+                            {i18n.language === "ar" ? country.name.ar : country.name.en}
+                          </ComboboxItem>
+                        ))}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
+                  <FieldError
+                    errors={[{ message: translateError(errors.country_ids) }]}
+                  />
+                </Field>
+              )}
+            />
+          </div>
 
         {/* Content Section (AR/EN) */}
         <div className="space-y-12">
@@ -500,7 +582,7 @@ export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
                       {...field}
                       dir="rtl"
                       placeholder={t("placeholders.meta_title")}
-                      className="h-12 rounded-2xl bg-muted/5 border-border/50"
+                      className="h-12 rounded-2xl bg-background border-border/50"
                     />
                     <FieldError
                       errors={[
@@ -544,7 +626,7 @@ export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
                       {...field}
                       dir="ltr"
                       placeholder={t("placeholders.meta_title")}
-                      className="h-12 rounded-2xl bg-muted/5 border-border/50"
+                      className="h-12 rounded-2xl bg-background border-border/50"
                     />
                     <FieldError
                       errors={[
@@ -587,7 +669,7 @@ export default function BasicInfoForm({ onSuccess }: BasicInfoFormProps) {
         disabled={isPending}
         className="w-fit h-12 rounded-full px-12 font-bold text-base gap-3 shadow-2xl shadow-primary/40 pointer-events-auto hover:scale-105 active:scale-95 transition-all"
       >
-        {isPending ? (
+        {isPending || isFetching ? (
           <Loader2 className="size-5 animate-spin" />
         ) : (
           <Save className="size-5" />

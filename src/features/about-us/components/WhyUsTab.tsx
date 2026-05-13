@@ -37,7 +37,7 @@ export default function WhyUsTab() {
   });
 
   const { getAboutUsQuery, updateWhyUsSection, isUpdatingWhyUsSection } = useAboutUs();
-  const { data: aboutUsData, isLoading, isError } = getAboutUsQuery;
+  const { data: aboutUsData, isLoading } = getAboutUsQuery;
 
   const { control, handleSubmit, reset } = useForm<WhyUsFormValues>({
     defaultValues: {
@@ -96,14 +96,6 @@ export default function WhyUsTab() {
     return (
       <div className="h-[400px] flex items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="h-[400px] flex items-center justify-center text-destructive font-bold">
-        Failed to load Why Us data.
       </div>
     );
   }

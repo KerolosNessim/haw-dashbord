@@ -37,6 +37,9 @@ import CoursesPage from "./pages/courses/CoursesPage"
 import CreateCoursePage from "./pages/courses/CreateCoursePage"
 import EditCoursePage from "./pages/courses/EditCoursePage"
 import CountriesPage from "./pages/countreies/CountriesPage"
+import PrivacyPolicyPage from "./pages/legal/PrivacyPolicy"
+import TermsOfUsePage from "./pages/legal/TermsOfUse"
+import RefundPolicyPage from "./pages/legal/RefundPolicy"
 
 const router = createBrowserRouter([
   {
@@ -178,6 +181,18 @@ const router = createBrowserRouter([
       {
         path: "/about",
         element: <AboutUsPage />,
+      },
+      {
+        path: "/privacy-policy",
+        element: <PrivacyPolicyPage />,
+      },
+      {
+        path: "/terms-of-use",
+        element: <TermsOfUsePage />,
+      },
+      {
+        path: "/refund-policy",
+        element: <RefundPolicyPage />,
       },
     ],
   },

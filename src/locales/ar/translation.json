@@ -79,6 +79,12 @@
     "courses": "الدورات",
     "testimonials": "آراء العملاء",
     "about_us": "من نحن",
+    "legal": {
+      "title": "الصفحات القانونية",
+      "privacy-policy": "سياسة الخصوصية",
+      "terms-of-use": "شروط الاستخدام",
+      "refund-policy": "سياسة الاسترجاع"
+    },
     "logout": "Log out"
   },
   "countries": {
@@ -110,6 +116,10 @@
     "add_service": "إضافة خدمة",
     "edit_service": "تعديل",
     "delete_service": "حذف",
+    "delete_confirm": "هل أنت متأكد من حذف هذه الخدمة؟",
+    "delete_confirm_description": "هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الخدمة وجميع بياناتها نهائياً.",
+    "delete_success": "تم حذف الخدمة بنجاح",
+    "delete_error": "حدث خطأ أثناء حذف الخدمة",
     "form": {
       "country": "الدولة",
       "country_placeholder": "اختر الدولة",
@@ -135,6 +145,7 @@
       "seo_settings": "إعدادات SEO",
       "media_settings": "إعدادات الوسائط",
       "slug": "الرابط (Slug)",
+      "cancel": "إلغاء",
       "is_active": "نشط",
       "sort_order": "ترتيب العرض",
       "highlight_description": "وصف مميز",
@@ -142,6 +153,7 @@
       "meta_description": "وصف (Meta Description)",
       "image_icon": "الأيقونة",
       "media_url_cover": "صورة الغلاف",
+      "show_footer": "إظهار الفوتر",
       "upload_icon": "رفع أيقونة",
       "upload_cover": "رفع صورة غلاف",
       "arabic": "باللغة العربية",
@@ -178,7 +190,8 @@
           "full_section": "سكشن كامل (Full Section)",
           "dual_desc": "وصف مزدوج",
           "faq": "الأسئلة الشائعة (FAQ)",
-          "contact": "بيانات التواصل"
+          "contact": "بيانات التواصل",
+          "packages": "باقات الأسعار"
         },
         "fields": {
           "title": "العنوان",
@@ -205,6 +218,25 @@
         "image_required": "يرجى رفع صورة",
         "content_required": "المحتوى مطلوب"
       }
+    }
+  },
+  "legal": {
+    "title": "الصفحات القانونية",
+    "privacy-policy": "سياسة الخصوصية",
+    "terms-of-use": "شروط الاستخدام",
+    "refund-policy": "سياسة الاسترجاع",
+    "form": {
+      "title_ar": "العنوان (عربي)",
+      "title_en": "العنوان (إنجليزي)",
+      "description_ar": "المحتوى (عربي)",
+      "description_en": "المحتوى (إنجليزي)",
+      "meta_title_ar": "العنوان (SEO - عربي)",
+      "meta_title_en": "العنوان (SEO - إنجليزي)",
+      "meta_description_ar": "الوصف (SEO - عربي)",
+      "meta_description_en": "الوصف (SEO - إنجليزي)",
+      "slug": "الرابط (Slug)",
+      "image": "صورة الصفحة",
+      "save": "حفظ التغييرات"
     }
   },
   "welcome_dashboard": "لوحة التحكم",
