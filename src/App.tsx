@@ -23,6 +23,8 @@ import HomeContentPage from "./pages/home-content/HomeContentPage"
 import WhyChooseUsPage from "./pages/why-choose-us/WhyChooseUsPage"
 import SolutionCategoriesPage from "./pages/solutions/SolutionCategoriesPage"
 import SolutionSinglesPage from "./pages/solutions/SolutionSinglesPage"
+import CreateSolutionSinglePage from "./pages/solutions/CreateSolutionSinglePage"
+import EditSolutionSinglePage from "./pages/solutions/EditSolutionSinglePage"
 import SolutionsPage from "./pages/solutions/SolutionsPage"
 import HelpYouPage from "./pages/help-you/HelpYouPage"
 import TestimonialsPage from "./pages/testimonials/TestimonialsPage"
@@ -62,6 +64,14 @@ const router = createBrowserRouter([
       {
         path: "/solution-singles",
         element: <SolutionSinglesPage />,
+      },
+      {
+        path: "/solution-singles/create",
+        element: <CreateSolutionSinglePage />,
+      },
+      {
+        path: "/solution-singles/edit/:id",
+        element: <EditSolutionSinglePage />,
       },
       {
         path: "/solution-categories",

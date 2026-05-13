@@ -32,10 +32,6 @@ export default function PackagesTable() {
     return () => window.clearTimeout(t);
   }, [searchInput]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch]);
-
   const { rows, meta, isLoading, isFetching, isError, error } = usePackages({
     page,
     search: debouncedSearch || undefined,
@@ -47,7 +43,8 @@ export default function PackagesTable() {
 
   useEffect(() => {
     if (meta.lastPage > 0 && page > meta.lastPage) {
-      setPage(meta.lastPage);
+      const id = window.setTimeout(() => setPage(meta.lastPage), 0);
+      return () => window.clearTimeout(id);
     }
   }, [meta.lastPage, page]);
 
@@ -88,7 +85,10 @@ export default function PackagesTable() {
           />
           <Input
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={(e) => {
+              setSearchInput(e.target.value);
+              if (page !== 1) setPage(1);
+            }}
             placeholder={tbl("search_placeholder")}
             className={`h-11 rounded-xl bg-white ${isAr ? "pe-10" : "ps-10"}`}
             dir={isAr ? "rtl" : "ltr"}
@@ -156,7 +156,13 @@ export default function PackagesTable() {
                 <TableCell className="py-6 pe-8">
                   <div className="flex items-center justify-start gap-2">
                     <Button variant="ghost" size="icon" className="rounded-xl" asChild>
-                      <Link to={`/packages/edit/${row.id}`}>
+                      <Link
+                        to={`/packages/edit/${row.id}`}
+                        state={{
+                          packageCategoryId: row.package_category_id,
+                          categoryTitle: row.categoryTitle,
+                        }}
+                      >
                         <Pencil className="h-4 w-4" />
                       </Link>
                     </Button>

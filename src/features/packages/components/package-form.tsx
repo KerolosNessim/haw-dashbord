@@ -17,10 +17,14 @@ import type { PackageFormValues } from "@/features/packages/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Languages, Link as LinkIcon, Plus, Save, Trash2, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Controller, useFieldArray, useForm, type FieldErrors } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import * as z from "zod";
+
+function normalizeSelectLabel(value: string | undefined) {
+  return (value ?? "").trim().toLocaleLowerCase();
+}
 
 const localizedRequired = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
@@ -105,6 +109,7 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
     control,
     handleSubmit,
     reset,
+    setValue,
     watch,
     trigger,
     formState: { errors },
@@ -134,6 +139,41 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
       });
     }
   }, [initialValues, reset]);
+
+  useEffect(() => {
+    if (mode !== "edit" || categoriesLoading) return;
+    let categoryId = String(initialValues?.package_category_id ?? "").trim();
+
+    if (!categoryId) {
+      const fallbackLabels = [
+        initialValues?.categoryTitleAr,
+        initialValues?.categoryTitleEn,
+      ].map(normalizeSelectLabel).filter(Boolean);
+
+      const matchedCategory = categories.find((category) => {
+        const labels = [category.titleAr, category.titleEn]
+          .map(normalizeSelectLabel)
+          .filter(Boolean);
+        return labels.some((label) => fallbackLabels.includes(label));
+      });
+
+      categoryId = matchedCategory ? String(matchedCategory.id).trim() : "";
+    }
+
+    if (!categoryId) return;
+    setValue("package_category_id", categoryId, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+  }, [
+    categories,
+    categoriesLoading,
+    initialValues?.categoryTitleAr,
+    initialValues?.categoryTitleEn,
+    initialValues?.package_category_id,
+    mode,
+    setValue,
+  ]);
 
   const translateError = (msg: string | undefined) => (msg ? commonT(msg) : undefined);
 
@@ -197,7 +237,7 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
     });
   };
 
-  const onValidationInvalid = (_errs: FieldErrors<FormValues>) => {
+  const onValidationInvalid = () => {
     toast.error(t("submit_validation_hint"));
   };
 
@@ -220,12 +260,10 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
             <Field>
               <FieldLabel className="font-bold text-gray-600">{t("category")}</FieldLabel>
               <Select
-                key={
-                  mode === "edit" && initialValues
-                    ? `pkg-${packageId}-${initialValues.package_category_id}`
-                    : "pkg-cat"
+                value={
+                  String(field.value ?? "").trim() ||
+                  String(initialValues?.package_category_id ?? "").trim()
                 }
-                value={field.value?.trim() ? field.value : undefined}
                 onValueChange={(v) => field.onChange(v)}
                 disabled={categoriesLoading && categoryItems.length === 0}
               >

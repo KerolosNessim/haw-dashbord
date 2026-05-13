@@ -90,7 +90,8 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
       },
       { titleKey: "packages", href: "/packages", icon: Boxes },
       { titleKey: "courses", href: "/courses", icon: GraduationCap },
-      { titleKey: "categories", href: "/categories", icon: LayoutGrid },
+      // Course category taxonomy page.
+      // { titleKey: "categories", href: "/categories", icon: LayoutGrid },
       { titleKey: "countries", href: "/countries", icon: Globe },
       {
         titleKey: "services",
