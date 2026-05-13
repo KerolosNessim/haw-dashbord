@@ -15,6 +15,7 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -74,6 +75,11 @@ export default function CourseSectionsPanel({ courseId }: { courseId: string | u
   };
 
   const openEdit = (row: CourseSectionRow) => {
+    console.log("[CourseSectionsPanel] edit section row:", {
+      courseId,
+      row,
+      formValues: rowToForm(row),
+    });
     setEditing(row);
     setForm(rowToForm(row));
     setDialogOpen(true);
@@ -195,6 +201,7 @@ export default function CourseSectionsPanel({ courseId }: { courseId: string | u
           <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto rounded-2xl sm:max-w-xl">
             <DialogHeader>
               <DialogTitle>{editing ? t("edit_section") : t("add_section")}</DialogTitle>
+              <DialogDescription>{t("description")}</DialogDescription>
             </DialogHeader>
 
             <div className="flex items-center gap-2 text-primary">

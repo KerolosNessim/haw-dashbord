@@ -7,7 +7,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 
 import { Input } from "@/components/ui/input";
 
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/features/shared/components/editor";
 
 import { useSaveCourse } from "@/features/courses/hooks/useSaveCourse";
 
@@ -83,6 +83,11 @@ const courseSchema = z.object({
 
 
 type FormShape = z.infer<typeof courseSchema>;
+
+function richEditorHtml(value: unknown): string {
+  const html = (value as { html?: unknown })?.html;
+  return typeof html === "string" ? html : "";
+}
 
 
 
@@ -357,7 +362,7 @@ export default function CourseForm({
 
             inputClassName="rounded-xl"
 
-            syncFromTitleWhenLocked={mode === "create"}
+            syncFromTitleWhenLocked
 
           />
 
@@ -386,7 +391,7 @@ export default function CourseForm({
 
             inputClassName="rounded-xl"
 
-            syncFromTitleWhenLocked={mode === "create"}
+            syncFromTitleWhenLocked
 
           />
 
@@ -434,7 +439,12 @@ export default function CourseForm({
 
                 <FieldLabel>{t("description_ar")}</FieldLabel>
 
-                <Textarea {...field} className="min-h-[120px] rounded-xl" dir="rtl" />
+                <RichTextEditor
+                  dir="rtl"
+                  value={field.value}
+                  placeholder={t("description_ar")}
+                  onChange={(value: unknown) => field.onChange(richEditorHtml(value))}
+                />
 
                 <FieldError>{translateError(errors.description?.ar?.message)}</FieldError>
 
@@ -456,7 +466,12 @@ export default function CourseForm({
 
                 <FieldLabel>{t("description_en")}</FieldLabel>
 
-                <Textarea {...field} className="min-h-[120px] rounded-xl" dir="ltr" />
+                <RichTextEditor
+                  dir="ltr"
+                  value={field.value}
+                  placeholder={t("description_en")}
+                  onChange={(value: unknown) => field.onChange(richEditorHtml(value))}
+                />
 
                 <FieldError>{translateError(errors.description?.en?.message)}</FieldError>
 
@@ -496,7 +511,12 @@ export default function CourseForm({
 
                 <FieldLabel>{t("objectives_ar")}</FieldLabel>
 
-                <Textarea {...field} className="min-h-[120px] rounded-xl font-normal" dir="rtl" />
+                <RichTextEditor
+                  dir="rtl"
+                  value={field.value}
+                  placeholder={t("objectives_ar")}
+                  onChange={(value: unknown) => field.onChange(richEditorHtml(value))}
+                />
 
               </Field>
 
@@ -516,7 +536,12 @@ export default function CourseForm({
 
                 <FieldLabel>{t("objectives_en")}</FieldLabel>
 
-                <Textarea {...field} className="min-h-[120px] rounded-xl font-normal" dir="ltr" />
+                <RichTextEditor
+                  dir="ltr"
+                  value={field.value}
+                  placeholder={t("objectives_en")}
+                  onChange={(value: unknown) => field.onChange(richEditorHtml(value))}
+                />
 
               </Field>
 

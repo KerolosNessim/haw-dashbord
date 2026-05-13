@@ -1,30 +1,20 @@
 import { Button } from "@/components/ui/button";
-import SolutionSingleFormDialog from "@/features/solutions/components/solution-single-form-dialog";
 import SolutionSinglesTable from "@/features/solutions/components/solution-singles-table";
 import SolutionsSectionDialog from "@/features/solutions/components/solutions-section-dialog";
 import type { SolutionFeature } from "@/features/solutions/types";
 import { Lightbulb, Plus, Settings2, Tags } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function SolutionSinglesPage() {
   const { t } = useTranslation("translation", { keyPrefix: "solutions" });
+  const navigate = useNavigate();
   const [sectionOpen, setSectionOpen] = useState(false);
-  const [singleOpen, setSingleOpen] = useState(false);
-  const [singleMode, setSingleMode] = useState<"create" | "edit">("create");
-  const [editing, setEditing] = useState<SolutionFeature | null>(null);
-
-  const openCreate = () => {
-    setEditing(null);
-    setSingleMode("create");
-    setSingleOpen(true);
-  };
 
   const openEdit = (row: SolutionFeature) => {
-    setEditing(row);
-    setSingleMode("edit");
-    setSingleOpen(true);
+    if (row.id == null) return;
+    navigate(`/solution-singles/edit/${row.id}`, { state: { row } });
   };
 
   return (
@@ -67,7 +57,7 @@ export default function SolutionSinglesPage() {
             type="button"
             size="lg"
             className="h-12 rounded-xl px-8 text-base font-bold shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
-            onClick={openCreate}
+            onClick={() => navigate("/solution-singles/create")}
           >
             <Plus className="me-2 h-5 w-5" />
             {t("add_solution")}
@@ -78,12 +68,6 @@ export default function SolutionSinglesPage() {
       <SolutionSinglesTable onEdit={openEdit} />
 
       <SolutionsSectionDialog open={sectionOpen} onOpenChange={setSectionOpen} />
-      <SolutionSingleFormDialog
-        open={singleOpen}
-        onOpenChange={setSingleOpen}
-        mode={singleMode}
-        initial={editing}
-      />
     </div>
   );
 }

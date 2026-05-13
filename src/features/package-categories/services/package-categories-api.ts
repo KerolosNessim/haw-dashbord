@@ -134,9 +134,11 @@ async function fetchPackageCategoriesPageFromUrl(
   if (perPage && perPage > 0) params.per_page = perPage;
   const res = await api.get<unknown>(url, { params });
   const body = (res.data as { data?: unknown })?.data ?? res.data;
+  const rows = normalizeCategoryListPayload(body);
+  const meta = pickCategoryListMeta(res.data);
   return {
-    rows: normalizeCategoryListPayload(body),
-    meta: pickCategoryListMeta(res.data),
+    rows,
+    meta,
   };
 }
 

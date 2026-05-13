@@ -32,7 +32,7 @@ export default function CategoriesPage() {
         </Button>
       </div>
 
-      {/* Main Table Content */}
+      {/* Course category taxonomy list fetched from the backend. */}
       <CategoriesTable />
     </div>
   );

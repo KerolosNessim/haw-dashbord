@@ -19,8 +19,6 @@ export type SolutionSingleFormPayload = {
   description: LocaleString;
   slug: LocaleString;
   is_active?: boolean;
-  /** Global taxonomy category id (`type=solutions`). Omit or null to clear. */
-  category_id?: number | string | null;
 };
 
 function payloadToFormData(p: SolutionSingleFormPayload, imageFile: File | null, mode: "create" | "update"): FormData {
@@ -36,11 +34,6 @@ function payloadToFormData(p: SolutionSingleFormPayload, imageFile: File | null,
   fd.append("slug[en]", (p.slug.en ?? "").trim());
   if (typeof p.is_active === "boolean") {
     fd.append("is_active", p.is_active ? "1" : "0");
-  }
-  if (p.category_id != null && String(p.category_id).trim() !== "") {
-    fd.append("category_id", String(p.category_id).trim());
-  } else if (mode === "update") {
-    fd.append("category_id", "");
   }
   if (imageFile instanceof File) {
     fd.append("image", imageFile);
@@ -61,15 +54,61 @@ function normalizeSinglesListEnvelope(raw: unknown): SolutionItemsResponse {
     items = (d as { data: SolutionFeature[] }).data;
   }
   return {
-    ...(root as SolutionItemsResponse),
+    ...(root as unknown as SolutionItemsResponse),
     data: items,
   };
 }
 
-export async function fetchSolutionSingles(): Promise<SolutionItemsResponse> {
-  const res = await api.get<unknown>(BASE);
+function localizedValue(value: unknown, locale: "ar" | "en"): string {
+  if (typeof value === "string") return value.trim();
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const localeValue = (value as Record<string, unknown>)[locale];
+    return typeof localeValue === "string" ? localeValue.trim() : "";
+  }
+  return "";
+}
+
+function mergeLocalizedSingle(
+  base: SolutionFeature,
+  arSingle: SolutionFeature | null,
+  enSingle: SolutionFeature | null,
+): SolutionFeature {
+  return {
+    ...base,
+    title: {
+      ar: localizedValue(arSingle?.title, "ar") || localizedValue(base.title, "ar"),
+      en: localizedValue(enSingle?.title, "en") || localizedValue(base.title, "en"),
+    },
+    description: {
+      ar: localizedValue(arSingle?.description, "ar") || localizedValue(base.description, "ar"),
+      en: localizedValue(enSingle?.description, "en") || localizedValue(base.description, "en"),
+    },
+    slug: {
+      ar: localizedValue(arSingle?.slug, "ar") || localizedValue(base.slug, "ar"),
+      en: localizedValue(enSingle?.slug, "en") || localizedValue(base.slug, "en"),
+    },
+  };
+}
+
+async function fetchSolutionSinglesForLocale(locale?: "ar" | "en"): Promise<SolutionItemsResponse> {
+  const res = await api.get<unknown>(BASE, locale ? { headers: { "Accept-Language": locale } } : undefined);
   assertApiEnvelopeSuccess(res.data);
   return normalizeSinglesListEnvelope(res.data);
+}
+
+export async function fetchSolutionSingles(): Promise<SolutionItemsResponse> {
+  return fetchSolutionSinglesForLocale();
+}
+
+export async function fetchSolutionSingleById(id: string | number): Promise<SolutionFeature | null> {
+  const [arList, enList] = await Promise.all([
+    fetchSolutionSinglesForLocale("ar"),
+    fetchSolutionSinglesForLocale("en"),
+  ]);
+  const arSingle = arList.data.find((item) => String(item.id) === String(id)) ?? null;
+  const enSingle = enList.data.find((item) => String(item.id) === String(id)) ?? null;
+  const base = arSingle ?? enSingle;
+  return base ? mergeLocalizedSingle(base, arSingle, enSingle) : null;
 }
 
 export async function createSolutionSingle(p: SolutionSingleFormPayload, imageFile: File | null) {
@@ -95,10 +134,6 @@ export async function updateSolutionSingle(
     description: p.description,
     slug: p.slug,
     ...(typeof p.is_active === "boolean" ? { is_active: p.is_active } : {}),
-    category_id:
-      p.category_id != null && String(p.category_id).trim() !== ""
-        ? p.category_id
-        : null,
   };
   const res = await api.put(`${BASE}/${id}`, body);
   assertApiEnvelopeSuccess(res.data);

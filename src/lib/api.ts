@@ -23,7 +23,7 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
 
-    if (config.headers) {
+    if (config.headers && !config.headers["Accept-Language"]) {
       config.headers["Accept-Language"] = acceptLanguageFromDashboard()
     }
 
