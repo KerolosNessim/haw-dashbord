@@ -29,7 +29,7 @@ export default function ContentTab() {
   const { t } = useTranslation("translation", { keyPrefix: "solutions.content" });
   const { getSolutionItemsQuery, updateSolutionItems, isPending } = useSolutionItems();
   
-  const apiFeatures = Array.isArray(getSolutionItemsQuery?.data?.data) ? getSolutionItemsQuery?.data?.data : [];
+  const apiFeatures = Array.isArray(getSolutionItemsQuery?.data?.data?.data) ? getSolutionItemsQuery?.data?.data?.data : [];
 
   
   const {

@@ -10,6 +10,7 @@ export const useStats = () => {
     queryKey: ["stats"],
     queryFn: getStatsApi,
   });
+  
 
   const { mutate: updateStat, isPending } = useMutation({
     mutationFn: (data: UpdateStatPayload) => updateStatApi(data),

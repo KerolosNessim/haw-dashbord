@@ -11,6 +11,7 @@ export const getStatsApi = (): Promise<StatsResponse> => {
 };
 
 export interface UpdateStatItem {
+  id?: number;
   title: { ar: string; en: string };
   number: string;
   description: { ar: string; en: string };

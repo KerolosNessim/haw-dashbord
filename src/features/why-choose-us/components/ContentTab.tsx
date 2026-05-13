@@ -29,9 +29,8 @@ export default function ContentTab() {
   const { t } = useTranslation("translation", { keyPrefix: "why_choose_us.content" });
   const { getWhyUsItemsQuery, updateWhyUsItems, isPending } = useWhyUsItems();
   
-  // Assuming the API returns a list of items for the content tab
-  // If it's the same endpoint, we might need to adjust based on real data structure
-  const apiFeatures = Array.isArray(getWhyUsItemsQuery?.data?.data) ? getWhyUsItemsQuery?.data?.data : [];
+  const apiFeatures = Array.isArray(getWhyUsItemsQuery?.data?.data?.data) ? getWhyUsItemsQuery?.data?.data?.data : [];
+  console.log("apiFeatures", apiFeatures);  
 
   const {
     control,

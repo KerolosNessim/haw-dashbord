@@ -32,5 +32,7 @@ export interface SolutionsResponse {
 export interface SolutionItemsResponse {
   status: string;
   message: string;
-  data: SolutionFeature[];
+  data: {
+    data: SolutionFeature[];
+  };
 }
