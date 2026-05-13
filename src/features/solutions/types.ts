@@ -41,7 +41,5 @@ export interface SolutionsResponse {
 export interface SolutionItemsResponse {
   status: string;
   message: string;
-  data: {
-    data: SolutionFeature[];
-  };
+  data: SolutionFeature[];
 }
