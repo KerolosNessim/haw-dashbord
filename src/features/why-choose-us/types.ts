@@ -35,5 +35,7 @@ export interface WhyUsResponse {
 export interface WhyUsItemsResponse {
   status: string;
   message: string;
-  data: WhyUsFeature[];
+  data: {
+    data: WhyUsFeature[];
+  };
 }

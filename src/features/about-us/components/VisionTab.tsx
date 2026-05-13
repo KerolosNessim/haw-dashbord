@@ -39,7 +39,7 @@ export default function VisionTab() {
   });
 
   const { getAboutUsQuery, updateVisionSection, isUpdatingVisionSection } = useAboutUs();
-  const { data: aboutUsData, isLoading, isError } = getAboutUsQuery;
+  const { data: aboutUsData, isLoading } = getAboutUsQuery;
 
   const { control, handleSubmit, reset } = useForm<VisionFormValues>({
     defaultValues: {
@@ -105,13 +105,7 @@ export default function VisionTab() {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="h-[400px] flex items-center justify-center text-destructive font-bold">
-        Failed to load Vision data.
-      </div>
-    );
-  }
+
 
   return (
     <form

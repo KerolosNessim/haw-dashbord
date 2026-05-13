@@ -32,7 +32,7 @@ export default function ContactTab() {
   });
 
   const { getAboutUsQuery, updateContactSection, isUpdatingContactSection } = useAboutUs();
-  const { data: aboutUsData, isLoading, isError } = getAboutUsQuery;
+  const { data: aboutUsData, isLoading } = getAboutUsQuery;
 
   const { control, handleSubmit, reset } = useForm<ContactFormValues>({
     defaultValues: {
@@ -74,13 +74,7 @@ export default function ContactTab() {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="h-[400px] flex items-center justify-center text-destructive font-bold">
-        Failed to load Contact data.
-      </div>
-    );
-  }
+
 
   return (
     <form

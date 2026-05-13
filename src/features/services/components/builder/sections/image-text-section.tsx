@@ -18,14 +18,18 @@ const localizedSchema = z.object({
 });
 
 const localizedEditorSchema = z.object({
-  ar: z.any().refine((val) => val && !val.isEmpty, { message: "validation.required" }),
-  en: z.any().refine((val) => val && !val.isEmpty, { message: "validation.required" }),
+  ar: z
+    .any()
+    .refine((val) => val && !val.isEmpty, { message: "validation.required" }),
+  en: z
+    .any()
+    .refine((val) => val && !val.isEmpty, { message: "validation.required" }),
 });
 
 const imageTextSchema = z.object({
   title: localizedSchema,
   description: localizedEditorSchema,
-  image: z.any().refine(file => !!file, { message: "validation.required" }),
+  image: z.any().refine((file) => !!file, { message: "validation.required" }),
 });
 
 type ImageTextValues = z.infer<typeof imageTextSchema>;
@@ -36,20 +40,31 @@ interface ImageTextSectionProps {
   initialData?: any;
 }
 
-export default function ImageTextSection({ serviceId, initialData }: ImageTextSectionProps) {
+export default function ImageTextSection({
+  serviceId,
+  initialData,
+}: ImageTextSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
   const { t: tToast } = useTranslation();
 
-  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image || null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    initialData?.image || null,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { control, handleSubmit, setValue, formState: { errors } } = useForm<ImageTextValues>({
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<ImageTextValues>({
     resolver: zodResolver(imageTextSchema),
-    defaultValues: {
+    values: {
       title: initialData?.title || { ar: "", en: "" },
       description: initialData?.description || { ar: null, en: null },
       image: initialData?.image || null,
+      items: initialData?.items || [],
     },
   });
 
@@ -79,14 +94,16 @@ export default function ImageTextSection({ serviceId, initialData }: ImageTextSe
         description: {
           ar: data.description.ar?.html || "",
           en: data.description.en?.html || "",
-        }
+        },
       };
-      
+
       const res = await saveImageTextSection(serviceId, finalData);
       console.log(res);
       toast.success(res?.data?.message || tToast("toasts.section_saved"));
     } catch (error) {
-      toast.error(error?.response?.data?.message || tToast("toasts.section_save_error"));
+      toast.error(
+        error?.response?.data?.message || tToast("toasts.section_save_error"),
+      );
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -94,7 +111,10 @@ export default function ImageTextSection({ serviceId, initialData }: ImageTextSe
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-12 animate-in fade-in duration-500">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-12 animate-in fade-in duration-500"
+    >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Arabic Content */}
         <div className="space-y-6 p-6 rounded-[24px] border border-dashed bg-muted/5">
@@ -107,8 +127,21 @@ export default function ImageTextSection({ serviceId, initialData }: ImageTextSe
             render={({ field }) => (
               <Field>
                 <FieldLabel>{t("sections.fields.title")}</FieldLabel>
-                <Input {...field} dir="rtl" placeholder={t("placeholders.title")} className="h-12 rounded-xl bg-background border-border/50" />
-                <FieldError errors={[{ message: errors.title?.ar?.message ? t(errors.title.ar.message as any) : undefined }]} />
+                <Input
+                  {...field}
+                  dir="rtl"
+                  placeholder={t("placeholders.title")}
+                  className="h-12 rounded-xl bg-background border-border/50"
+                />
+                <FieldError
+                  errors={[
+                    {
+                      message: errors.title?.ar?.message
+                        ? t(errors.title.ar.message as any)
+                        : undefined,
+                    },
+                  ]}
+                />
               </Field>
             )}
           />
@@ -119,14 +152,22 @@ export default function ImageTextSection({ serviceId, initialData }: ImageTextSe
               <Field>
                 <FieldLabel>{t("sections.fields.content")}</FieldLabel>
                 <div className="min-h-[200px]">
-                  <RichTextEditor 
-                    value={field.value} 
-                    onChange={field.onChange} 
-                    dir="rtl" 
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={field.onChange}
+                    dir="rtl"
                     placeholder={t("placeholders.description")}
                   />
                 </div>
-                <FieldError errors={[{ message: errors.description?.ar?.message ? t(errors.description.ar.message as any) : undefined }]} />
+                <FieldError
+                  errors={[
+                    {
+                      message: errors.description?.ar?.message
+                        ? t(errors.description.ar.message as any)
+                        : undefined,
+                    },
+                  ]}
+                />
               </Field>
             )}
           />
@@ -143,8 +184,21 @@ export default function ImageTextSection({ serviceId, initialData }: ImageTextSe
             render={({ field }) => (
               <Field>
                 <FieldLabel>{t("sections.fields.title")}</FieldLabel>
-                <Input {...field} dir="ltr" placeholder={t("placeholders.title")} className="h-12 rounded-xl bg-background border-border/50" />
-                <FieldError errors={[{ message: errors.title?.en?.message ? t(errors.title.en.message as any) : undefined }]} />
+                <Input
+                  {...field}
+                  dir="ltr"
+                  placeholder={t("placeholders.title")}
+                  className="h-12 rounded-xl bg-background border-border/50"
+                />
+                <FieldError
+                  errors={[
+                    {
+                      message: errors.title?.en?.message
+                        ? t(errors.title.en.message as any)
+                        : undefined,
+                    },
+                  ]}
+                />
               </Field>
             )}
           />
@@ -155,14 +209,22 @@ export default function ImageTextSection({ serviceId, initialData }: ImageTextSe
               <Field>
                 <FieldLabel>{t("sections.fields.content")}</FieldLabel>
                 <div className="min-h-[200px]">
-                  <RichTextEditor 
-                    value={field.value} 
-                    onChange={field.onChange} 
-                    dir="ltr" 
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={field.onChange}
+                    dir="ltr"
                     placeholder={t("placeholders.description")}
                   />
                 </div>
-                <FieldError errors={[{ message: errors.description?.en?.message ? t(errors.description.en.message as any) : undefined }]} />
+                <FieldError
+                  errors={[
+                    {
+                      message: errors.description?.en?.message
+                        ? t(errors.description.en.message as any)
+                        : undefined,
+                    },
+                  ]}
+                />
               </Field>
             )}
           />
@@ -172,23 +234,47 @@ export default function ImageTextSection({ serviceId, initialData }: ImageTextSe
       {/* Image Upload Area */}
       <div className="space-y-4 mx-auto w-full">
         <FieldLabel className="text-sm font-bold flex items-center gap-2">
-          <ImageIcon className="w-4 h-4 text-primary" /> {t("sections.fields.image")}
+          <ImageIcon className="w-4 h-4 text-primary" />{" "}
+          {t("sections.fields.image")}
         </FieldLabel>
-        <div 
+        <div
           className={cn(
             "relative group overflow-hidden rounded-[32px] border-2 border-dashed transition-all",
-            imagePreview ? "border-primary/20 aspect-video shadow-lg" : "border-border hover:border-primary/40 min-h-[300px] flex flex-col items-center justify-center bg-muted/10 cursor-pointer"
+            imagePreview
+              ? "border-primary/20 aspect-video shadow-lg"
+              : "border-border hover:border-primary/40 min-h-[300px] flex flex-col items-center justify-center bg-muted/10 cursor-pointer",
           )}
           onClick={() => !imagePreview && fileInputRef.current?.click()}
         >
           {imagePreview ? (
             <>
-              <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="w-full h-full object-cover"
+              />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-4">
-                <Button type="button" size="icon" className="rounded-full h-12 w-12 bg-red-500 hover:bg-red-600 transition-colors shadow-xl" onClick={(e) => { e.stopPropagation(); removeImage(); }}>
+                <Button
+                  type="button"
+                  size="icon"
+                  className="rounded-full h-12 w-12 bg-red-500 hover:bg-red-600 transition-colors shadow-xl"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeImage();
+                  }}
+                >
                   <X className="w-6 h-6" />
                 </Button>
-                <Button type="button" variant="secondary" size="icon" className="rounded-full h-12 w-12 shadow-xl" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full h-12 w-12 shadow-xl"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                >
                   <ImagePlus className="w-6 h-6" />
                 </Button>
               </div>
@@ -200,22 +286,42 @@ export default function ImageTextSection({ serviceId, initialData }: ImageTextSe
               </div>
               <div className="space-y-1">
                 <p className="text-lg font-bold">{t("upload_image")}</p>
-                <p className="text-xs opacity-40 uppercase tracking-tighter">Recommended size: 1200x800px</p>
+                <p className="text-xs opacity-40 uppercase tracking-tighter">
+                  Recommended size: 1200x800px
+                </p>
               </div>
             </div>
           )}
-          <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
+            onChange={handleImageChange}
+          />
         </div>
-        <FieldError errors={[{ message: errors.image?.message ? t(errors.image.message as any) : undefined }]} />
+        <FieldError
+          errors={[
+            {
+              message: errors.image?.message
+                ? t(errors.image.message as any)
+                : undefined,
+            },
+          ]}
+        />
       </div>
 
       <div className="flex justify-end pt-8 border-t">
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           disabled={isSubmitting}
           className="rounded-full h-14 px-12 font-bold text-lg gap-3 shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all"
         >
-          {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
+          {isSubmitting ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : (
+            <Save className="w-6 h-6" />
+          )}
           {t("save_section")}
         </Button>
       </div>

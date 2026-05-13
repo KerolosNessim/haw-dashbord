@@ -43,7 +43,7 @@ export default function GeneralTab() {
   });
 
   const { getAboutUsQuery, updateAboutUs, isUpdating } = useAboutUs();
-  const { data: aboutUsData, isLoading, isError } = getAboutUsQuery;
+  const { data: aboutUsData, isLoading} = getAboutUsQuery;
 
   const { control, handleSubmit, reset } = useForm<GeneralFormValues>({
     defaultValues: {
@@ -91,6 +91,7 @@ export default function GeneralTab() {
         ar: extractHtml(values.description_ar), 
         en: extractHtml(values.description_en) 
       },
+      
       image: values.image instanceof File ? values.image : undefined,
       video_url: values.video_url,
       meta_title: { ar: values.meta_title_ar, en: values.meta_title_en },
@@ -106,13 +107,7 @@ export default function GeneralTab() {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="h-[400px] flex items-center justify-center text-destructive font-bold">
-        Failed to load About Us data.
-      </div>
-    );
-  }
+
 
   return (
     <form

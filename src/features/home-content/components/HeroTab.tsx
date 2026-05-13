@@ -163,9 +163,9 @@ export default function HeroTab() {
                 control={control}
                 render={({ field }) => (
                   <RichTextEditor
-                    key={data ? "ar-ready" : "ar-loading"}
+                    key="hero-title-ar"
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(val: any) => field.onChange(val.html)}
                     dir="rtl"
                     placeholder="أدخل العنوان هنا..."
                   />
@@ -182,9 +182,9 @@ export default function HeroTab() {
                 control={control}
                 render={({ field }) => (
                   <RichTextEditor
-                    key={data ? "en-ready" : "en-loading"}
+                    key="hero-title-en"
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(val: any) => field.onChange(val.html)}
                     dir="ltr"
                     placeholder="Enter title here..."
                   />

@@ -40,7 +40,8 @@ export default function StatesTab() {
   const { t } = useTranslation("translation", { keyPrefix: "home_content.states" });
 
   const { getStats, updateStat, isPending } = useStats();
-  const apiStats = getStats?.data?.data;
+  const apiStats = getStats?.data?.data?.data;
+  
 
   const {
     control,

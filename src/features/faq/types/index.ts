@@ -34,6 +34,7 @@ export interface UpdateFaqGeneralInput {
   description: LocalizedString;
   meta_title: LocalizedString;
   meta_description: LocalizedString;
+  slug: LocalizedString;
 }
 
 export interface CreateFaqItemInput {

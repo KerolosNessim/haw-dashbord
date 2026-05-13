@@ -34,7 +34,7 @@ export default function IntroTab() {
     keyPrefix: "about.intro",
   });
   const { getAboutUsQuery,updateIntroSection,isUpdatingIntroSection } = useAboutUs();
-  const { data: aboutUsData, isLoading, isError } = getAboutUsQuery;
+  const { data: aboutUsData, isLoading } = getAboutUsQuery;
   const { control, handleSubmit ,reset} = useForm<IntroFormValues>({
     defaultValues: {
       title_ar: "",
@@ -50,11 +50,11 @@ export default function IntroTab() {
     if (aboutUsData?.data) {
       const d = aboutUsData.data;
       reset({
-        title_ar: d.sections[0].title.ar || "",
-        title_en: d.sections[0].title.en || "",
-        description_ar: d.sections[0].description.ar || "",
-        description_en: d.sections[0].description.en || "",
-        image: d.sections[0].image || null,
+        title_ar: d?.sections?.[0]?.title.ar || "",
+        title_en: d?.sections?.[0]?.title.en || "",
+        description_ar: d?.sections?.[0]?.description.ar || "",
+        description_en: d?.sections?.[0]?.description.en || "",
+        image: d?.sections?.[0]?.image || null,
       });
     }
   }, [aboutUsData, reset]);
@@ -82,13 +82,7 @@ export default function IntroTab() {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="h-[400px] flex items-center justify-center text-destructive font-bold">
-        Failed to load About Us data.
-      </div>
-    );
-  }
+
 
   return (
     <form

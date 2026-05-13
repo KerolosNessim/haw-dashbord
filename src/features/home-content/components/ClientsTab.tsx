@@ -35,7 +35,9 @@ export default function ClientsTab() {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { getClientsQuery, updateClients, isPending } = useClients();
-  const apiData = getClientsQuery?.data?.data[0];
+  const apiData = getClientsQuery?.data?.data?.data[0];
+  console.log("apiData", apiData);  
+  
 
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [deletedImages, setDeletedImages] = useState<number[]>([]);

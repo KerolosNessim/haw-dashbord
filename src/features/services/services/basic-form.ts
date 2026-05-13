@@ -2,14 +2,17 @@ import type { LoginResponse } from "@/features/auth/types";
 import type { BasicInfoValues } from "../components/builder/basic-info-form";
 import { api } from "@/lib/api";
 
-export const basicFormApi = (values: BasicInfoValues): Promise<LoginResponse> => {
+export const basicFormApi = (values: BasicInfoValues, id?: number): Promise<LoginResponse> => {
   const formData = new FormData();
+  const url = id ? `/v1/admin/services/${id}?_method=PUT` : "/v1/admin/services";
 
-  formData.append("slug", values.slug);
+  formData.append("slug[ar]", values.slug.ar);
+  formData.append("slug[en]", values.slug.en);
   values.country_ids.forEach((id) => {
     formData.append("country_ids[]", id);
   });
   formData.append("is_active", values.is_active ? "1" : "0");
+  formData.append("show_footer", values.show_footer ? "1" : "0");
 
   // Appending nested localized strings
   formData.append("title[ar]", values.title.ar);
@@ -34,7 +37,7 @@ export const basicFormApi = (values: BasicInfoValues): Promise<LoginResponse> =>
   }
 
 
-  return api.post("/v1/admin/services", formData, {
+  return api.post(url, formData, {
     headers: {
       "Content-Type": "multipart/form-data"
     }

@@ -59,7 +59,7 @@ export default function CardsSection({
     formState: { errors },
   } = useForm<CardsValues>({
     resolver: zodResolver(cardsSchema),
-    defaultValues: {
+    values: {
       title: initialData?.title || { ar: "", en: "" },
       description: initialData?.description || { ar: "", en: "" },
       items: initialData?.items || [

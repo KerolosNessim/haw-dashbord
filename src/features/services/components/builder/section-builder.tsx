@@ -11,6 +11,7 @@ import {
   Trash2,
   ChevronUp,
   ChevronDown,
+  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +30,9 @@ import FullSection from "./sections/full-section";
 import DualDescSection from "./sections/dual-desc-section";
 import FAQSection from "./sections/faq-section";
 import ContactSection from "./sections/contact-section";
+import PackagesSection from "./sections/packages-section";
+import { useEffect } from "react";
+import type { Service } from "../../type";
 
 export type SectionType =
   | "image_text"
@@ -36,7 +40,8 @@ export type SectionType =
   | "full_section"
   | "dual_desc"
   | "faq"
-  | "contact";
+  | "contact"
+
 
 interface SectionInstance {
   id: string;
@@ -46,12 +51,40 @@ interface SectionInstance {
 
 interface SectionBuilderProps {
   serviceId: number;
+  initialService?: Service;
+  isLoading?: boolean;
 }
 
-export default function SectionBuilder({ serviceId }: SectionBuilderProps) {
+export default function SectionBuilder({ serviceId, initialService, isLoading }: SectionBuilderProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [sections, setSections] = useState<SectionInstance[]>([]);
+
+  useEffect(() => {
+    if (initialService && sections.length === 0) {
+      const mappedSections: SectionInstance[] = [];
+      
+      // Mapping keys to SectionInstance
+      if (initialService.benefits) {
+        mappedSections.push({ id: "benefits", type: "image_text", data: initialService.benefits });
+      }
+      if (initialService.steps) {
+        mappedSections.push({ id: "steps", type: "full_section", data: initialService.steps });
+      }
+      if (initialService.faqs) {
+        mappedSections.push({ id: "faqs", type: "faq", data: initialService.faqs });
+      }
+      if (initialService.tools) {
+        mappedSections.push({ id: "tools", type: "dual_desc", data: initialService.tools });
+      }
+      if (initialService.ctas) {
+        mappedSections.push({ id: "ctas", type: "contact", data: initialService.ctas });
+      }
+
+      
+      setSections(mappedSections);
+    }
+  }, [initialService]);
 
   const sectionTypes = [
     { id: "image_text", icon: ImageIcon, color: "bg-blue-50 text-blue-600" },

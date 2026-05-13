@@ -39,6 +39,9 @@ export const updateAboutUs = (data: UpdateAboutUsInput): Promise<AboutUsResponse
     formData.append("meta_description[en]", data.meta_description.en);
   }
 
+  formData.append("slug[ar]", "من_نحن");
+  formData.append("slug[en]", "about_us");
+
 
 
   return api

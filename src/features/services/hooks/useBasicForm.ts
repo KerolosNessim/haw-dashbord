@@ -7,11 +7,11 @@ import type { BasicInfoValues } from "../components/builder/basic-info-form";
 import { basicFormApi } from "../services/basic-form";
 import { resolveApiToastMessage } from "@/lib/api-toast-message";
 
-export const useBasicForm = () => {
+export const useBasicForm = (id?: number) => {
   const { t } = useTranslation();
 
   const {mutateAsync: basicFormMutation, isPending} = useMutation({
-    mutationFn: (values: BasicInfoValues) => basicFormApi(values),
+    mutationFn: (values: BasicInfoValues) => basicFormApi(values, id),
     onSuccess: (data) => {
       toast.success(resolveApiToastMessage(data, t("toasts.create_success")));
       return data;

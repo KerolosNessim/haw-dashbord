@@ -42,7 +42,7 @@ export default function DualDescSection({ serviceId, initialData }: DualDescSect
 
   const { control, handleSubmit, formState: { errors } } = useForm<DualDescValues>({
     resolver: zodResolver(dualDescSchema),
-    defaultValues: {
+    values: {
       title: initialData?.title || { ar: "", en: "" },
       description: initialData?.description || { ar: null, en: null },
       sub_title: initialData?.sub_title || { ar: "", en: "" },

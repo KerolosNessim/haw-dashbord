@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useHelpYou } from "../hooks/useHelpYou";
 import type { HelpYouItem } from "../types";
+import { slugify, slugifyAr } from "@/lib/slugify";
 
 const itemSchema = z.object({
   id: z.number().optional(),
@@ -29,7 +30,8 @@ export default function ContentTab() {
   const { t } = useTranslation("translation", { keyPrefix: "help_you.content" });
   const { getHelpYouQuery, updateHelpYou, isPending } = useHelpYou();
   
-  const apiItems = Array.isArray(getHelpYouQuery?.data?.data) ? getHelpYouQuery?.data?.data : [];
+  const apiItems = Array.isArray(getHelpYouQuery?.data?.data?.data) ? getHelpYouQuery?.data?.data?.data : [];
+console.log("apiItemshelp", apiItems);
 
   const {
     control,
@@ -41,10 +43,10 @@ export default function ContentTab() {
       items: apiItems.length > 0 
         ? apiItems.map((f: HelpYouItem) => ({
             id: f.id,
-            title_ar: f.content?.title?.ar ?? "",
-            title_en: f.content?.title?.en ?? "",
-            des_ar: f.content?.description?.ar ?? "",
-            des_en: f.content?.description?.en ?? "",
+            title_ar: f.title?.ar ?? "",
+            title_en: f.title?.en ?? "",
+            des_ar: f.description?.ar ?? "",
+            des_en: f.description?.en ?? "",
             image: f.image ?? null,
           }))
         : [{ title_ar: "", title_en: "", des_ar: "", des_en: "", image: null }],
@@ -67,6 +69,8 @@ export default function ContentTab() {
       formData.append(`items[${index}][title][en]`, item.title_en);
       formData.append(`items[${index}][description][ar]`, item.des_ar);
       formData.append(`items[${index}][description][en]`, item.des_en);
+      formData.append(`items[${index}][slug][ar]`, slugifyAr(item.title_ar));
+      formData.append(`items[${index}][slug][en]`, slugify(item.title_en));
       
       if (item.image instanceof File) {
         formData.append(`items[${index}][image]`, item.image);

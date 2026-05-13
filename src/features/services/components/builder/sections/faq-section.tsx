@@ -44,7 +44,7 @@ export default function FAQSection({ serviceId, initialData }: FAQSectionProps) 
 
   const { control, handleSubmit, formState: { errors } } = useForm<FAQValues>({
     resolver: zodResolver(faqSchema),
-    defaultValues: {
+    values: {
       title: initialData?.title || { ar: "", en: "" },
       description: initialData?.description || { ar: "", en: "" },
       items: initialData?.items || [{ question: { ar: "", en: "" }, answer: { ar: "", en: "" } }],
