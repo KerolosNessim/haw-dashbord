@@ -1,3 +1,14 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -47,6 +58,7 @@ function rowToForm(row: CourseSectionRow): CourseSectionFormValues {
 
 export default function CourseSectionsPanel({ courseId }: { courseId: string | undefined }) {
   const { t } = useTranslation("translation", { keyPrefix: "courses.sections" });
+  const { t: tApi } = useTranslation("translation", { keyPrefix: "courses.sections_api" });
   const { data: rows = [], isLoading } = useCourseSections(courseId);
   const { createSection, updateSection, removeSection, isPending } = useMutateCourseSection(courseId);
 
@@ -102,20 +114,20 @@ export default function CourseSectionsPanel({ courseId }: { courseId: string | u
               <TableHead>{t("duration")}</TableHead>
               <TableHead>{t("sort_order")}</TableHead>
               <TableHead>{t("free_preview")}</TableHead>
-              <TableHead className="w-[120px] text-center">{t("actions")}</TableHead>
+              <TableHead className="w-[120px]">{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="py-10 text-start text-muted-foreground">
                   …
                 </TableCell>
               </TableRow>
             )}
             {!isLoading && rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="py-10 text-start text-muted-foreground">
                   {t("empty")}
                 </TableCell>
               </TableRow>
@@ -131,7 +143,7 @@ export default function CourseSectionsPanel({ courseId }: { courseId: string | u
                   <TableCell>{row.sort_order}</TableCell>
                   <TableCell>{row.is_free ? t("yes") : t("no")}</TableCell>
                   <TableCell>
-                    <div className="flex justify-center gap-1">
+                    <div className="flex justify-start gap-1">
                       <Button
                         type="button"
                         size="icon"
@@ -141,18 +153,35 @@ export default function CourseSectionsPanel({ courseId }: { courseId: string | u
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        className="rounded-lg text-rose-600 hover:bg-rose-50"
-                        disabled={isPending}
-                        onClick={() => {
-                          if (window.confirm(t("delete_confirm"))) void removeSection(row.id);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="rounded-lg text-rose-600 hover:bg-rose-50"
+                            disabled={isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="rounded-2xl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>{t("delete_confirm_title")}</AlertDialogTitle>
+                            <AlertDialogDescription>{t("delete_confirm")}</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="rounded-xl">{tApi("cancel")}</AlertDialogCancel>
+                            <AlertDialogAction
+                              variant="destructive"
+                              className="rounded-xl"
+                              onClick={() => void removeSection(row.id)}
+                            >
+                              {tApi("delete")}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -247,12 +276,7 @@ export default function CourseSectionsPanel({ courseId }: { courseId: string | u
               <Button
                 type="button"
                 className="rounded-xl font-bold"
-                disabled={
-                  isPending ||
-                  !form.title.ar.trim() ||
-                  !form.title.en.trim() ||
-                  !form.video_url.trim()
-                }
+                disabled={isPending || !form.title.ar.trim() || !form.title.en.trim()}
                 onClick={() => void submitSection()}
               >
                 {editing ? t("save") : t("create")}

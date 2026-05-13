@@ -4,7 +4,7 @@ export interface LocaleString {
 }
 
 export interface SolutionFeature {
-  id: number;
+  id?: number;
   is_active: boolean;
   title: LocaleString;
   description: LocaleString;
@@ -13,14 +13,23 @@ export interface SolutionFeature {
   images: string[];
   meta_title: LocaleString | null;
   meta_description: LocaleString | null;
+  /** Global category id when linked to taxonomy `type=solutions`. */
+  category_id?: number | string | null;
+  category?: {
+    id?: number;
+    name?: LocaleString | string | null;
+    slug?: LocaleString | string | null;
+  } | null;
 }
 
 export interface SolutionsData {
   id: number;
   slug: string;
   is_active: boolean;
-    title: LocaleString;
-    description: LocaleString;
+  title: LocaleString;
+  /** API may expose section copy as `subtitle` (Postman) or legacy `description`. */
+  subtitle?: LocaleString;
+  description?: LocaleString;
 }
 
 export interface SolutionsResponse {

@@ -157,8 +157,8 @@ export default function SocialMediaRepeater() {
             <TableRow className="hover:bg-transparent border-none">
               <TableHead className="py-5 px-6 font-bold text-foreground text-start w-[250px]">{t("platform")}</TableHead>
               <TableHead className="font-bold text-foreground text-start">{t("link")}</TableHead>
-              <TableHead className="font-bold text-foreground text-center w-[120px]">{t("status")}</TableHead>
-              <TableHead className="py-5 px-6 font-bold text-foreground text-center w-[150px]">{t("actions")}</TableHead>
+              <TableHead className="font-bold text-foreground text-start w-[120px]">{t("status")}</TableHead>
+              <TableHead className="py-5 px-6 font-bold text-foreground text-start w-[150px]">{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

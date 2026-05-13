@@ -1,4 +1,7 @@
+import { FormImageField } from "@/components/form/form-image-field";
+import { SmartSlugField } from "@/components/form/smart-slug-field";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 
@@ -12,9 +15,9 @@ import type { CourseFormValues } from "@/features/courses/types";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { BookOpenCheck, ImageIcon, Languages, Save, Trash2 } from "lucide-react";
+import { BookOpenCheck, Languages, Link as LinkIcon, Save } from "lucide-react";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { Controller, useForm } from "react-hook-form";
 
@@ -34,11 +37,32 @@ const localizedRequired = z.object({
 
 
 
+// Matches the bilingual slug regexes used on blog categories: AR slug allows
+// Arabic letters + digits + hyphens; EN slug stays lowercase ASCII.
+const slugLatinPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const slugArabicPattern =
+  /^(?:[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:-[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)$/u;
+
+const localizedCourseSlug = z.object({
+  ar: z
+    .string()
+    .min(1, { message: "validation.required" })
+    .refine((s) => slugArabicPattern.test(s), { message: "validation.slug_format" }),
+  en: z
+    .string()
+    .min(1, { message: "validation.required" })
+    .refine((s) => slugLatinPattern.test(s), { message: "validation.slug_format" }),
+});
+
 const courseSchema = z.object({
 
   title: localizedRequired,
 
   description: localizedRequired,
+
+  slug: localizedCourseSlug,
+
+  is_active: z.boolean(),
 
   price: z.string().optional(),
 
@@ -69,6 +93,10 @@ function defaultValues(): CourseFormValues {
     title: { ar: "", en: "" },
 
     description: { ar: "", en: "" },
+
+    slug: { ar: "", en: "" },
+
+    is_active: true,
 
     price: "",
 
@@ -120,23 +148,9 @@ export default function CourseForm({
 
   const { saveMutation, isPending } = useSaveCourse(mode, courseId);
 
-
+  const coverInputId = useId();
 
   const [coverFile, setCoverFile] = useState<File | null>(null);
-
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
-
-
-
-  useEffect(() => {
-
-    return () => {
-
-      if (coverPreview?.startsWith("blob:")) URL.revokeObjectURL(coverPreview);
-
-    };
-
-  }, [coverPreview]);
 
 
 
@@ -147,6 +161,10 @@ export default function CourseForm({
     handleSubmit,
 
     reset,
+
+    watch,
+
+    trigger,
 
     formState: { errors },
 
@@ -170,6 +188,10 @@ export default function CourseForm({
 
         description: initialValues.description,
 
+        slug: initialValues.slug ?? { ar: "", en: "" },
+
+        is_active: initialValues.is_active ?? true,
+
         price: initialValues.price ?? "",
 
         compare_price: initialValues.compare_price ?? "",
@@ -182,59 +204,22 @@ export default function CourseForm({
 
       setCoverFile(null);
 
-      setCoverPreview(null);
-
     }
 
   }, [initialValues, reset]);
 
 
 
-  const displayCover = coverPreview || initialCoverUrl || null;
-
-
-
-  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-
-    const file = e.target.files?.[0];
-
-    if (!file) return;
-
-    setCoverFile(file);
-
-    setCoverPreview((prev) => {
-
-      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
-
-      return URL.createObjectURL(file);
-
-    });
-
-    e.target.value = "";
-
-  };
-
-
-
-  const clearCover = () => {
-
-    setCoverFile(null);
-
-    setCoverPreview((prev) => {
-
-      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
-
-      return null;
-
-    });
-
-  };
+  // Cover preview source: pending File takes priority, then the saved server URL.
+  const coverPreviewValue: File | string | null =
+    coverFile ?? (initialCoverUrl?.trim() ? initialCoverUrl : null);
 
 
 
   const translateError = (msg: string | undefined) => (msg ? commonT(msg) : undefined);
 
-
+  const watchTitleAr = watch("title.ar");
+  const watchTitleEn = watch("title.en");
 
   const onSubmit = (data: FormShape) => {
 
@@ -243,6 +228,13 @@ export default function CourseForm({
       title: data.title,
 
       description: data.description,
+
+      slug: {
+        ar: data.slug.ar.trim(),
+        en: data.slug.en.trim(),
+      },
+
+      is_active: data.is_active,
 
       price: data.price?.trim() ?? "",
 
@@ -331,6 +323,94 @@ export default function CourseForm({
                 <FieldError>{translateError(errors.title?.en?.message)}</FieldError>
 
               </Field>
+
+            )}
+
+          />
+
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+
+          <SmartSlugField<FormShape>
+
+            control={control}
+
+            name="slug.ar"
+
+            slugLocale="ar"
+
+            titleEn={watchTitleAr ?? ""}
+
+            trigger={trigger}
+
+            label={
+              <span className="flex items-center gap-2 font-bold">
+                <LinkIcon className="h-3 w-3" />
+                {t("slug_ar")}
+              </span>
+            }
+
+            placeholder={t("slug_placeholder_ar")}
+
+            errorMessage={translateError(errors.slug?.ar?.message)}
+
+            inputClassName="rounded-xl"
+
+            syncFromTitleWhenLocked={mode === "create"}
+
+          />
+
+          <SmartSlugField<FormShape>
+
+            control={control}
+
+            name="slug.en"
+
+            slugLocale="en"
+
+            titleEn={watchTitleEn ?? ""}
+
+            trigger={trigger}
+
+            label={
+              <span className="flex items-center gap-2 font-bold">
+                <LinkIcon className="h-3 w-3" />
+                {t("slug_en")}
+              </span>
+            }
+
+            placeholder={t("slug_placeholder")}
+
+            errorMessage={translateError(errors.slug?.en?.message)}
+
+            inputClassName="rounded-xl"
+
+            syncFromTitleWhenLocked={mode === "create"}
+
+          />
+
+          <p className="text-xs text-muted-foreground md:col-span-2">{t("slug_hint")}</p>
+
+        </div>
+
+        <div className="flex items-center gap-2 rounded-xl border border-dashed px-4 py-3">
+
+          <Controller
+
+            name="is_active"
+
+            control={control}
+
+            render={({ field }) => (
+
+              <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+
+                <Checkbox checked={field.value} onCheckedChange={(v) => field.onChange(Boolean(v))} />
+
+                {t("is_active")}
+
+              </label>
 
             )}
 
@@ -514,53 +594,17 @@ export default function CourseForm({
 
 
 
-        <div className="space-y-3">
+        <div className="w-full space-y-2">
 
-          <FieldLabel className="flex items-center gap-2">
-
-            <ImageIcon className="h-4 w-4" />
-
-            {t("cover_image")}
-
-          </FieldLabel>
-
-          {displayCover && (
-
-            <div className="relative max-w-md overflow-hidden rounded-2xl border">
-
-              <img src={displayCover} alt="" className="aspect-video w-full object-cover" />
-
-            </div>
-
-          )}
-
-          <div className="flex flex-wrap gap-2">
-
-            <Button type="button" variant="outline" className="rounded-xl" asChild>
-
-              <label className="cursor-pointer">
-
-                {t("choose_image")}
-
-                <input type="file" accept="image/*" className="hidden" onChange={onFile} />
-
-              </label>
-
-            </Button>
-
-            {(coverPreview || (mode === "edit" && coverFile)) && (
-
-              <Button type="button" variant="ghost" className="rounded-xl text-rose-600" onClick={clearCover}>
-
-                <Trash2 className="mr-1 h-4 w-4" />
-
-                {t("remove_image")}
-
-              </Button>
-
-            )}
-
-          </div>
+          <FormImageField
+            inputId={coverInputId}
+            className="w-full"
+            aspectClassName="aspect-video w-full"
+            label={t("cover_image")}
+            emptyHint={t("choose_image")}
+            value={coverPreviewValue}
+            onChange={(file) => setCoverFile(file)}
+          />
 
           {mode === "create" && !coverFile && (
 

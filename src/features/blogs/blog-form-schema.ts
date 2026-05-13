@@ -11,9 +11,14 @@ const localizedOptional = z.object({
 });
 
 const slugLatinPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-/** Arabic presentation + digits; hyphen between segments. */
+/**
+ * Slug for the Arabic locale. The backend stores either Arabic letters or
+ * Latin transliterations (e.g. id 14 returns `"ar": "vitae-dolor-cumque-v"`),
+ * so this pattern accepts Arabic presentation forms + lowercase Latin + digits,
+ * separated by single hyphens between segments.
+ */
 const slugArabicPattern =
-  /^(?:[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\d]+(?:-[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\d]+)*)$/u;
+  /^(?:[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:-[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)$/u;
 
 const localizedBlogSlug = z.object({
   ar: z

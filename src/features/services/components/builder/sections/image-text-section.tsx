@@ -38,7 +38,8 @@ interface ImageTextSectionProps {
 
 export default function ImageTextSection({ serviceId, initialData }: ImageTextSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
-  
+  const { t: tToast } = useTranslation();
+
   const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,9 +84,9 @@ export default function ImageTextSection({ serviceId, initialData }: ImageTextSe
       
       const res = await saveImageTextSection(serviceId, finalData);
       console.log(res);
-      toast.success(res?.data?.message || "Section Saved!");
+      toast.success(res?.data?.message || tToast("toasts.section_saved"));
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Error saving section");
+      toast.error(error?.response?.data?.message || tToast("toasts.section_save_error"));
       console.error(error);
     } finally {
       setIsSubmitting(false);

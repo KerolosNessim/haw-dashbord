@@ -19,6 +19,22 @@ export type AdminBlogRow = {
   slug: string;
 };
 
+/** Aggregated counts from `data.statistics` in the admin blogs list response. */
+export type AdminBlogStatistics = {
+  total: number;
+  published: number;
+  draft: number;
+  scheduled: number;
+};
+
+/** Laravel paginator summary from `data.meta` in the admin blogs list response. */
+export type AdminBlogMeta = {
+  currentPage: number;
+  lastPage: number;
+  perPage: number;
+  total: number;
+};
+
 function asRecord(v: unknown): Record<string, unknown> | null {
   if (v && typeof v === "object" && !Array.isArray(v)) return v as Record<string, unknown>;
   return null;
@@ -70,20 +86,62 @@ function pickStatus(raw: unknown): BlogStatus {
   return "draft";
 }
 
-/** Accepts Laravel-style `{ data: [] }`, `{ blogs: [] }`, nested envelopes, or plain array */
+/**
+ * Accepts every shape the admin/public blog list endpoints have used over time:
+ * - current admin: `{ data: { blogs: [], statistics, meta } }`
+ * - legacy admin / public: `{ data: [] }`, `{ blogs: [] }`, `{ data: { data: [] } }`, or bare array.
+ */
 export function normalizeAdminBlogListPayload(payload: unknown): unknown[] {
   if (Array.isArray(payload)) return payload;
+
+  const root = asRecord(payload);
+  if (root) {
+    const dataRec = asRecord(root.data);
+    if (dataRec && Array.isArray(dataRec.blogs)) return dataRec.blogs;
+    if (dataRec && Array.isArray(dataRec.data)) return dataRec.data;
+    if (Array.isArray(root.data)) return root.data;
+    if (Array.isArray(root.blogs)) return root.blogs;
+  }
 
   const rows = unwrapDataArray(payload);
   if (rows.length > 0) return rows as unknown[];
 
-  const root = asRecord(payload);
-  if (!root) return [];
-  const d = root.data;
-  if (Array.isArray(d)) return d;
-  const nested = asRecord(d);
-  if (nested && Array.isArray(nested.data)) return nested.data;
   return [];
+}
+
+function toFiniteNumber(v: unknown, fallback = 0): number {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return fallback;
+}
+
+/** Extracts `data.statistics` from the admin blogs list response (defaults to zeros). */
+export function pickAdminBlogStatistics(payload: unknown): AdminBlogStatistics {
+  const root = asRecord(payload);
+  const dataRec = root ? asRecord(root.data) : null;
+  const stats = asRecord(dataRec?.statistics) ?? asRecord(root?.statistics);
+  return {
+    total: toFiniteNumber(stats?.total),
+    published: toFiniteNumber(stats?.published),
+    draft: toFiniteNumber(stats?.draft),
+    scheduled: toFiniteNumber(stats?.scheduled),
+  };
+}
+
+/** Extracts `data.meta` (Laravel paginator) from the admin blogs list response. */
+export function pickAdminBlogMeta(payload: unknown): AdminBlogMeta {
+  const root = asRecord(payload);
+  const dataRec = root ? asRecord(root.data) : null;
+  const meta = asRecord(dataRec?.meta) ?? asRecord(root?.meta);
+  return {
+    currentPage: toFiniteNumber(meta?.current_page, 1),
+    lastPage: toFiniteNumber(meta?.last_page, 1),
+    perPage: toFiniteNumber(meta?.per_page, 0),
+    total: toFiniteNumber(meta?.total),
+  };
 }
 
 export function blogRecordToRow(blog: unknown, locale: string): AdminBlogRow | null {

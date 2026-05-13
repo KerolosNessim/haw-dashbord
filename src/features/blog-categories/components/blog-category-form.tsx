@@ -40,8 +40,9 @@ const localizedSoft = z.object({
 });
 
 const slugLatinPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+/** Mirrors blog-form schema: the AR slug field accepts Arabic OR Latin lowercase letters + digits. */
 const slugArabicPattern =
-  /^(?:[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\d]+(?:-[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\d]+)*)$/u;
+  /^(?:[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:-[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)$/u;
 
 const localizedCategorySlug = z.object({
   ar: z
@@ -212,12 +213,13 @@ export default function BlogCategoryForm({
                 )}
               />
 
+              {/* Same opt-in behavior in both modes: starts Manual; clicking "Linked"
+                 explicitly syncs from the matching name field. */}
               <SmartSlugField<SchemaValues>
                 control={control}
                 name="slug.ar"
                 slugLocale="ar"
                 titleEn={watchNameAr ?? ""}
-                syncFromTitleWhenLocked={mode === "create"}
                 trigger={trigger}
                 label={
                   <span className="flex items-center gap-2">
@@ -233,7 +235,6 @@ export default function BlogCategoryForm({
                 name="slug.en"
                 slugLocale="en"
                 titleEn={watchNameEn ?? ""}
-                syncFromTitleWhenLocked={mode === "create"}
                 trigger={trigger}
                 label={
                   <span className="flex items-center gap-2">

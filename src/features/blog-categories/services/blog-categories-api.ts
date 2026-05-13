@@ -2,6 +2,24 @@ import { api } from "@/lib/api";
 import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
 import type { BlogCategoryFormValues, BlogCategoryRow } from "../types";
 
+/** Laravel paginator summary from `data.meta` (snake_case → camelCase). */
+export type BlogCategoryMeta = {
+  currentPage: number;
+  lastPage: number;
+  perPage: number;
+  total: number;
+};
+
+export type BlogCategoryPage = {
+  rows: BlogCategoryRow[];
+  meta: BlogCategoryMeta;
+};
+
+export type BlogCategoryListParams = {
+  page?: number;
+  perPage?: number;
+};
+
 /**
  * Admin blog-categories aligned with Postman: list `GET ?tree=…`, create `POST` multipart,
  * update via `POST` multipart + `_method=PUT` (Laravel method spoofing) — PHP often omits multipart fields on true PUT.
@@ -78,10 +96,70 @@ export function normalizeBlogCategoryListPayload(payload: unknown): BlogCategory
     .filter((x): x is BlogCategoryRow => x != null);
 }
 
-export async function fetchBlogCategories(): Promise<BlogCategoryRow[]> {
-  const res = await api.get<unknown>(ADMIN_BLOG_CATEGORIES_BASE, { params: { tree: true } });
+function asRecord(v: unknown): Record<string, unknown> | null {
+  return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+}
+
+function toFiniteNumber(v: unknown, fallback = 0): number {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return fallback;
+}
+
+/** Extracts Laravel paginator `meta` from the admin blog-categories list response. */
+export function pickBlogCategoryMeta(payload: unknown): BlogCategoryMeta {
+  const root = asRecord(payload);
+  const dataRec = root ? asRecord(root.data) : null;
+  const meta = asRecord(dataRec?.meta) ?? asRecord(root?.meta);
+  return {
+    currentPage: toFiniteNumber(meta?.current_page, 1),
+    lastPage: toFiniteNumber(meta?.last_page, 1),
+    perPage: toFiniteNumber(meta?.per_page, 0),
+    total: toFiniteNumber(meta?.total),
+  };
+}
+
+/** Fetches a single page; current API returns `{ data: { data: [...], meta } }` (no tree). */
+export async function fetchBlogCategoriesPage(
+  params: BlogCategoryListParams = {},
+): Promise<BlogCategoryPage> {
+  const query: Record<string, string | number> = {};
+  if (params.page && params.page > 0) query.page = params.page;
+  if (params.perPage && params.perPage > 0) query.per_page = params.perPage;
+
+  const res = await api.get<unknown>(ADMIN_BLOG_CATEGORIES_BASE, {
+    params: Object.keys(query).length ? query : undefined,
+  });
+
   const body = (res.data as { data?: unknown })?.data ?? res.data;
-  return normalizeBlogCategoryListPayload(body);
+  return {
+    rows: normalizeBlogCategoryListPayload(body),
+    meta: pickBlogCategoryMeta(res.data),
+  };
+}
+
+/**
+ * Returns every blog category as a flat list (drains all pages).
+ * Dropdowns and category-filter strips depend on having the full set, so we fetch
+ * page 1 then in parallel pull the remaining pages reported by `meta.last_page`.
+ */
+export async function fetchBlogCategories(): Promise<BlogCategoryRow[]> {
+  const first = await fetchBlogCategoriesPage({ page: 1 });
+  if (first.meta.lastPage <= 1) return first.rows;
+
+  const remainingPages: number[] = [];
+  for (let p = 2; p <= first.meta.lastPage; p++) remainingPages.push(p);
+
+  const rest = await Promise.all(
+    remainingPages.map((p) =>
+      fetchBlogCategoriesPage({ page: p, perPage: first.meta.perPage || undefined }),
+    ),
+  );
+
+  return rest.reduce<BlogCategoryRow[]>((acc, page) => acc.concat(page.rows), first.rows);
 }
 
 /**

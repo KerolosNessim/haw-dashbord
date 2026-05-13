@@ -7,8 +7,17 @@ export function unwrapDataArray(payload: unknown): Record<string, unknown>[] {
       p.data ?? p.categories ?? p.items ?? p.packages ?? p.courses ?? p.results ?? p.blogs;
     if (Array.isArray(inner)) return inner as Record<string, unknown>[];
     if (inner && typeof inner === "object") {
-      const nested = (inner as Record<string, unknown>).data;
-      if (Array.isArray(nested)) return nested as Record<string, unknown>[];
+      // Support newer envelopes such as `{ data: { blogs: [...], statistics, meta } }`.
+      const innerRec = inner as Record<string, unknown>;
+      const nestedCandidate =
+        innerRec.data ??
+        innerRec.blogs ??
+        innerRec.items ??
+        innerRec.categories ??
+        innerRec.packages ??
+        innerRec.courses ??
+        innerRec.results;
+      if (Array.isArray(nestedCandidate)) return nestedCandidate as Record<string, unknown>[];
     }
   }
   return [];

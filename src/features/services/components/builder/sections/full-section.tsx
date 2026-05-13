@@ -36,6 +36,7 @@ interface FullSectionProps {
 
 export default function FullSection({ serviceId, initialData }: FullSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
+  const { t: tToast } = useTranslation();
   const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,9 +79,9 @@ export default function FullSection({ serviceId, initialData }: FullSectionProps
     setIsSubmitting(true);
     try {
       const res = await saveFullSection(serviceId, data);
-      toast.success(res?.data?.message || "Section Saved!");
+      toast.success(res?.data?.message || tToast("toasts.section_saved"));
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Error saving section");
+      toast.error(error?.response?.data?.message || tToast("toasts.section_save_error"));
       console.error(error);
     } finally {
       setIsSubmitting(false);

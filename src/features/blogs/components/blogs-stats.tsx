@@ -34,11 +34,21 @@ function StatsCard({ label, value, icon: Icon, colorClass, iconColorClass, unit 
 
 export default function BlogsStats() {
   const { t } = useTranslation("translation", { keyPrefix: "blogs" });
-  const { blogs, isLoading } = useAdminBlogs();
+  const { blogs, statistics, isLoading } = useAdminBlogs();
 
-  const allCount = blogs.length;
-  const publishedCount = blogs.filter((b) => b.status === "published").length;
-  const draftCount = blogs.filter((b) => b.status === "draft").length;
+  // Prefer server-provided `data.statistics`; fall back to row counts (legacy/public fallback endpoint).
+  const hasServerStats =
+    statistics.total > 0 ||
+    statistics.published > 0 ||
+    statistics.draft > 0 ||
+    statistics.scheduled > 0;
+  const allCount = hasServerStats ? statistics.total : blogs.length;
+  const publishedCount = hasServerStats
+    ? statistics.published
+    : blogs.filter((b) => b.status === "published").length;
+  const draftCount = hasServerStats
+    ? statistics.draft
+    : blogs.filter((b) => b.status === "draft").length;
 
   const stats = [
     {

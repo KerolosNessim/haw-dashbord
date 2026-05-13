@@ -1,3 +1,14 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +27,7 @@ import { Link } from "react-router-dom";
 
 export default function CoursesTable() {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "courses" });
+  const { t: tApi } = useTranslation("translation", { keyPrefix: "courses.api" });
   const { t: tbl } = useTranslation("translation", { keyPrefix: "courses.table" });
   const { data: rows = [], isLoading, isError, error } = useCourses();
   const { deleteMutation, isPending: isDeleting } = useDeleteCourse();
@@ -36,7 +48,7 @@ export default function CoursesTable() {
             <TableHead className="py-6 ps-8 font-bold">{tbl("title")}</TableHead>
             <TableHead className="font-bold">{tbl("slug")}</TableHead>
             <TableHead className="font-bold">{tbl("price")}</TableHead>
-            <TableHead className="w-[180px] py-6 pe-8 text-center font-bold">{tbl("actions")}</TableHead>
+            <TableHead className="w-[180px] py-6 pe-8 font-bold">{tbl("actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -68,23 +80,41 @@ export default function CoursesTable() {
                 </TableCell>
                 <TableCell className="text-muted-foreground">{row.priceLabel}</TableCell>
                 <TableCell className="py-6 pe-8">
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-start gap-2">
                     <Button variant="ghost" size="icon" className="rounded-xl" asChild>
                       <Link to={`/courses/edit/${row.id}`}>
                         <Pencil className="h-4 w-4" />
                       </Link>
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-xl text-rose-600 hover:bg-rose-50"
-                      disabled={isDeleting}
-                      onClick={() => {
-                        if (window.confirm(t("delete_confirm"))) void deleteMutation(row.id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-xl text-rose-600 hover:bg-rose-50"
+                          disabled={isDeleting}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="rounded-2xl">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{tApi("delete_confirm_title")}</AlertDialogTitle>
+                          <AlertDialogDescription>{tApi("delete_confirm")}</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="rounded-xl">{tApi("cancel")}</AlertDialogCancel>
+                          <AlertDialogAction
+                            variant="destructive"
+                            className="rounded-xl"
+                            onClick={() => void deleteMutation(row.id)}
+                          >
+                            {tApi("delete")}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </TableCell>
               </TableRow>
@@ -92,7 +122,7 @@ export default function CoursesTable() {
 
           {!isLoading && rows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4} className="py-16 text-center text-muted-foreground">
+              <TableCell colSpan={4} className="py-16 text-start text-muted-foreground">
                 {tbl("empty")}
               </TableCell>
             </TableRow>

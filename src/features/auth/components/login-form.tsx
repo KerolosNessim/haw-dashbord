@@ -7,7 +7,8 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, LogIn } from "lucide-react";
+import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
+import { useState } from "react";
 import { useForm, type FieldError as RHFFieldError } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
@@ -24,6 +25,7 @@ export type LoginValues = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const { t } = useTranslation();
   const { loginMutation, isPending } = useLogin();
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -72,14 +74,28 @@ export function LoginForm() {
       <Field>
         <FieldLabel htmlFor="password">{t("password_label")}</FieldLabel>
         <FieldContent>
-          <Input
-            {...register("password")}
-            id="password"
-            type="password"
-            placeholder={t("password_placeholder")}
-            className="h-12 rounded-xl bg-muted/10 border-border/50 focus:bg-background transition-colors"
-            aria-invalid={!!errors.password}
-          />
+          <div className="relative">
+            <Input
+              {...register("password")}
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder={t("password_placeholder")}
+              autoComplete="current-password"
+              className="h-12 rounded-xl bg-muted/10 border-border/50 focus:bg-background transition-colors pe-11"
+              aria-invalid={!!errors.password}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute end-1 top-1/2 h-9 w-9 -translate-y-1/2 rounded-lg text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? t("hide_password") : t("show_password")}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+            </Button>
+          </div>
           <FieldError errors={[{ message: translateError(errors.password) }]} />
         </FieldContent>
       </Field>

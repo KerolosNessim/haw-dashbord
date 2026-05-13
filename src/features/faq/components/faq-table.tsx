@@ -99,7 +99,7 @@ export default function FaqTable({ data, isLoading }: FaqTableProps) {
               <TableHead className=" py-5 px-6 font-bold text-foreground text-start">
                 {t("question")}
               </TableHead>
-              <TableHead className="text-center font-bold text-foreground">
+              <TableHead className="font-bold text-foreground">
                 {t("status")}
               </TableHead>
               <TableHead className=" py-5 px-6 font-bold text-foreground text-start">
@@ -116,7 +116,7 @@ export default function FaqTable({ data, isLoading }: FaqTableProps) {
                 <TableCell className="py-5 px-6 font-medium text-gray-900 max-w-md text-start">
                   {faq.question[currentLang]}
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell>
                   <Badge
                     variant="secondary"
                     className={`rounded-full px-4 py-1 font-medium border-none ${
@@ -129,7 +129,7 @@ export default function FaqTable({ data, isLoading }: FaqTableProps) {
                   </Badge>
                 </TableCell>
                 <TableCell className="py-5 px-6">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-start gap-2">
                     <Link to={`/faq/edit/${faq.id}`}>
                       <Button
                         variant="ghost"
@@ -158,7 +158,7 @@ export default function FaqTable({ data, isLoading }: FaqTableProps) {
             ))}
             {filteredData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={3} className="py-20 text-center text-muted-foreground font-medium">
+                <TableCell colSpan={3} className="py-20 text-start text-muted-foreground font-medium">
                    {searchQuery ? `No results found for "${searchQuery}"` : "No questions found."}
                 </TableCell>
               </TableRow>

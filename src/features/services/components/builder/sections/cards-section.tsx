@@ -50,6 +50,7 @@ export default function CardsSection({
   initialData,
 }: CardsSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
+  const { t: tToast } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -86,9 +87,9 @@ export default function CardsSection({
         })),
       };
       const res = await saveCardsSection(serviceId, finalData);
-      toast.success(res?.data?.message || "Section Saved!");
+      toast.success(res?.data?.message || tToast("toasts.section_saved"));
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Error saving section");
+      toast.error(error?.response?.data?.message || tToast("toasts.section_save_error"));
       console.error(error);
     } finally {
       setIsSubmitting(false);

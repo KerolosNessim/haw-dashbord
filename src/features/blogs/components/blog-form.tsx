@@ -506,12 +506,14 @@ export default function BlogForm({
             </div>
 
             <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-2 md:*:min-w-0">
+              {/* Slug toggle behaves the same in create and edit: the field always starts in
+                 Manual mode so the stored slug is preserved, and clicking "Linked to Title"
+                 explicitly opts in to syncing from the matching title. */}
               <SmartSlugField<BlogFormValues>
                 control={control}
                 name="slug.ar"
                 slugLocale="ar"
                 titleEn={watchTitleAr ?? ""}
-                syncFromTitleWhenLocked={mode === "create"}
                 trigger={trigger}
                 label={
                   <span className="flex items-center gap-2">
@@ -530,7 +532,6 @@ export default function BlogForm({
                 name="slug.en"
                 slugLocale="en"
                 titleEn={watchTitleEn ?? ""}
-                syncFromTitleWhenLocked={mode === "create"}
                 trigger={trigger}
                 label={
                   <span className="flex items-center gap-2">

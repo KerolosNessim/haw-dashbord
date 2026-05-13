@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { createFaqItem, deleteFaqItem, updateFaqItem } from "../services/faq";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +7,7 @@ import type { AxiosError } from "axios";
 import type { CreateFaqItemInput } from "../types";
 
 export const useFaqItem = (id?: number) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -13,11 +15,11 @@ export const useFaqItem = (id?: number) => {
     mutationFn: createFaqItem,
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["faq-general"] });
-      toast.success(res.message || "FAQ created successfully");
+      toast.success(res.message || t("toasts.faq_created"));
       navigate("/faq");
     },
     onError: (error: AxiosError<{ message: string }>) => {
-      toast.error(error?.response?.data?.message || "Failed to create FAQ");
+      toast.error(error?.response?.data?.message || t("toasts.faq_create_failed"));
     },
   });
 
@@ -25,11 +27,11 @@ export const useFaqItem = (id?: number) => {
     mutationFn: (data: CreateFaqItemInput) => updateFaqItem(id!, data),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["faq-general"] });
-      toast.success(res.message || "FAQ updated successfully");
+      toast.success(res.message || t("toasts.faq_updated"));
       navigate("/faq");
     },
     onError: (error: AxiosError<{ message: string }>) => {
-      toast.error(error?.response?.data?.message || "Failed to update FAQ");
+      toast.error(error?.response?.data?.message || t("toasts.faq_update_failed"));
     },
   });
 
@@ -37,10 +39,10 @@ export const useFaqItem = (id?: number) => {
     mutationFn: deleteFaqItem,
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["faq-general"] });
-      toast.success(res.message || "FAQ deleted successfully");
+      toast.success(res.message || t("toasts.faq_deleted"));
     },
     onError: (error: AxiosError<{ message: string }>) => {
-      toast.error(error?.response?.data?.message || "Failed to delete FAQ");
+      toast.error(error?.response?.data?.message || t("toasts.faq_delete_failed"));
     },
   });
 

@@ -18,6 +18,7 @@ import {
   Settings,
   Shapes,
   Sparkles,
+  Tags,
 } from "lucide-react"
 
 export type NavLinkDef = {
@@ -68,7 +69,12 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
         href: "/why-choose-us",
         icon: Sparkles,
       },
-      { titleKey: "solutions", href: "/solutions", icon: Puzzle },
+      { titleKey: "solutions", href: "/solution-singles", icon: Puzzle },
+      {
+        titleKey: "solution_categories",
+        href: "/solution-categories",
+        icon: Tags,
+      },
       { titleKey: "help_you", href: "/help-you", icon: HandHelping },
     ],
   },
