@@ -86,16 +86,9 @@ function objectivesFormFromApi(raw: unknown): { ar: string; en: string } {
 
 /** JSON array `{ title: { ar, en } }[]` for course create/update multipart field `objectives`. */
 function objectivesPayloadFromForm(obj: { ar: string; en: string }): string {
-  const ar = obj.ar.split(/\r?\n/).map((s) => s.trim());
-  const en = obj.en.split(/\r?\n/).map((s) => s.trim());
-  const n = Math.max(ar.length, en.length);
-  const arr: { title: { ar: string; en: string } }[] = [];
-  for (let i = 0; i < n; i++) {
-    const a = ar[i] ?? "";
-    const e = en[i] ?? "";
-    if (!a.trim() && !e.trim()) continue;
-    arr.push({ title: { ar: a, en: e } });
-  }
+  const ar = obj.ar.trim();
+  const en = obj.en.trim();
+  const arr = ar || en ? [{ title: { ar, en } }] : [];
   return JSON.stringify(arr);
 }
 
@@ -310,13 +303,89 @@ export function recordToCourseFormValues(raw: Record<string, unknown>): CourseDe
   };
 }
 
-export async function fetchCourseDetailForEdit(id: string): Promise<CourseDetailForForm | null> {
+function localizedTextFromRecord(
+  raw: Record<string, unknown> | null,
+  key: string,
+  locale: "ar" | "en",
+): string {
+  if (!raw) return "";
+  const value = raw[key];
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    try {
+      return localizedTextFromRecord({ value: JSON.parse(trimmed) as unknown }, "value", locale);
+    } catch {
+      return trimmed;
+    }
+  }
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return pickLocalized(value, locale).trim();
+  }
+  return "";
+}
+
+function localizedSlugFromRecord(raw: Record<string, unknown> | null, locale: "ar" | "en"): string {
+  if (!raw) return "";
+  const value = raw.slug ?? raw.url_slug;
+  if (typeof value === "string") return value.trim();
+  return pickBilingualSlug(value)[locale];
+}
+
+function mergeLocalizedCourseRecords(
+  base: Record<string, unknown>,
+  arRaw: Record<string, unknown> | null,
+  enRaw: Record<string, unknown> | null,
+): Record<string, unknown> {
+  const title = {
+    ar: localizedTextFromRecord(arRaw, "title", "ar") || localizedTextFromRecord(base, "title", "ar"),
+    en: localizedTextFromRecord(enRaw, "title", "en") || localizedTextFromRecord(base, "title", "en"),
+  };
+  const description = {
+    ar:
+      localizedTextFromRecord(arRaw, "description", "ar") ||
+      localizedTextFromRecord(base, "description", "ar"),
+    en:
+      localizedTextFromRecord(enRaw, "description", "en") ||
+      localizedTextFromRecord(base, "description", "en"),
+  };
+  const slug = {
+    ar: localizedSlugFromRecord(arRaw, "ar") || localizedSlugFromRecord(base, "ar"),
+    en: localizedSlugFromRecord(enRaw, "en") || localizedSlugFromRecord(base, "en"),
+  };
+
+  return {
+    ...base,
+    title,
+    description,
+    slug,
+  };
+}
+
+async function fetchCourseRecordForLocale(
+  id: string,
+  locale: "ar" | "en",
+): Promise<Record<string, unknown> | null> {
   try {
-    const res = await api.get(`/v1/admin/courses/${id}`);
+    const res = await api.get(`/v1/admin/courses/${id}`, {
+      headers: { "Accept-Language": locale },
+    });
     const raw = unwrapEntity(res.data ?? res);
-    if (raw && readId(raw)) return recordToCourseFormValues(raw);
+    return raw && readId(raw) ? raw : null;
   } catch {
-    /* fallback */
+    return null;
+  }
+}
+
+export async function fetchCourseDetailForEdit(id: string): Promise<CourseDetailForForm | null> {
+  const [arRaw, enRaw] = await Promise.all([
+    fetchCourseRecordForLocale(id, "ar"),
+    fetchCourseRecordForLocale(id, "en"),
+  ]);
+
+  const base = arRaw ?? enRaw;
+  if (base && readId(base)) {
+    return recordToCourseFormValues(mergeLocalizedCourseRecords(base, arRaw, enRaw));
   }
 
   const raw = await findListCourseRecord(id);
@@ -408,7 +477,15 @@ export function normalizeSection(raw: unknown): CourseSectionRow | null {
   const id = readId(r);
   if (!id) return null;
   const free = r.is_free ?? r.isFree ?? r.preview;
-  const dur = r.duration;
+  const dur =
+    r.duration ??
+    r.duration_label ??
+    r.durationLabel ??
+    r.time ??
+    r.time_label ??
+    r.timeLabel ??
+    r.minutes ??
+    r.duration_minutes;
   const durationStr =
     typeof dur === "string"
       ? dur
@@ -429,10 +506,31 @@ export function normalizeSection(raw: unknown): CourseSectionRow | null {
 export async function fetchCourseSections(courseId: string): Promise<CourseSectionRow[]> {
   const res = await api.get(`/v1/courses/${courseId}/sections`);
   const body = (res.data as { data?: unknown })?.data ?? res.data;
-  return unwrapDataArray(body)
+  const rawRows = unwrapDataArray(body);
+  const normalizedRows = rawRows
     .map(normalizeSection)
     .filter((x): x is CourseSectionRow => x != null)
     .sort((a, b) => a.sort_order - b.sort_order);
+  console.table(
+    rawRows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      duration: row.duration,
+      duration_label: row.duration_label,
+      time: row.time,
+      minutes: row.minutes,
+      duration_minutes: row.duration_minutes,
+      normalized_duration: normalizedRows.find((normalized) => normalized.id === String(row.id))?.duration ?? "",
+    })),
+  );
+  console.log("[CoursesSections] backend sections response:", {
+    courseId,
+    response: res.data,
+    body,
+    rawRows,
+    normalizedRows,
+  });
+  return normalizedRows;
 }
 
 function courseSectionFormData(courseIdNum: number, values: CourseSectionFormValues): FormData {

@@ -13,8 +13,6 @@ export interface SolutionFeature {
   images: string[];
   meta_title: LocaleString | null;
   meta_description: LocaleString | null;
-  /** Global category id when linked to taxonomy `type=solutions`. */
-  category_id?: number | string | null;
   category?: {
     id?: number;
     name?: LocaleString | string | null;

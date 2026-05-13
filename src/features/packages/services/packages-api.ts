@@ -117,19 +117,44 @@ function categoryLabel(cat: unknown, lang: "ar" | "en"): string {
   return pickLocalized(c.title, lang) || pickLocalized(c.name, lang) || String(c.slug ?? "");
 }
 
-/** Resolves category id from flat keys or nested `package_category` / `category` (scalar or object). */
-function readPackageCategoryId(r: Record<string, unknown>): string {
-  const flat = r.package_category_id ?? r.category_id;
-  if (typeof flat === "string" && flat.trim()) return flat.trim();
-  if (typeof flat === "number" && Number.isFinite(flat)) return String(flat);
+function stringifyIdValue(value: unknown): string {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return "";
+}
 
-  const rel = r.package_category ?? r.category ?? r.packageCategory;
-  if (typeof rel === "string" && rel.trim()) return rel.trim();
-  if (typeof rel === "number" && Number.isFinite(rel)) return String(rel);
-  if (rel && typeof rel === "object" && !Array.isArray(rel)) {
-    const o = rel as Record<string, unknown>;
-    const cid = o.id ?? o.uuid;
-    if (cid != null) return String(cid);
+function readNestedCategoryId(value: unknown): string {
+  const direct = stringifyIdValue(value);
+  if (direct) return direct;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "";
+
+  const o = value as Record<string, unknown>;
+  for (const key of ["id", "uuid", "package_category_id", "category_id", "packageCategoryId", "categoryId", "value"]) {
+    const id = stringifyIdValue(o[key]);
+    if (id) return id;
+  }
+
+  for (const key of ["data", "package_category", "packageCategory", "category", "pivot"]) {
+    const id = readNestedCategoryId(o[key]);
+    if (id) return id;
+  }
+
+  return "";
+}
+
+/** Resolves category id from flat keys or nested `package_category` / `category` relation shapes. */
+function readPackageCategoryId(r: Record<string, unknown>): string {
+  for (const key of [
+    "package_category_id",
+    "packageCategoryId",
+    "category_id",
+    "categoryId",
+    "package_category",
+    "packageCategory",
+    "category",
+  ]) {
+    const id = readNestedCategoryId(r[key]);
+    if (id) return id;
   }
   return "";
 }
@@ -221,6 +246,20 @@ export async function fetchPackagesPage(
 
 export async function fetchPackages(locale: "ar" | "en"): Promise<PackageRow[]> {
   return (await fetchPackagesPage(locale)).rows;
+}
+
+async function fetchPackageRowById(id: string, locale: "ar" | "en"): Promise<PackageRow | null> {
+  const first = await fetchPackagesPage(locale, { perPage: 100 });
+  const firstHit = first.rows.find((p) => p.id === id);
+  if (firstHit) return firstHit;
+
+  for (let page = 2; page <= first.meta.lastPage; page += 1) {
+    const next = await fetchPackagesPage(locale, { page, perPage: first.meta.perPage || 100 });
+    const hit = next.rows.find((p) => p.id === id);
+    if (hit) return hit;
+  }
+
+  return null;
 }
 
 function appendLocalized(fd: FormData, prefix: string, value: { ar: string; en: string }) {
@@ -336,6 +375,29 @@ export function recordToPackageFormValues(raw: unknown): PackageFormValues | nul
   };
 }
 
+async function fillPackageCategoryFromList(
+  id: string,
+  values: PackageFormValues,
+): Promise<PackageFormValues> {
+  if (values.package_category_id && (values.categoryTitleAr || values.categoryTitleEn)) {
+    return values;
+  }
+
+  try {
+    const row = await fetchPackageRowById(id, "en");
+    if (!row) return values;
+
+    return {
+      ...values,
+      package_category_id: values.package_category_id || row.package_category_id,
+      categoryTitleAr: values.categoryTitleAr || row.categoryTitle,
+      categoryTitleEn: values.categoryTitleEn || row.categoryTitle,
+    };
+  } catch {
+    return values;
+  }
+}
+
 export async function fetchPackageById(id: string): Promise<PackageFormValues | null> {
   const urls = [`/v1/admin/packages/${id}`, `/v1/packages/${id}`];
   for (const url of urls) {
@@ -345,13 +407,12 @@ export async function fetchPackageById(id: string): Promise<PackageFormValues | 
         pickPackagePayloadRecord(res.data) ??
         pickPackagePayloadRecord((res.data as { data?: unknown })?.data);
       const parsed = raw ? recordToPackageFormValues(raw) : null;
-      if (parsed) return parsed;
+      if (parsed) return fillPackageCategoryFromList(id, parsed);
     } catch {
       /* next */
     }
   }
-  const list = await fetchPackages("en");
-  const row = list.find((p) => p.id === id);
+  const row = await fetchPackageRowById(id, "en");
   if (!row) return null;
   return {
     package_category_id: row.package_category_id,
@@ -364,5 +425,6 @@ export async function fetchPackageById(id: string): Promise<PackageFormValues | 
     price: "",
     currency: "",
     features: [],
+    ...(row.categoryTitle ? { categoryTitleAr: row.categoryTitle, categoryTitleEn: row.categoryTitle } : {}),
   };
 }

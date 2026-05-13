@@ -37,16 +37,20 @@ function slugPair(row: SolutionFeature): { ar: string; en: string } {
   if (s && typeof s === "object" && "ar" in s && "en" in s) {
     return { ar: String(s.ar ?? ""), en: String(s.en ?? "") };
   }
+  if (typeof s === "string") {
+    return { ar: s, en: s };
+  }
   return { ar: "", en: "" };
 }
 
-function categoryLabel(row: SolutionFeature, isRtl: boolean): string {
-  const n = row.category?.name;
-  if (n == null) return "—";
-  if (typeof n === "string") return n.trim() || "—";
-  const ar = String(n.ar ?? "").trim();
-  const en = String(n.en ?? "").trim();
-  return isRtl ? ar || en || "—" : en || ar || "—";
+function plainTextFromHtml(value: string | undefined | null): string {
+  if (!value) return "";
+  if (typeof window === "undefined") {
+    return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  }
+  const div = document.createElement("div");
+  div.innerHTML = value;
+  return (div.textContent ?? div.innerText ?? "").replace(/\s+/g, " ").trim();
 }
 
 export default function SolutionSinglesTable({ onEdit }: SolutionSinglesTableProps) {
@@ -69,8 +73,8 @@ export default function SolutionSinglesTable({ onEdit }: SolutionSinglesTablePro
       const blob = [
         r.title?.ar,
         r.title?.en,
-        r.description?.ar,
-        r.description?.en,
+        plainTextFromHtml(r.description?.ar),
+        plainTextFromHtml(r.description?.en),
         ar,
         en,
       ]
@@ -110,7 +114,6 @@ export default function SolutionSinglesTable({ onEdit }: SolutionSinglesTablePro
               <TableRow className="border-none hover:bg-transparent">
                 <TableHead className="min-w-[160px] py-5 ps-6 font-bold">{tbl("image")}</TableHead>
                 <TableHead className="min-w-[200px] font-bold">{tbl("title")}</TableHead>
-                <TableHead className="min-w-[140px] font-bold">{tbl("category")}</TableHead>
                 <TableHead className="min-w-[120px] font-bold">{tbl("slug_ar")}</TableHead>
                 <TableHead className="min-w-[120px] font-bold">{tbl("slug_en")}</TableHead>
                 <TableHead className="min-w-[220px] font-bold">{tbl("description")}</TableHead>
@@ -122,7 +125,7 @@ export default function SolutionSinglesTable({ onEdit }: SolutionSinglesTablePro
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={`sk-${i}`}>
-                    {[...Array(8)].map((__, j) => (
+                    {[...Array(7)].map((__, j) => (
                       <TableCell key={j}>
                         <div className="h-8 animate-pulse rounded-lg bg-muted/40" />
                       </TableCell>
@@ -133,7 +136,9 @@ export default function SolutionSinglesTable({ onEdit }: SolutionSinglesTablePro
               {!isLoading &&
                 filtered.map((row) => {
                   const sl = slugPair(row);
-                  const desc = isRtl ? row.description?.ar || row.description?.en : row.description?.en || row.description?.ar;
+                  const desc = plainTextFromHtml(
+                    isRtl ? row.description?.ar || row.description?.en : row.description?.en || row.description?.ar,
+                  );
                   return (
                     <TableRow key={String(row.id ?? sl.en ?? sl.ar)} className="border-border/40 hover:bg-muted/5">
                       <TableCell className="py-4 ps-6 align-middle">
@@ -148,9 +153,6 @@ export default function SolutionSinglesTable({ onEdit }: SolutionSinglesTablePro
                         </div>
                       </TableCell>
                       <TableCell className="align-middle font-bold text-gray-900">{titleLabel(row)}</TableCell>
-                      <TableCell className="align-middle text-sm text-muted-foreground">
-                        {categoryLabel(row, isRtl)}
-                      </TableCell>
                       <TableCell className="align-middle">
                         {sl.ar ? (
                           <Badge variant="outline" className="max-w-[140px] truncate font-mono text-xs">
@@ -225,7 +227,7 @@ export default function SolutionSinglesTable({ onEdit }: SolutionSinglesTablePro
 
               {!isLoading && filtered.length === 0 && !isError && (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-16 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="py-16 text-center text-muted-foreground">
                     {tbl("empty")}
                   </TableCell>
                 </TableRow>

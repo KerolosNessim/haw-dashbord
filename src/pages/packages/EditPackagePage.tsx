@@ -3,13 +3,32 @@ import { usePackageDetail } from "@/features/packages/hooks/usePackageDetail";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
+
+type PackageEditLocationState = {
+  packageCategoryId?: string;
+  categoryTitle?: string;
+};
 
 export default function EditPackagePage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const { t, i18n } = useTranslation("translation", { keyPrefix: "packages" });
   const isRtl = i18n.language.startsWith("ar");
   const { data: initialValues, isLoading, isError } = usePackageDetail(id);
+  const routeState = location.state as PackageEditLocationState | null;
+  const fallbackCategoryId =
+    typeof routeState?.packageCategoryId === "string" ? routeState.packageCategoryId.trim() : "";
+  const fallbackCategoryTitle =
+    typeof routeState?.categoryTitle === "string" ? routeState.categoryTitle.trim() : "";
+  const formInitialValues = initialValues
+    ? {
+        ...initialValues,
+        package_category_id: initialValues.package_category_id || fallbackCategoryId,
+        categoryTitleAr: initialValues.categoryTitleAr || fallbackCategoryTitle,
+        categoryTitleEn: initialValues.categoryTitleEn || fallbackCategoryTitle,
+      }
+    : initialValues;
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 pb-20">
@@ -34,7 +53,7 @@ export default function EditPackagePage() {
 
       {isError && <p className="text-sm text-destructive">{t("load_one_error")}</p>}
 
-      <PackageForm mode="edit" packageId={id} initialValues={initialValues ?? null} isInitialLoading={isLoading} />
+      <PackageForm mode="edit" packageId={id} initialValues={formInitialValues ?? null} isInitialLoading={isLoading} />
     </div>
   );
 }
