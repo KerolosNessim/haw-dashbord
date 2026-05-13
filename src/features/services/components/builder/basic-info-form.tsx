@@ -76,7 +76,7 @@ interface BasicInfoFormProps {
 export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormProps) {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "services.form" });
   const { data: countriesData } = useAdminCountries();
-  const countries = countriesData?.data?.data ?? [];
+  const countries = countriesData?.data ?? [];
   
   const { service, isLoading: isFetching } = useAdminService(initialId);
   const { basicFormMutation, isPending } = useBasicForm(initialId);

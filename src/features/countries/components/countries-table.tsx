@@ -35,7 +35,7 @@ export default function CountriesTable() {
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const countries = data?.data?.data ?? [];
+  const countries = data?.data ?? [];
 
   const filteredCountries = useMemo(() => {
     const q = search.toLowerCase();
