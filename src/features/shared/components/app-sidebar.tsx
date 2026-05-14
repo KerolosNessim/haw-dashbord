@@ -160,7 +160,7 @@ export function AppSidebar() {
               {s("dashboard_title")}
             </p>
           </div> */}
-          <img src="/logo.png" alt="logo" className="w-full h-16 mx-auto object-contain" />
+          <img src="/logo.png" alt="logo" className="w-full h-12 mx-auto object-contain" />
         </div>
       </SidebarHeader>
 
