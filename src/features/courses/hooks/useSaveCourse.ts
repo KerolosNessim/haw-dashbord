@@ -38,6 +38,7 @@ export function useSaveCourse(mode: "create" | "edit", courseId?: string) {
       navigate("/courses");
     },
     onError: (error: AxiosError<unknown>) => {
+      console.error("[useSaveCourse] Mutation error:", error, error.response?.data);
       toast.error(axiosResponseErrorSummary(error.response?.data) || t("save_error"));
     },
   });

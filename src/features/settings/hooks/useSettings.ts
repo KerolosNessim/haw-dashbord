@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   getSettingsApi, 
+  getScriptsApi,
+  updateScriptsApi,
   updateGeneralSettingsApi, 
   updateContactSettingsApi, 
   updateWorkingHoursApi,
@@ -16,6 +18,23 @@ export const useSettings = () => {
   return useQuery({
     queryKey: ["settings"],
     queryFn: getSettingsApi,
+  });
+};
+
+export const useScripts = () => {
+  return useQuery({
+    queryKey: ["settings-scripts"],
+    queryFn: getScriptsApi,
+  });
+};
+
+export const useUpdateScripts = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateScriptsApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["settings-scripts"] });
+    },
   });
 };
 

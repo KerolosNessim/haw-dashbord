@@ -807,7 +807,18 @@
       "offices": "Offices & Addresses",
       "working_hours": "Working Hours",
       "social": "Social Media",
-      "seo": "SEO"
+      "seo": "SEO",
+      "scripts": "Scripts"
+    },
+    "scripts": {
+      "title": "Custom Header & Body Scripts",
+      "custom_head_scripts": "Custom Head Scripts (<head>)",
+      "custom_head_placeholder": "<!-- Google Tag Manager -->\n<script>...</script>",
+      "custom_body_scripts": "Custom Body Scripts (<body>)",
+      "custom_body_placeholder": "<!-- WhatsApp Widget -->\n<div>...</div>",
+      "robots_txt": "Robots.txt Content",
+      "robots_placeholder": "User-agent: *\nDisallow: /admin\nSitemap: https://yourdomain.com/sitemap.xml",
+      "save_changes": "Save Scripts"
     },
     "general": {
       "title": "General Information",

@@ -45,11 +45,14 @@ function CourseEditSummary({
         </div>
         <p className="font-mono text-sm text-muted-foreground">{slug || "—"}</p>
         {detail.values.description.en || detail.values.description.ar ? (
-          <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-            {isRtl
-              ? detail.values.description.ar || detail.values.description.en
-              : detail.values.description.en || detail.values.description.ar}
-          </p>
+          <div
+            className="line-clamp-2 text-sm leading-relaxed text-muted-foreground [&>p]:inline"
+            dangerouslySetInnerHTML={{
+              __html: isRtl
+                ? detail.values.description.ar || detail.values.description.en
+                : detail.values.description.en || detail.values.description.ar,
+            }}
+          />
         ) : null}
         {detail.values.price ? (
           <p className="text-lg font-bold text-primary">

@@ -252,13 +252,17 @@ export async function fetchCourses(_locale: "ar" | "en"): Promise<CourseRow[]> {
 }
 
 async function fetchRawCourseDetail(slug: string): Promise<Record<string, unknown> | null> {
-  try {
-    const res = await api.get(`/v1/courses/${encodeURIComponent(slug)}`);
-    const raw = unwrapEntity(res.data ?? res);
-    return raw;
-  } catch {
-    return null;
+  const urls = [`/v1/courses/${encodeURIComponent(slug)}`, `/v1/admin/courses/${encodeURIComponent(slug)}`];
+  for (const url of urls) {
+    try {
+      const res = await api.get(url);
+      const raw = unwrapEntity(res.data ?? res);
+      if (raw && readId(raw)) return raw;
+    } catch {
+      /* ignore and try next */
+    }
   }
+  return null;
 }
 
 async function findListCourseRecord(id: string): Promise<Record<string, unknown> | null> {
@@ -270,7 +274,8 @@ async function findListCourseRecord(id: string): Promise<Record<string, unknown>
     if (!raw) return null;
 
     let r = raw as Record<string, unknown>;
-    const slug = stringField(r, ["slug", "url_slug"]);
+    const bilingualSlug = pickBilingualSlug(r.slug ?? r.url_slug);
+    const slug = bilingualSlug.en || bilingualSlug.ar || stringField(r, ["slug", "url_slug"]);
     if (slug) {
       const detail = await fetchRawCourseDetail(slug);
       if (detail && readId(detail)) r = detail;
@@ -284,7 +289,7 @@ async function findListCourseRecord(id: string): Promise<Record<string, unknown>
 export function recordToCourseFormValues(raw: Record<string, unknown>): CourseDetailForForm {
   const desc = parseDescriptionFromApi(raw.description);
   const objectivesRaw =
-    raw.objectives ?? raw.learning_objectives ?? raw.goals ?? raw.learningGoals;
+    raw.objectives ?? raw.learning_objectives ?? raw.goals ?? raw.learningGoals ?? raw.features;
   return {
     values: {
       title: {
@@ -366,15 +371,19 @@ async function fetchCourseRecordForLocale(
   id: string,
   locale: "ar" | "en",
 ): Promise<Record<string, unknown> | null> {
-  try {
-    const res = await api.get(`/v1/admin/courses/${id}`, {
-      headers: { "Accept-Language": locale },
-    });
-    const raw = unwrapEntity(res.data ?? res);
-    return raw && readId(raw) ? raw : null;
-  } catch {
-    return null;
+  const urls = [`/v1/admin/courses/${id}`, `/v1/courses/${id}`];
+  for (const url of urls) {
+    try {
+      const res = await api.get(url, {
+        headers: { "Accept-Language": locale },
+      });
+      const raw = unwrapEntity(res.data ?? res);
+      if (raw && readId(raw)) return raw;
+    } catch {
+      /* ignore and try next */
+    }
   }
+  return null;
 }
 
 export async function fetchCourseDetailForEdit(id: string): Promise<CourseDetailForForm | null> {
@@ -410,6 +419,7 @@ export function courseValuesToFormData(values: CourseFormValues, imageFile: File
   if (objJson !== "[]") {
     fd.append("objectives", objJson);
     fd.append("learning_objectives", objJson);
+    fd.append("features", objJson);
   }
 
   if (imageFile instanceof File) {
@@ -436,6 +446,7 @@ function courseUpdateJsonBody(values: CourseFormValues): Record<string, unknown>
       const parsed = JSON.parse(objJson) as unknown;
       body.objectives = parsed;
       body.learning_objectives = parsed;
+      body.features = parsed;
     } catch {
       /* ignore malformed objectives */
     }
@@ -452,16 +463,20 @@ export async function createCourse(values: CourseFormValues, imageFile: File | n
 }
 
 export async function updateCourse(courseId: string, values: CourseFormValues, imageFile: File | null) {
-  if (imageFile instanceof File) {
-    const fd = courseValuesToFormData(values, imageFile);
-    fd.append("_method", "PUT");
+  const fd = courseValuesToFormData(values, imageFile);
+  fd.append("_method", "PUT");
+  try {
     const res = await api.post(`/v1/admin/courses/${courseId}`, fd, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data;
+  } catch (err) {
+    console.warn("[updateCourse] admin route failed, trying public route", err);
+    const res = await api.post(`/v1/courses/${courseId}`, fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
   }
-  const res = await api.put(`/v1/admin/courses/${courseId}`, courseUpdateJsonBody(values));
-  return res.data;
 }
 
 export async function deleteCourse(courseId: string) {
