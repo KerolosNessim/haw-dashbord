@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings as SettingsIcon, Globe, MapPin, Clock, Share2, Search, Phone } from "lucide-react";
+import { Settings as SettingsIcon, Globe, MapPin, Clock, Share2, Search, Phone, Code2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import GeneralSettingsForm from "@/features/settings/components/general-settings-form";
 import OfficesRepeater from "@/features/settings/components/offices-repeater";
@@ -7,6 +7,7 @@ import ContactSettingsForm from "@/features/settings/components/contact-settings
 import WorkingHoursForm from "@/features/settings/components/working-hours-form";
 import SocialMediaRepeater from "@/features/settings/components/social-media-repeater";
 import SeoSettingsRepeater from "@/features/settings/components/seo-settings-repeater";
+import ScriptsSettingsForm from "@/features/settings/components/scripts-settings-form";
 
 export default function SettingsPage() {
   const { t } = useTranslation("translation", { keyPrefix: "settings" });
@@ -28,8 +29,8 @@ export default function SettingsPage() {
 
       {/* Tabs */}
       <Tabs  defaultValue="general" className="space-y-8">
-        <div className="bg-white p-1 rounded-2xl border shadow-sm w-fit">
-          <TabsList className="bg-transparent gap-2 h-fit!">
+        <div className="bg-white p-1 rounded-2xl border shadow-sm w-fit flex flex-wrap">
+          <TabsList className="bg-transparent gap-2 h-fit! flex-wrap">
             <TabsTrigger 
               value="general" 
               className="rounded-xl px-8 h-10 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300"
@@ -72,6 +73,13 @@ export default function SettingsPage() {
               <Search className="w-4 h-4 mr-2" />
               {t("tabs.seo")}
             </TabsTrigger>
+            <TabsTrigger 
+              value="scripts" 
+              className="rounded-xl px-8 h-10 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300"
+            >
+              <Code2 className="w-4 h-4 mr-2" />
+              {t("tabs.scripts")}
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -94,8 +102,12 @@ export default function SettingsPage() {
           <TabsContent value="seo" className="mt-0 outline-none">
             <SeoSettingsRepeater />
           </TabsContent>
+          <TabsContent value="scripts" className="mt-0 outline-none">
+            <ScriptsSettingsForm />
+          </TabsContent>
         </div>
       </Tabs>
     </div>
   );
 }
+

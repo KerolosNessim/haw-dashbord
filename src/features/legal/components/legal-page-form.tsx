@@ -109,18 +109,12 @@ export default function LegalPageForm({ type }: LegalPageFormProps) {
   const onSubmit = (values: LegalPageValues) => {
     const formData = new FormData();
     formData.append("_method", "PUT"); // Laravel PUT workaround
-    formData.append("description", JSON.stringify({
-      ar: values.description_ar,
-      en: values.description_en,
-    }));
-    formData.append("meta_title", JSON.stringify({
-      ar: values.meta_title_ar,
-      en: values.meta_title_en,
-    }));
-    formData.append("meta_description", JSON.stringify({
-      ar: values.meta_description_ar,
-      en: values.meta_description_en,
-    }));
+    formData.append("description[ar]", values.description_ar);
+    formData.append("description[en]", values.description_en);
+    formData.append("meta_title[ar]", values.meta_title_ar);
+    formData.append("meta_title[en]", values.meta_title_en);
+    formData.append("meta_description[ar]", values.meta_description_ar);
+    formData.append("meta_description[en]", values.meta_description_en);
     if (values.slug) formData.append("slug", values.slug);
     if (values.image instanceof File) {
       formData.append("image", values.image);

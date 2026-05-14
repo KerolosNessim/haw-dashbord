@@ -5,11 +5,21 @@ import type {
   SeoSettings,
   SettingsResponse,
   SocialMedia,
-  WorkingHours
+  WorkingHours,
+  ScriptsSettings,
+  ScriptsResponse
 } from "../types";
 
 export const getSettingsApi = (): Promise<SettingsResponse> => {
   return api.get("/v1/admin/settings").then((res) => res.data);
+};
+
+export const getScriptsApi = (): Promise<ScriptsResponse> => {
+  return api.get("/v1/admin/settings/scripts").then((res) => res.data);
+};
+
+export const updateScriptsApi = (data: ScriptsSettings): Promise<unknown> => {
+  return api.post("/v1/admin/settings/scripts", data).then((res) => res.data);
 };
 
 export const updateGeneralSettingsApi = (data: FormData): Promise<unknown> => {

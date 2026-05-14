@@ -809,7 +809,18 @@
       "offices": "المكاتب والعناوين",
       "working_hours": "ساعات العمل",
       "social": "وسائل التواصل الاجتماعي",
-      "seo": "SEO"
+      "seo": "SEO",
+      "scripts": "أكواد برمجية"
+    },
+    "scripts": {
+      "title": "أكواد الترويسة والجسم البرمجية",
+      "custom_head_scripts": "أكواد برمجية للترويسة (<head>)",
+      "custom_head_placeholder": "<!-- Google Tag Manager -->\n<script>...</script>",
+      "custom_body_scripts": "أكواد برمجية للجسم (<body>)",
+      "custom_body_placeholder": "<!-- WhatsApp Widget -->\n<div>...</div>",
+      "robots_txt": "محتوى Robots.txt",
+      "robots_placeholder": "User-agent: *\nDisallow: /admin\nSitemap: https://yourdomain.com/sitemap.xml",
+      "save_changes": "حفظ الأكواد"
     },
     "general": {
       "title": "المعلومات العامة",
