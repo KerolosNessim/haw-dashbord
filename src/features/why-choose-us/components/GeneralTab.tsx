@@ -74,7 +74,7 @@ export default function GeneralTab() {
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel className="text-base font-bold flex items-center gap-2 justify-end">
+                <FieldLabel className="text-base font-bold flex items-center gap-2 ">
                   (AR) {t("sec_title", { defaultValue: "Section Title" })}
                   <Type className="w-4 h-4 text-primary" />
                 </FieldLabel>
@@ -115,7 +115,7 @@ export default function GeneralTab() {
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel className="text-base font-bold flex items-center gap-2 justify-end">
+                <FieldLabel className="text-base font-bold flex items-center gap-2 ">
                   (AR) {t("sec_des", { defaultValue: "Section Description" })}
                   <AlignLeft className="w-4 h-4 text-primary" />
                 </FieldLabel>

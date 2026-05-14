@@ -23,6 +23,8 @@ import {
   routeMatches,
   type NavGroupId,
   type NavLinkDef,
+  DASHBOARD_USERS_LINK,
+  DASHBOARD_CONSULTATION_LINK,
 } from "@/features/shared/config/dashboard-nav.config"
 import { cn } from "@/lib/utils"
 import { ChevronDown, Languages, LayoutDashboard } from "lucide-react"
@@ -96,9 +98,13 @@ export function AppSidebar() {
 
   const homeLink: NavLinkDef = DASHBOARD_HOME_LINK
   const settingsLink: NavLinkDef = DASHBOARD_SETTINGS_LINK
+  const usersLink: NavLinkDef = DASHBOARD_USERS_LINK
+  const consultationLink: NavLinkDef = DASHBOARD_CONSULTATION_LINK
 
   const HomeIcon = homeLink.icon
   const SettingsIcon = settingsLink.icon
+  const UsersIcon = usersLink.icon
+  const ConsultationIcon = consultationLink.icon
 
   const logoPublicSrc = `${import.meta.env.BASE_URL}logo.png`.replace(
     /\/+/g,
@@ -112,7 +118,7 @@ export function AppSidebar() {
       className="z-30"
       sidebarInnerClassName={sidebarGlassSurface}
     >
-      <div
+      {/* <div
         aria-hidden
         className={cn(
           "pointer-events-none absolute inset-x-3 bottom-[6.25rem] z-0 flex max-h-[10.5rem] min-h-[6rem] items-end justify-center sm:bottom-[6.75rem]",
@@ -129,7 +135,7 @@ export function AppSidebar() {
           decoding="async"
           draggable={false}
         />
-      </div>
+      </div> */}
       <SidebarHeader className="relative z-10 shrink-0 border-none px-3.5 pb-2.5 pt-3">
         <div
           className={cn(
@@ -137,7 +143,7 @@ export function AppSidebar() {
             dir === "rtl" && "flex-row-reverse text-right",
           )}
         >
-          <div
+          {/* <div
             className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[calc(0.75rem)] bg-linear-to-br from-sidebar-primary via-[hsl(77_52%_36%)] to-[hsl(77_42%_30%)] text-sidebar-primary-foreground shadow-[0_12px_32px_-12px_hsl(77_52%_26%/72%)] ring-[3px] ring-sidebar-primary/25 ring-offset-2 ring-offset-white/95 dark:to-[hsl(77_42%_24%)] dark:ring-sidebar-primary/35 dark:ring-offset-transparent"
           >
             <span
@@ -153,7 +159,8 @@ export function AppSidebar() {
             <p className="truncate text-[1.02rem] font-semibold tracking-tight text-sidebar-foreground">
               {s("dashboard_title")}
             </p>
-          </div>
+          </div> */}
+          <img src="/logo.png" alt="logo" className="w-full h-16 mx-auto object-contain" />
         </div>
       </SidebarHeader>
 
@@ -212,7 +219,7 @@ export function AppSidebar() {
                           )}
                         >
                           <Icon
-                            className="shrink-0 text-sidebar-primary drop-shadow-[0_1px_0_rgb(255_255_255/42%)]"
+                            className="shrink-0 text-sidebar-primary drop-shadow-[0_1px_0_rgb(255_255_255/42%)] me-2"
                             aria-hidden
                           />
                           <span className="min-w-0 flex-1 truncate text-start font-semibold tracking-tight">
@@ -230,8 +237,8 @@ export function AppSidebar() {
                       <CollapsibleContent className="overflow-hidden duration-150 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0">
                         <SidebarMenu
                           className={cn(
-                            "mx-[3px] mb-2 mt-[0.5625rem] gap-1.5 rounded-[calc(0.8125rem)] border-y border-e border-sidebar-border/42 bg-linear-to-b from-sidebar-accent/[0.32] via-sidebar-accent/[0.09] to-transparent py-2.5 pe-[0.7875rem] ps-4 backdrop-blur-sm shadow-[inset_0_1px_0_rgb(255_255_255/32%)]",
-                            "border-s-[3px] border-s-sidebar-primary/48 dark:border-white/12 dark:from-sidebar-accent/15 dark:to-transparent dark:shadow-[inset_0_1px_0_rgb(255_255_255/6%)]",
+                            "mx-[3px] mb-2 mt-[0.5625rem] gap-1.5 rounded-[calc(0.8125rem)]  py-2.5 pe-[0.7875rem] ps-4 ",
+                            " dark:border-white/12 dark:from-sidebar-accent/15 dark:to-transparent dark:shadow-[inset_0_1px_0_rgb(255_255_255/6%)]",
                           )}
                         >
                           {group.links.map((link) => {
@@ -268,6 +275,48 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
+                  isActive={routeActive(consultationLink.href)}
+                  size="lg"
+                  className={cn(
+                    "group/nav h-[2.75rem] rounded-[calc(0.8125rem)] text-[0.95rem]",
+                    linkButtonClass(routeActive(consultationLink.href)),
+                  )}
+                >
+                  <Link
+                    to={consultationLink.href}
+                    className="flex w-full items-center gap-[0.7rem] font-semibold leading-snug [&_svg]:size-[1.125rem]"
+                  >
+                    <ConsultationIcon className="shrink-0" aria-hidden />
+                    <span className="min-w-0 flex-1 truncate">
+                      {s(consultationLink.titleKey)}
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={routeActive(usersLink.href)}
+                  size="lg"
+                  className={cn(
+                    "group/nav h-[2.75rem] rounded-[calc(0.8125rem)] text-[0.95rem]",
+                    linkButtonClass(routeActive(usersLink.href)),
+                  )}
+                >
+                  <Link
+                    to={usersLink.href}
+                    className="flex w-full items-center gap-[0.7rem] font-semibold leading-snug [&_svg]:size-[1.125rem]"
+                  >
+                    <UsersIcon className="shrink-0" aria-hidden />
+                    <span className="min-w-0 flex-1 truncate">
+                      {s(usersLink.titleKey)}
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
                   isActive={routeActive(settingsLink.href)}
                   size="lg"
                   className={cn(
@@ -293,7 +342,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="relative z-10 mt-auto shrink-0 gap-0 border-transparent px-[1.0625rem] pb-6 pt-[0.625rem] before:pointer-events-none before:absolute before:inset-x-10 before:-top-[1px] before:h-[1px] before:bg-linear-to-r before:from-transparent before:via-sidebar-border/55 before:to-transparent dark:before:via-white/22">
         <SidebarMenu className="gap-3 pt-3">
-          <SidebarMenuItem>
+          {/* <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
               onClick={toggleLanguage}
@@ -308,7 +357,7 @@ export function AppSidebar() {
                 {i18n.language.startsWith("ar") ? "English" : "عربي"}
               </span>
             </SidebarMenuButton>
-          </SidebarMenuItem>
+          </SidebarMenuItem> */}
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="p-0">
               <LogoutBtn />

@@ -151,7 +151,7 @@ export default function DependenciesTab() {
               control={control}
               render={({ field }) => (
                 <Field>
-                  <FieldLabel className="text-base font-bold flex items-center gap-2 justify-end">
+                  <FieldLabel className="text-base font-bold flex items-center gap-2 ">
                     ({t("ar", { defaultValue: "AR" })}) {t("sec_title")}
                     <Type className="w-4 h-4 text-primary" />
                   </FieldLabel>
@@ -194,7 +194,7 @@ export default function DependenciesTab() {
               control={control}
               render={({ field }) => (
                 <Field>
-                  <FieldLabel className="text-base font-bold flex items-center gap-2 justify-end">
+                  <FieldLabel className="text-base font-bold flex items-center gap-2 ">
                     ({t("ar", { defaultValue: "AR" })}) {t("sec_des")}
                     <AlignLeft className="w-4 h-4 text-primary" />
                   </FieldLabel>

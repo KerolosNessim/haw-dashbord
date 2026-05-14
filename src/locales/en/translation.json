@@ -79,6 +79,9 @@
     "courses": "Courses",
     "testimonials": "Testimonials",
     "about_us": "About Us",
+    "contact_submissions": "Contact Submissions",
+    "users": "Users Management",
+    "consultation": "Consultation Bookings",
     "legal": {
       "title": "Legal Pages",
       "privacy-policy": "Privacy Policy",
@@ -1203,6 +1206,110 @@
       "phone": "Phone Number",
       "save": "Save Changes"
     }
+  },
+  "contact": {
+    "title": "Contact Submissions",
+    "description": "Manage and view contact requests sent by website visitors.",
+    "submission_details": "Submission Details",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "message": "Message",
+    "submitted_at": "Submitted At",
+    "close": "Close",
+    "reply_via_email": "Reply via Email",
+    "no_submissions": "No contact submissions found.",
+    "status": {
+      "new": "New",
+      "read": "Read"
+    },
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "status": "Status",
+      "date": "Date",
+      "actions": "Actions"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    }
+  },
+  "users": {
+    "title": "Users Management",
+    "description": "View and manage system users, their statistics and profile information.",
+    "no_users": "No users found.",
+    "account_info": "Account Information",
+    "preferences": "Preferences",
+    "email_verified": "Email Verification",
+    "verified": "Verified",
+    "not_verified": "Not Verified",
+    "created_at": "Joined At",
+    "last_login": "Last Login",
+    "never": "Never",
+    "locale": "Locale",
+    "timezone": "Timezone",
+    "user_id": "User ID",
+    "close": "Close",
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended",
+      "banned": "Banned"
+    },
+    "stats": {
+      "total": "Total Users",
+      "active": "Active Users",
+      "suspended": "Suspended Users",
+      "banned": "Banned Users"
+    },
+    "table": {
+      "user": "User",
+      "contact": "Contact",
+      "status": "Status",
+      "joined_at": "Joined At",
+      "actions": "Actions"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    }
+  },
+  "consultation": {
+    "title": "Consultation Bookings",
+    "description": "Manage and view service booking requests and consultations from clients.",
+    "booking_details": "Booking Details",
+    "no_bookings": "No bookings found at the moment.",
+    "name": "Client Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "date": "Booking Date",
+    "message": "Client Message",
+    "close": "Close",
+    "reply": "Reply via Email",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "delete_confirm_title": "Confirm Deletion",
+    "delete_confirm_description": "Are you sure you want to delete this booking? This action cannot be undone.",
+    "status": {
+      "new": "New",
+      "read": "Read"
+    },
+    "table": {
+      "service": "Requested Service",
+      "client": "Client",
+      "status": "Status",
+      "date": "Date",
+      "actions": "Actions"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    }
   }
 }
+
+
+
 

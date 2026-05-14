@@ -23,7 +23,11 @@ import {
   ShieldCheck,
   FileText,
   Handshake,
+  MessageSquare,
+  Users,
+  MessageCircle,
 } from "lucide-react"
+
 
 export type NavLinkDef = {
   titleKey: string
@@ -55,6 +59,16 @@ export const DASHBOARD_SETTINGS_LINK: NavLinkDef = {
   titleKey: "settings",
   href: "/settings",
   icon: Settings,
+}
+export const DASHBOARD_USERS_LINK: NavLinkDef = {
+  titleKey: "users",
+  href: "/users",
+  icon: Users,
+}
+export const DASHBOARD_CONSULTATION_LINK: NavLinkDef = {
+  titleKey: "consultation",
+  href: "/service-bookings",
+  icon: MessageCircle,
 }
 
 export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
@@ -118,7 +132,14 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
       },
       { titleKey: "testimonials", href: "/testimonials", icon: Quote },
       { titleKey: "about_us", href: "/about", icon: Info },
+      {
+        titleKey: "contact_submissions",
+        href: "/contact-submissions",
+        icon: MessageSquare,
+      },
     ],
+
+
   },
   {
     id: "legal",

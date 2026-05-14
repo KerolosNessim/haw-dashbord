@@ -154,7 +154,7 @@ export default function HeroTab() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-3">
-              <FieldLabel className="text-base font-bold flex items-center gap-2 justify-end">
+              <FieldLabel className="text-base font-bold flex items-center gap-2 ">
                 ({t("ar")}) {t("title")}
                 <Languages className="w-4 h-4 text-primary" />
               </FieldLabel>
@@ -202,7 +202,7 @@ export default function HeroTab() {
               control={control}
               render={({ field }) => (
                 <Field>
-                  <FieldLabel className="text-base font-bold flex items-center gap-2 justify-end">
+                  <FieldLabel className="text-base font-bold flex items-center gap-2 ">
                     ({t("ar")}) {t("des")}
                     <AlignLeft className="w-4 h-4 text-primary" />
                   </FieldLabel>
@@ -246,7 +246,7 @@ export default function HeroTab() {
               control={control}
               render={({ field }) => (
                 <Field>
-                  <FieldLabel className="text-base font-bold flex items-center gap-2 justify-end">
+                  <FieldLabel className="text-base font-bold flex items-center gap-2 ">
                     ({t("ar")}) {t("sup_des")}
                     <AlignLeft className="w-4 h-4 text-primary/60" />
                   </FieldLabel>

@@ -202,7 +202,7 @@ export default function ContentTab() {
                     control={control}
                     render={({ field }) => (
                       <Field>
-                        <FieldLabel className="text-sm font-bold flex items-center gap-2 justify-end">
+                        <FieldLabel className="text-sm font-bold flex items-center gap-2 ">
                           (AR) {t("feature_title")}
                           <Type className="w-4 h-4 text-primary" />
                         </FieldLabel>
@@ -251,7 +251,7 @@ export default function ContentTab() {
                     control={control}
                     render={({ field }) => (
                       <Field>
-                        <FieldLabel className="text-sm font-bold flex items-center gap-2 justify-end">
+                        <FieldLabel className="text-sm font-bold flex items-center gap-2 ">
                           (AR) {t("feature_description")}
                           <AlignLeft className="w-4 h-4 text-primary" />
                         </FieldLabel>
@@ -299,7 +299,7 @@ export default function ContentTab() {
       </div>
 
       {/* Action Footer */}
-      <div className="pt-10 border-t flex justify-end">
+      <div className="pt-10 border-t flex ">
         <Button
           type="submit"
           size="lg"

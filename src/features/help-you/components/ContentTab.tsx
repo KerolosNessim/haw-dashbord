@@ -196,7 +196,7 @@ console.log("apiItemshelp", apiItems);
                     control={control}
                     render={({ field }) => (
                       <Field>
-                        <FieldLabel className="text-sm font-bold flex items-center gap-2 justify-end">
+                        <FieldLabel className="text-sm font-bold flex items-center gap-2 ">
                           (AR) {t("item_title")}
                           <Type className="w-4 h-4 text-primary" />
                         </FieldLabel>
@@ -244,7 +244,7 @@ console.log("apiItemshelp", apiItems);
                     control={control}
                     render={({ field }) => (
                       <Field>
-                        <FieldLabel className="text-sm font-bold flex items-center gap-2 justify-end">
+                        <FieldLabel className="text-sm font-bold flex items-center gap-2 ">
                           (AR) {t("item_description")}
                           <AlignLeft className="w-4 h-4 text-primary" />
                         </FieldLabel>
@@ -291,7 +291,7 @@ console.log("apiItemshelp", apiItems);
         ))}
       </div>
 
-      <div className="pt-10 border-t flex justify-end">
+      <div className="pt-10 border-t flex ">
         <Button
           type="submit"
           size="lg"

@@ -79,13 +79,16 @@
     "courses": "الدورات",
     "testimonials": "آراء العملاء",
     "about_us": "من نحن",
+    "contact_submissions": "طلبات التواصل",
+    "users": "إدارة المستخدمين",
+    "consultation": "حجوزات الاستشارات",
     "legal": {
       "title": "الصفحات القانونية",
       "privacy-policy": "سياسة الخصوصية",
       "terms-of-use": "شروط الاستخدام",
       "refund-policy": "سياسة الاسترجاع"
     },
-    "logout": "Log out"
+    "logout": "تسجيل الخروج"
   },
   "countries": {
     "title": "الدول",
@@ -1205,6 +1208,110 @@
       "phone": "رقم الهاتف",
       "save": "حفظ التغييرات"
     }
+  },
+  "contact": {
+    "title": "طلبات التواصل",
+    "description": "إدارة وعرض طلبات التواصل المرسلة من قبل زوار الموقع.",
+    "submission_details": "تفاصيل الطلب",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "رقم الهاتف",
+    "message": "الرسالة",
+    "submitted_at": "تاريخ الإرسال",
+    "close": "إغلاق",
+    "reply_via_email": "الرد عبر البريد",
+    "no_submissions": "لا توجد طلبات تواصل حالياً.",
+    "status": {
+      "new": "جديد",
+      "read": "تمت القراءة"
+    },
+    "table": {
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "status": "الحالة",
+      "date": "التاريخ",
+      "actions": "الإجراءات"
+    },
+    "pagination": {
+      "previous": "السابق",
+      "next": "التالي"
+    }
+  },
+  "users": {
+    "title": "إدارة المستخدمين",
+    "description": "عرض وإدارة مستخدمي النظام والاطلاع على إحصائياتهم وبياناتهم.",
+    "no_users": "لم يتم العثور على مستخدمين.",
+    "account_info": "معلومات الحساب",
+    "preferences": "التفضيلات",
+    "email_verified": "توثيق البريد",
+    "verified": "موثق",
+    "not_verified": "غير موثق",
+    "created_at": "تاريخ الانضمام",
+    "last_login": "آخر ظهور",
+    "never": "لم يسجل دخول بعد",
+    "locale": "اللغة",
+    "timezone": "التوقيت",
+    "user_id": "معرف المستخدم",
+    "close": "إغلاق",
+    "status": {
+      "active": "نشط",
+      "suspended": "معلق",
+      "banned": "محظور"
+    },
+    "stats": {
+      "total": "إجمالي المستخدمين",
+      "active": "المستخدمين النشطين",
+      "suspended": "المستخدمين المعلقين",
+      "banned": "المستخدمين المحظورين"
+    },
+    "table": {
+      "user": "المستخدم",
+      "contact": "التواصل",
+      "status": "الحالة",
+      "joined_at": "تاريخ الانضمام",
+      "actions": "الإجراءات"
+    },
+    "pagination": {
+      "previous": "السابق",
+      "next": "التالي"
+    }
+  },
+  "consultation": {
+    "title": "حجوزات الاستشارات",
+    "description": "إدارة وعرض طلبات حجز الاستشارات والخدمات المقدمة من العملاء.",
+    "booking_details": "تفاصيل الحجز",
+    "no_bookings": "لا توجد حجوزات حالياً.",
+    "name": "اسم العميل",
+    "email": "البريد الإلكتروني",
+    "phone": "رقم الهاتف",
+    "date": "تاريخ الطلب",
+    "message": "رسالة العميل",
+    "close": "إغلاق",
+    "reply": "الرد عبر البريد",
+    "delete": "حذف",
+    "cancel": "إلغاء",
+    "deleting": "جاري الحذف...",
+    "delete_confirm_title": "تأكيد الحذف",
+    "delete_confirm_description": "هل أنت متأكد من حذف هذا الحجز؟ لا يمكن التراجع عن هذا الإجراء.",
+    "status": {
+      "new": "جديد",
+      "read": "تمت القراءة"
+    },
+    "table": {
+      "service": "الخدمة المطلوبة",
+      "client": "العميل",
+      "status": "الحالة",
+      "date": "التاريخ",
+      "actions": "الإجراءات"
+    },
+    "pagination": {
+      "previous": "السابق",
+      "next": "التالي"
+    }
   }
 }
+
+
+
 

@@ -42,6 +42,10 @@ import CountriesPage from "./pages/countreies/CountriesPage"
 import PrivacyPolicyPage from "./pages/legal/PrivacyPolicy"
 import TermsOfUsePage from "./pages/legal/TermsOfUse"
 import RefundPolicyPage from "./pages/legal/RefundPolicy"
+import ContactSubmissionsPage from "./pages/contact/ContactSubmissionsPage"
+import UsersPage from "./pages/users/UsersPage"
+import ServiceBookingsPage from "./pages/service-bookings/ServiceBookingsPage"
+
 
 const router = createBrowserRouter([
   {
@@ -204,6 +208,19 @@ const router = createBrowserRouter([
         path: "/refund-policy",
         element: <RefundPolicyPage />,
       },
+      {
+        path: "/contact-submissions",
+        element: <ContactSubmissionsPage />,
+      },
+      {
+        path: "/users",
+        element: <UsersPage />,
+      },
+      {
+        path: "/service-bookings",
+        element: <ServiceBookingsPage />,
+      },
+
     ],
   },
   {

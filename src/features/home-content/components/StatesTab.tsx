@@ -160,7 +160,7 @@ export default function StatesTab() {
                     control={control}
                     render={({ field }) => (
                       <Field>
-                        <FieldLabel className="text-sm font-bold flex items-center gap-2 justify-end">
+                        <FieldLabel className="text-sm font-bold flex items-center gap-2 ">
                           ({t("ar", { defaultValue: "AR" })}) {t("stat_title")}
                           <Type className="w-4 h-4 text-primary" />
                         </FieldLabel>
@@ -199,7 +199,7 @@ export default function StatesTab() {
                     control={control}
                     render={({ field }) => (
                       <Field>
-                        <FieldLabel className="text-sm font-bold flex items-center gap-2 justify-end">
+                        <FieldLabel className="text-sm font-bold flex items-center gap-2 ">
                           ({t("ar", { defaultValue: "AR" })}) {t("stat_description")}
                           <AlignLeft className="w-4 h-4 text-primary" />
                         </FieldLabel>
@@ -237,7 +237,7 @@ export default function StatesTab() {
       </div>
 
       {/* Action Footer */}
-      <div className="pt-6 border-t flex justify-end">
+      <div className="pt-6 border-t flex ">
         <Button
           type="submit"
           size="lg"
