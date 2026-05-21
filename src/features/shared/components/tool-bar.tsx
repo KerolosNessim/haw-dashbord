@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { applyHeadingLevel } from "./editor-font-utils";
 import FontSizeSelect from "./font-size-select";
 import {
   INSERT_ORDERED_LIST_COMMAND,
@@ -94,9 +95,9 @@ export default function Toolbar() {
   const formatHeading = (level: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") => {
     editor.update(() => {
       const selection = $getSelection();
-      if ($isRangeSelection(selection)) {
-        $setBlocksType(selection, () => $createHeadingNode(level));
-      }
+      if (!$isRangeSelection(selection)) return;
+      $setBlocksType(selection, () => $createHeadingNode(level));
+      applyHeadingLevel(selection, level);
     });
   };
 

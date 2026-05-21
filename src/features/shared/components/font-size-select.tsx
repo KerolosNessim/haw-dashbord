@@ -7,70 +7,26 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import {
-  $getSelectionStyleValueForProperty,
-  $patchStyleText,
-} from "@lexical/selection";
 import { mergeRegister } from "@lexical/utils";
 import { $getSelection, $isRangeSelection, type LexicalEditor } from "lexical";
 import { Minus, Plus } from "lucide-react";
 import type { ElementType } from "react";
 import { useCallback, useEffect, useState } from "react";
-
-export const DEFAULT_FONT_SIZE = "16px";
-
-/** Word-style sizes in px; 16 is the default (clears inline style, inherits editor base). */
-export const EDITOR_FONT_SIZES = [
-  { label: "8", value: "8px" },
-  { label: "9", value: "9px" },
-  { label: "10", value: "10px" },
-  { label: "11", value: "11px" },
-  { label: "12", value: "12px" },
-  { label: "14", value: "14px" },
-  { label: "16", value: "16px" },
-  { label: "18", value: "18px" },
-  { label: "20", value: "20px" },
-  { label: "24", value: "24px" },
-  { label: "28", value: "28px" },
-  { label: "32", value: "32px" },
-  { label: "36", value: "36px" },
-  { label: "48", value: "48px" },
-  { label: "72", value: "72px" },
-] as const;
+import {
+  applyFontSizeToSelection,
+  DEFAULT_FONT_SIZE,
+  EDITOR_FONT_SIZES,
+  labelForFontSize,
+  resolveFontSizeFromSelection,
+} from "./editor-font-utils";
 
 const SIZE_VALUES = EDITOR_FONT_SIZES.map((o) => o.value);
-
-function labelForValue(value: string): string {
-  return EDITOR_FONT_SIZES.find((o) => o.value === value)?.label ?? "16";
-}
-
-function normalizeFontSize(raw: string): string {
-  if (!raw) return DEFAULT_FONT_SIZE;
-  const exact = EDITOR_FONT_SIZES.find((o) => o.value === raw);
-  if (exact) return exact.value;
-  const px = raw.match(/^([\d.]+)px$/i);
-  if (px) {
-    const candidate = `${Math.round(Number(px[1]))}px`;
-    if (EDITOR_FONT_SIZES.some((o) => o.value === candidate)) return candidate;
-  }
-  const pt = raw.match(/^([\d.]+)pt$/i);
-  if (pt) {
-    const pxNum = Math.round((Number(pt[1]) * 96) / 72);
-    const candidate = `${pxNum}px`;
-    if (EDITOR_FONT_SIZES.some((o) => o.value === candidate)) return candidate;
-  }
-  return DEFAULT_FONT_SIZE;
-}
 
 function applyFontSize(editor: LexicalEditor, value: string) {
   editor.update(() => {
     const selection = $getSelection();
     if (!$isRangeSelection(selection)) return;
-    if (value === DEFAULT_FONT_SIZE) {
-      $patchStyleText(selection, { "font-size": null });
-    } else {
-      $patchStyleText(selection, { "font-size": value });
-    }
+    applyFontSizeToSelection(selection, value);
   });
 }
 
@@ -121,8 +77,7 @@ export default function FontSizeSelect() {
   const syncFromSelection = useCallback(() => {
     const selection = $getSelection();
     if (!$isRangeSelection(selection)) return;
-    const raw = $getSelectionStyleValueForProperty(selection, "font-size", "");
-    setFontSize(normalizeFontSize(raw));
+    setFontSize(resolveFontSizeFromSelection(selection));
   }, []);
 
   useEffect(() => {
@@ -164,7 +119,7 @@ export default function FontSizeSelect() {
             "[&_svg]:size-3.5 [&_svg]:opacity-60",
           )}
         >
-          <SelectValue>{labelForValue(fontSize)}</SelectValue>
+          <SelectValue>{labelForFontSize(fontSize)}</SelectValue>
         </SelectTrigger>
         <SelectContent align="center" className="max-h-60 min-w-16">
           {EDITOR_FONT_SIZES.map((option) => (
