@@ -42,6 +42,7 @@ export function normalizeService(raw: Record<string, unknown>): Service {
     title: pickLocalizedField(raw.title as LocalizedField),
     description: pickLocalizedField(raw.description as LocalizedField),
     highlight_description: pickLocalizedField(raw.highlight_description as LocalizedField),
+    inside_desc: pickLocalizedField(raw.inside_desc as LocalizedField),
     media_url: (raw.media_url as string | null) ?? null,
     media_type: (raw.media_type as string | null) ?? null,
     meta_title: pickLocalizedField(raw.meta_title as LocalizedField),

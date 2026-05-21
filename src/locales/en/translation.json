@@ -162,6 +162,7 @@
       "status_online": "Status Online",
       "sort_order": "Sort Order",
       "highlight_description": "Highlight Description",
+      "inside_desc": "Inside description",
       "meta_title": "Meta Title",
       "meta_description": "Meta Description",
       "image_icon": "Icon",
@@ -190,6 +191,7 @@
         "title": "Enter title here...",
         "description": "Enter short description...",
         "highlight": "Enter highlight text...",
+        "inside_desc": "Enter inside page description...",
         "meta_title": "Page title for search engines",
         "meta_description": "Page description for search engines"
       },

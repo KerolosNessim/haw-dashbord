@@ -32,6 +32,10 @@ export function serviceToBasicInfoValues(service: Service): BasicInfoValues {
       ar: service.highlight_description?.ar ?? null,
       en: service.highlight_description?.en ?? null,
     },
+    inside_desc: {
+      ar: service.inside_desc?.ar ?? null,
+      en: service.inside_desc?.en ?? null,
+    },
     meta_title: {
       ar: service.meta_title?.ar ?? "",
       en: service.meta_title?.en ?? "",
@@ -48,9 +52,6 @@ export function serviceToBasicInfoValues(service: Service): BasicInfoValues {
       ar: service.image_alt?.ar ?? "",
       en: service.image_alt?.en ?? "",
     },
-    sort_order: service.sort_order ?? 0,
-    media_url: service.media_url ?? "",
-    media_type: service.media_type ?? "",
     og_title: pickLocalized(raw.og_title) ?? { ar: "", en: "" },
     og_description: pickLocalized(raw.og_description) ?? { ar: "", en: "" },
     og_type: (raw.og_type as string) ?? "website",

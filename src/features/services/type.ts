@@ -41,6 +41,7 @@ export interface Service {
   title: LocalizedString;
   description: LocalizedString;
   highlight_description: LocalizedString;
+  inside_desc?: LocalizedString;
   media_url: string | null;
   media_type: string | null;
   meta_title: LocalizedString;

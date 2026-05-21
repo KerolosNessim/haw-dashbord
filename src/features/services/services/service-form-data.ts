@@ -117,8 +117,6 @@ function appendTools(fd: FormData, data: ToolsSectionData) {
 function appendCtas(fd: FormData, data: Record<string, unknown>) {
   const title = data.title as { ar?: string; en?: string } | undefined;
   if (title) appendLocalized(fd, "ctas_title", { ar: title.ar ?? "", en: title.en ?? "" });
-  const buttonText = data.button_text as { ar?: string; en?: string } | undefined;
-  if (buttonText) appendLocalized(fd, "ctas_button_text", buttonText);
   if (data.phone_number) fd.append("ctas_phone_number", String(data.phone_number));
   if (data.phone) fd.append("ctas_phone_number", String(data.phone));
   appendLocalizedHtml(fd, "ctas_description", (data.description as { ar?: unknown })?.ar, "ar");
@@ -152,12 +150,6 @@ function appendPackages(fd: FormData, data: PackagesSectionData) {
 }
 
 function appendBasicSocialAndMedia(fd: FormData, basic: BasicInfoValues) {
-  appendScalar(fd, "media_url", basic.media_url);
-  appendScalar(fd, "media_type", basic.media_type);
-  if (basic.sort_order != null) {
-    fd.append("sort_order", String(basic.sort_order));
-  }
-
   basic.package_ids?.forEach((id) => fd.append("package_ids[]", id));
 
   appendLocalized(fd, "og_title", basic.og_title);
@@ -206,6 +198,9 @@ export function buildServicePageFormData(
       htmlFromUnknown(basic.highlight_description.en),
     );
   }
+
+  appendLocalizedHtml(fd, "inside_desc", basic.inside_desc?.ar, "ar");
+  appendLocalizedHtml(fd, "inside_desc", basic.inside_desc?.en, "en");
 
   appendLocalized(fd, "meta_title", basic.meta_title);
   appendLocalized(fd, "meta_description", basic.meta_description);

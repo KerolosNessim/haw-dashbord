@@ -70,6 +70,7 @@ const basicInfoSchema = z.object({
   title: localizedSchema,
   description: localizedSchema,
   highlight_description: localizedEditorSchema,
+  inside_desc: localizedEditorSchema,
   meta_title: localizedSchema,
   meta_description: localizedSchema,
   image: serviceImageSchema,
@@ -78,9 +79,6 @@ const basicInfoSchema = z.object({
     en: z.string().optional(),
   }),
   show_footer: z.boolean(),
-  sort_order: z.coerce.number().optional(),
-  media_url: z.string().optional(),
-  media_type: z.string().optional(),
   og_title: optionalLocalizedSchema.optional(),
   og_description: optionalLocalizedSchema.optional(),
   og_type: z.string().optional(),
@@ -144,14 +142,12 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
       title: { ar: "", en: "" },
       description: { ar: "", en: "" },
       highlight_description: { ar: null, en: null },
+      inside_desc: { ar: null, en: null },
       meta_title: { ar: "", en: "" },
       meta_description: { ar: "", en: "" },
       image: { ar: null, en: null },
       image_alt: { ar: "", en: "" },
       package_ids: [],
-      sort_order: 0,
-      media_url: "",
-      media_type: "",
       og_title: { ar: "", en: "" },
       og_description: { ar: "", en: "" },
       og_type: "website",
@@ -186,6 +182,10 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
           ar: service.highlight_description?.ar ?? null,
           en: service.highlight_description?.en ?? null,
         },
+        inside_desc: {
+          ar: service.inside_desc?.ar ?? null,
+          en: service.inside_desc?.en ?? null,
+        },
         meta_title: {
           ar: service.meta_title?.ar ?? "",
           en: service.meta_title?.en ?? "",
@@ -204,9 +204,6 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
         },
         package_ids:
           (service as { package_ids?: number[] }).package_ids?.map(String) ?? [],
-        sort_order: service.sort_order ?? 0,
-        media_url: service.media_url ?? "",
-        media_type: service.media_type ?? "",
         og_title: pickLocalizedFromService(service as Record<string, unknown>, "og_title"),
         og_description: pickLocalizedFromService(
           service as Record<string, unknown>,
@@ -277,6 +274,10 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
     highlight_description: {
       ar: editorOnChangeToHtml(data.highlight_description?.ar),
       en: editorOnChangeToHtml(data.highlight_description?.en),
+    },
+    inside_desc: {
+      ar: editorOnChangeToHtml(data.inside_desc?.ar),
+      en: editorOnChangeToHtml(data.inside_desc?.en),
     },
   });
 
@@ -605,6 +606,70 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
               )}
             />
           </div>
+
+          {/* Inside description (Rich Text) */}
+          <div className="grid grid-cols-1 gap-8 border-t pt-8 md:grid-cols-2">
+            <Controller
+              name="inside_desc.ar"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 opacity-40" />
+                    {t("inside_desc")} (AR)
+                  </FieldLabel>
+                  <div className="min-h-[200px]">
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        if (field.value !== html) field.onChange(html);
+                      }}
+                      dir="rtl"
+                      placeholder={t("placeholders.inside_desc")}
+                    />
+                  </div>
+                  <FieldError
+                    errors={[
+                      {
+                        message: translateError(errors.inside_desc?.ar),
+                      },
+                    ]}
+                  />
+                </Field>
+              )}
+            />
+            <Controller
+              name="inside_desc.en"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 opacity-40" />
+                    {t("inside_desc")} (EN)
+                  </FieldLabel>
+                  <div className="min-h-[200px]">
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        if (field.value !== html) field.onChange(html);
+                      }}
+                      dir="ltr"
+                      placeholder={t("placeholders.inside_desc")}
+                    />
+                  </div>
+                  <FieldError
+                    errors={[
+                      {
+                        message: translateError(errors.inside_desc?.en),
+                      },
+                    ]}
+                  />
+                </Field>
+              )}
+            />
+          </div>
         </div>
 
         {/* Media Settings (Dual Uploaders) */}
@@ -700,48 +765,6 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                     {...field}
                     dir="ltr"
                     className="h-12 rounded-2xl bg-background border-border/50"
-                  />
-                </Field>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Controller
-              name="media_url"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>media_url</FieldLabel>
-                  <Input {...field} dir="ltr" className="h-12 rounded-2xl" />
-                </Field>
-              )}
-            />
-            <Controller
-              name="media_type"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>media_type</FieldLabel>
-                  <Input
-                    {...field}
-                    placeholder="video | image"
-                    className="h-12 rounded-2xl"
-                  />
-                </Field>
-              )}
-            />
-            <Controller
-              name="sort_order"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>sort_order</FieldLabel>
-                  <Input
-                    {...field}
-                    type="number"
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                    className="h-12 rounded-2xl"
                   />
                 </Field>
               )}

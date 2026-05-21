@@ -101,7 +101,6 @@ export function mapContactToCtas(data: Record<string, unknown>): Record<string, 
   const description = data.description as { ar?: unknown; en?: unknown } | undefined;
   return {
     title: data.title,
-    button_text: data.button_text,
     phone_number: data.phone_number ?? data.phone,
     description: description
       ? { ar: editorHtml(description.ar), en: editorHtml(description.en) }
