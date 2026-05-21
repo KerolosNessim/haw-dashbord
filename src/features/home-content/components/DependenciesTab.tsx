@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  buildAccreditationFormData,
+  buildMediaGalleryFormData,
   mediaAltFromApi,
   type BilingualAlt,
 } from "../services/accreditation-form-data";
@@ -111,7 +111,7 @@ export default function DependenciesTab() {
       };
     });
 
-    const formData = buildAccreditationFormData({
+    const formData = buildMediaGalleryFormData({
       title: { ar: data.title_ar, en: data.title_en },
       description: { ar: data.des_ar, en: data.des_en },
       sort_order: data.sort_order,

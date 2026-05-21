@@ -18,8 +18,8 @@ export type AccreditationFormInput = {
   deletedImageIds: number[];
 };
 
-/** Builds multipart/form-data for POST /v1/admin/accreditations (Spatie Media Library). */
-export function buildAccreditationFormData(input: AccreditationFormInput): FormData {
+/** Builds multipart/form-data for Spatie media gallery (accreditations, partners, …). */
+export function buildMediaGalleryFormData(input: AccreditationFormInput): FormData {
   const fd = new FormData();
 
   fd.append("title[ar]", input.title.ar);
@@ -52,6 +52,9 @@ export function buildAccreditationFormData(input: AccreditationFormInput): FormD
 
   return fd;
 }
+
+/** @deprecated Use buildMediaGalleryFormData */
+export const buildAccreditationFormData = buildMediaGalleryFormData;
 
 /** Maps GET `image_alt` (nullable ar/en) to form values. */
 export function mediaAltFromApi(imageAlt: AccreditationImageAlt | null | undefined): BilingualAlt {

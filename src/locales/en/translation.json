@@ -972,6 +972,11 @@
       "sec_des": "Section Description",
       "images": "Client Logos",
       "add_images": "Add Logos",
+      "image_alt": "Alt text",
+      "image_alt_ar": "Alt text (Arabic)",
+      "image_alt_en": "Alt text (English)",
+      "image_alt_placeholder": "Describe the logo for accessibility",
+      "new_image_badge": "New",
       "save": "Save Changes"
     }
   },

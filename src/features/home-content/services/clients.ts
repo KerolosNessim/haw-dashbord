@@ -1,9 +1,9 @@
 import { api } from "@/lib/api";
-import type { AccreditationResponse } from "../types";
+import type { PartnersResponse } from "../types";
 
-export const getClients = (): Promise<AccreditationResponse> => {
+export const getClients = (): Promise<PartnersResponse> => {
   return api
-    .get<AccreditationResponse>("/v1/admin/partners")
+    .get<PartnersResponse>("/v1/admin/partners")
     .then((res) => res.data)
     .catch((error) => {
       throw error;
@@ -12,11 +12,9 @@ export const getClients = (): Promise<AccreditationResponse> => {
 
 export const updateClients = (
    data: FormData,
-): Promise<AccreditationResponse> => {
+): Promise<PartnersResponse> => {
   return api
-    .post<AccreditationResponse>(`/v1/admin/partners`, data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
+    .post<PartnersResponse>(`/v1/admin/partners`, data)
     .then((res) => res.data)
     .catch((error) => {
       throw error;

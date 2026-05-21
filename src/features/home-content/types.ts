@@ -86,3 +86,12 @@ export interface AccreditationResponse {
   message: string;
   data: AccreditationData;
 };
+
+/** GET /v1/admin/partners — list wrapper with first item used in dashboard */
+export interface PartnersResponse {
+  status: string;
+  message: string;
+  data: {
+    data: AccreditationData[];
+  };
+};
