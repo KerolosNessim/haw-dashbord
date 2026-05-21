@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import RichTextEditor from "@/features/shared/components/editor";
 import { cn } from "@/lib/utils";
 import { getHttpErrorMessage } from "@/lib/http-error-message";
+import { htmlForMultipartApi } from "@/lib/html-for-multipart-api";
 import { useHero } from "../hooks/useHero";
 
 /**
@@ -89,8 +90,8 @@ export default function HeroTab() {
     const titleEn = (formValues.title_en as EditorValue)?.html ?? formValues.title_en ?? "";
 
     const formData = new FormData();
-    formData.append("title[ar]", String(titleAr));
-    formData.append("title[en]", String(titleEn));
+    formData.append("title[ar]", htmlForMultipartApi(String(titleAr)));
+    formData.append("title[en]", htmlForMultipartApi(String(titleEn)));
     formData.append("description[ar]", formValues.des_ar);
     formData.append("description[en]", formValues.des_en);
     formData.append("sub_description[ar]", formValues.sup_des_ar ?? "");
