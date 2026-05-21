@@ -97,10 +97,11 @@ function appendOfferings(fd: FormData, data: ListSectionData) {
   appendLocalized(fd, "offerings_description", data.description);
   data.items?.forEach((item, index) => {
     appendIndexedLocalized(fd, "offerings", index, "title", item.title);
-    const descAr = htmlFromUnknown(item.description?.ar ?? item.description);
-    const descEn = htmlFromUnknown(item.description?.en ?? item.description);
-    if (descAr) fd.append(`offerings[${index}][description][ar]`, descAr);
-    if (descEn) fd.append(`offerings[${index}][description][en]`, descEn);
+    const desc =
+      item.description && typeof item.description === "object"
+        ? (item.description as { ar?: unknown; en?: unknown })
+        : undefined;
+    appendIndexedLocalizedHtml(fd, "offerings", index, "description", desc);
     appendIndexedField(fd, "offerings", index, "sort_order", item.sort_order ?? index + 1);
   });
 }

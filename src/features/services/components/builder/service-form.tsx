@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import SectionBuilder, { type SectionBuilderHandle } from "./section-builder";
-import { useRef, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import BasicInfoForm, { type BasicInfoFormHandle } from "./basic-info-form";
 import { Loader2, Save } from "lucide-react";
 import { useAdminService } from "../../hooks/useAdminService";
@@ -11,13 +11,24 @@ interface ServiceFormProps {
   initialId?: number;
 }
 
-export default function ServiceForm({ initialId }: ServiceFormProps) {
+export interface ServiceFormHandle {
+  openSocialMetaDialog: () => void;
+}
+
+const ServiceForm = forwardRef<ServiceFormHandle, ServiceFormProps>(function ServiceForm(
+  { initialId },
+  ref,
+) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
   const [serviceId, setServiceId] = useState<number | null>(initialId ?? null);
   const { service, isLoading } = useAdminService(serviceId ?? undefined);
   const basicFormRef = useRef<BasicInfoFormHandle>(null);
   const sectionBuilderRef = useRef<SectionBuilderHandle>(null);
   const { saveServicePage, isPending } = useServicePageSave();
+
+  useImperativeHandle(ref, () => ({
+    openSocialMetaDialog: () => basicFormRef.current?.openSocialMetaDialog(),
+  }));
 
   const handleSavePage = async () => {
     const basic = await basicFormRef.current?.validate();
@@ -72,4 +83,6 @@ export default function ServiceForm({ initialId }: ServiceFormProps) {
       </div>
     </div>
   );
-}
+});
+
+export default ServiceForm;

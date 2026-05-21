@@ -29,6 +29,7 @@ import {
   X,
 } from "lucide-react";
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import ServiceSocialMetaDialog from "./service-social-meta-dialog";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
@@ -103,6 +104,7 @@ function pickLocalizedFromService(
 
 export interface BasicInfoFormHandle {
   validate: () => Promise<BasicInfoValues | null>;
+  openSocialMetaDialog: () => void;
 }
 
 interface BasicInfoFormProps {
@@ -114,6 +116,7 @@ interface BasicInfoFormProps {
 const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
   function BasicInfoForm({ initialId, embedded }, ref) {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "services.form" });
+  const [socialMetaOpen, setSocialMetaOpen] = useState(false);
   const { data: countriesData } = useAdminCountries();
   const countries = countriesData?.data ?? [];
   
@@ -287,6 +290,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
       if (!valid) return null;
       return normalizeValues(getValues());
     },
+    openSocialMetaDialog: () => setSocialMetaOpen(true),
   }));
 
   /**
@@ -870,64 +874,14 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
             </div>
           </div>
 
-          <div className="space-y-6 border-t pt-6">
-            <h4 className="font-bold text-sm opacity-60">Open Graph / Twitter</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {(["og_title", "og_description", "twitter_title", "twitter_description"] as const).map(
-                (name) => (
-                  <div key={name} className="grid grid-cols-2 gap-4 md:col-span-2">
-                    <Controller
-                      name={`${name}.ar`}
-                      control={control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>{name} (AR)</FieldLabel>
-                          <Input {...field} dir="rtl" className="h-11 rounded-xl" />
-                        </Field>
-                      )}
-                    />
-                    <Controller
-                      name={`${name}.en`}
-                      control={control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>{name} (EN)</FieldLabel>
-                          <Input {...field} dir="ltr" className="h-11 rounded-xl" />
-                        </Field>
-                      )}
-                    />
-                  </div>
-                ),
-              )}
-              <Controller
-                name="og_type"
-                control={control}
-                render={({ field }) => (
-                  <Field>
-                    <FieldLabel>og_type</FieldLabel>
-                    <Input {...field} placeholder="website" className="h-11 rounded-xl" />
-                  </Field>
-                )}
-              />
-              <Controller
-                name="twitter_card"
-                control={control}
-                render={({ field }) => (
-                  <Field>
-                    <FieldLabel>twitter_card</FieldLabel>
-                    <Input
-                      {...field}
-                      placeholder="summary_large_image"
-                      className="h-11 rounded-xl"
-                    />
-                  </Field>
-                )}
-              />
-            </div>
-          </div>
         </div>
       </div>
 
+      <ServiceSocialMetaDialog
+        open={socialMetaOpen}
+        onOpenChange={setSocialMetaOpen}
+        control={control}
+      />
     </div>
   );
 });
