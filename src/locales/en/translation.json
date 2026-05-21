@@ -177,6 +177,7 @@
       "currency": "Currency",
       "packages_description": "Section description",
       "package_number": "Package #{{n}}",
+      "package_image": "Package image",
       "add_feature": "Add feature",
       "feature_placeholder": "Feature…",
       "upload_cover": "Upload cover",
@@ -192,6 +193,7 @@
         "description": "Enter short description...",
         "highlight": "Enter highlight text...",
         "inside_desc": "Enter inside page description...",
+        "image_alt": "Describe the image for accessibility",
         "meta_title": "Page title for search engines",
         "meta_description": "Page description for search engines"
       },

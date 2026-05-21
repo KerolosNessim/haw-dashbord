@@ -117,6 +117,8 @@ export function mapPackagesToPayload(data: Record<string, unknown>): PackagesSec
         description: desc
           ? { ar: editorHtml(desc.ar), en: editorHtml(desc.en) }
           : { ar: "", en: "" },
+        image: item.image as PackagesSectionData["items"][0]["image"],
+        image_alt: item.image_alt as PackagesSectionData["items"][0]["image_alt"],
         price: Number(item.price ?? 0),
         currency: String(item.currency ?? ""),
         features: item.features as PackagesSectionData["items"][0]["features"],

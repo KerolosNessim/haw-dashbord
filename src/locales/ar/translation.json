@@ -181,6 +181,7 @@
       "currency": "العملة",
       "packages_description": "وصف القسم",
       "package_number": "باقة #{{n}}",
+      "package_image": "صورة الباقة",
       "add_feature": "إضافة ميزة",
       "feature_placeholder": "ميزة…",
       "upload_icon": "رفع أيقونة",
@@ -193,6 +194,7 @@
         "description": "أدخل الوصف المختصر...",
         "highlight": "أدخل النص المميز...",
         "inside_desc": "أدخل الوصف الداخلي للصفحة...",
+        "image_alt": "وصف الصورة لإمكانية الوصول",
         "meta_title": "عنوان الصفحة لمحركات البحث",
         "meta_description": "وصف الصفحة لمحركات البحث"
       },

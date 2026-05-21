@@ -1,12 +1,13 @@
-import { forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Package, ListChecks } from "lucide-react";
+import { Plus, Trash2, Package, ListChecks, ImagePlus, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
@@ -35,6 +36,13 @@ const localizedEditorSchema = z.object({
 const packageItemSchema = z.object({
   title: localizedSchema,
   description: localizedEditorSchema,
+  image: z.any().nullable().optional(),
+  image_alt: z
+    .object({
+      ar: z.string().optional(),
+      en: z.string().optional(),
+    })
+    .optional(),
   price: z.coerce.number().min(0),
   currency: z.string().min(1),
   features: z.object({
@@ -71,6 +79,8 @@ const ServicePackagesForm = forwardRef<
     control,
     trigger,
     getValues,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<ServicePackagesValues>({
     resolver: zodResolver(packagesSchema),
@@ -87,6 +97,8 @@ const ServicePackagesForm = forwardRef<
         {
           title: { ar: "", en: "" },
           description: { ar: null, en: null },
+          image: null,
+          image_alt: { ar: "", en: "" },
           price: 0,
           currency: "OMR",
           features: { ar: [""], en: [""] },
@@ -196,6 +208,8 @@ const ServicePackagesForm = forwardRef<
               key={field.id}
               index={index}
               control={control}
+              setValue={setValue}
+              watch={watch}
               onRemove={() => remove(index)}
               showRemove={fields.length > 1}
               itemErrors={errors.items?.[index]}
@@ -210,6 +224,8 @@ const ServicePackagesForm = forwardRef<
               append({
                 title: { ar: "", en: "" },
                 description: { ar: null, en: null },
+                image: null,
+                image_alt: { ar: "", en: "" },
                 price: 0,
                 currency: "OMR",
                 features: { ar: [""], en: [""] },
@@ -230,12 +246,16 @@ export default ServicePackagesForm;
 function PackageItem({
   index,
   control,
+  setValue,
+  watch,
   onRemove,
   showRemove,
   itemErrors,
 }: {
   index: number;
   control: ReturnType<typeof useForm<ServicePackagesValues>>["control"];
+  setValue: ReturnType<typeof useForm<ServicePackagesValues>>["setValue"];
+  watch: ReturnType<typeof useForm<ServicePackagesValues>>["watch"];
   onRemove: () => void;
   showRemove: boolean;
   itemErrors?: {
@@ -247,6 +267,32 @@ function PackageItem({
 
   const translateError = (message?: string) =>
     message?.includes("validation.") ? t(message) : message;
+
+  const imageValue = watch(`items.${index}.image`);
+  const [preview, setPreview] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (imageValue instanceof File) return;
+    setPreview(typeof imageValue === "string" && imageValue ? imageValue : null);
+  }, [imageValue]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setValue(`items.${index}.image`, file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => setPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setValue(`items.${index}.image`, null);
+    setPreview(null);
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
 
   const { fields: arFeatures, append: appendAr, remove: removeAr } = useFieldArray({
     control,
@@ -396,6 +442,82 @@ function PackageItem({
                       message: translateError(itemErrors?.description?.en?.message),
                     },
                   ]}
+                />
+              </Field>
+            )}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-6 border-t pt-6">
+        <p className="text-sm font-bold opacity-60">{t("package_image")}</p>
+        <div
+          className={cn(
+            "relative mx-auto flex aspect-video max-w-md cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-all",
+            preview
+              ? "border-primary/20"
+              : "border-border hover:border-primary/40",
+          )}
+          onClick={() => !preview && imageInputRef.current?.click()}
+        >
+          {preview ? (
+            <>
+              <img src={preview} alt="" className="h-full w-full object-cover" />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-all hover:opacity-100">
+                <Button
+                  type="button"
+                  size="icon"
+                  className="h-9 w-9 rounded-full bg-red-500 text-white shadow-xl"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeImage();
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-2 p-6">
+              <ImagePlus className="h-8 w-8 opacity-20" />
+              <p className="text-[10px] font-bold opacity-30">{t("upload_cover")}</p>
+            </div>
+          )}
+          <input
+            type="file"
+            ref={imageInputRef}
+            className="hidden"
+            accept="image/*"
+            onChange={handleImageChange}
+          />
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Controller
+            name={`items.${index}.image_alt.ar`}
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>{t("image_alt_ar")}</FieldLabel>
+                <Input
+                  {...field}
+                  dir="rtl"
+                  className="h-11 rounded-xl bg-muted/5"
+                  placeholder={t("placeholders.image_alt")}
+                />
+              </Field>
+            )}
+          />
+          <Controller
+            name={`items.${index}.image_alt.en`}
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>{t("image_alt_en")}</FieldLabel>
+                <Input
+                  {...field}
+                  dir="ltr"
+                  className="h-11 rounded-xl bg-muted/5"
+                  placeholder={t("placeholders.image_alt")}
                 />
               </Field>
             )}

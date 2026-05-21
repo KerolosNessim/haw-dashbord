@@ -129,6 +129,10 @@ function appendPackages(fd: FormData, data: PackagesSectionData) {
   data.items?.forEach((item, index) => {
     appendIndexedLocalized(fd, "packages", index, "title", item.title);
     appendIndexedLocalizedHtml(fd, "packages", index, "description", item.description);
+    appendIndexedLocalized(fd, "packages", index, "image_alt", item.image_alt);
+    if (item.image instanceof File) {
+      fd.append(`packages[${index}][image]`, item.image);
+    }
     if (item.price != null) {
       fd.append(`packages[${index}][price]`, String(item.price));
     }

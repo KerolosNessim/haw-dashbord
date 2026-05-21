@@ -22,6 +22,17 @@ export function pickServiceImageAlt(field: unknown): ServiceImageAlt {
   return { ar: o.ar ?? "", en: o.en ?? "" };
 }
 
+/** Single package image from API (string or legacy { ar, en } object). */
+export function pickPackageImage(field: unknown): string | null {
+  if (!field) return null;
+  if (typeof field === "string") return field;
+  if (typeof field === "object" && field !== null) {
+    const o = field as { ar?: string | null; en?: string | null };
+    return o.ar ?? o.en ?? null;
+  }
+  return null;
+}
+
 /** Prefer Arabic cover, then English (for list cards). */
 export function serviceCoverUrl(
   image: ServiceImageUrls | string | null | undefined,

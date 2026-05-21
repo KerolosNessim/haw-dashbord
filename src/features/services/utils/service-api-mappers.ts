@@ -2,6 +2,7 @@ import type { BasicInfoValues } from "../components/builder/basic-info-form";
 import type { Service } from "../type";
 import type { ServiceSectionsPayload } from "../service-section-types";
 import { mapPackagesToPayload } from "./section-form-mappers";
+import { pickPackageImage, pickServiceImageAlt } from "./service-mapper";
 
 function pickLocalized(
   field: unknown,
@@ -91,6 +92,8 @@ function normalizePackageItems(items: unknown[]): Array<Record<string, unknown>>
     return {
       ...row,
       description,
+      image: pickPackageImage(row.image),
+      image_alt: pickServiceImageAlt(row.image_alt),
       features: featuresNormalized,
     };
   });
@@ -120,6 +123,9 @@ export function packagesDataFromService(service: Service): Record<string, unknow
       : [
           {
             title: { ar: "", en: "" },
+            description: { ar: null, en: null },
+            image: null,
+            image_alt: { ar: "", en: "" },
             price: 0,
             currency: "OMR",
             features: { ar: [""], en: [""] },
