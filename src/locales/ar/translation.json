@@ -958,6 +958,11 @@
       "sec_des": "وصف القسم",
       "images": "معرض الصور",
       "add_images": "إضافة صور",
+      "image_alt": "النص البديل",
+      "image_alt_placeholder": "وصف الصورة لإمكانية الوصول",
+      "new_image_badge": "جديد",
+      "sort_order": "ترتيب العرض",
+      "is_active": "مفعّل",
       "save": "حفظ التغييرات"
     },
     "our_clients": {

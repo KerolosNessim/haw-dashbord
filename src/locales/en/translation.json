@@ -956,6 +956,11 @@
       "sec_des": "Section Description",
       "images": "Gallery Images",
       "add_images": "Add Images",
+      "image_alt": "Alt text",
+      "image_alt_placeholder": "Describe the image for accessibility",
+      "new_image_badge": "New",
+      "sort_order": "Sort order",
+      "is_active": "Active",
       "save": "Save Changes"
     },
     "our_clients": {

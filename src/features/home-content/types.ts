@@ -55,25 +55,23 @@ export interface StatsResponse {
   data: StatsData[];
 };
 
+/** Spatie media item from GET /v1/admin/accreditations */
+export interface AccreditationMedia {
+  id: number;
+  url: string;
+  alt?: string | null;
+}
+
 // Accreditation — single item from GET /v1/admin/accreditations
 export interface AccreditationData {
   id: number;
   title: LocaleString;
   description: LocaleString;
-  images: { //array of image URLs
-    id:number,
-    url:string
-  }[];        
+  images: AccreditationMedia[];
   sort_order: number;
   is_active: boolean;
   created_at: string;
-};
-
-// POST / PUT request body
-export interface AccreditationRequest {
-  title: LocaleString;
-  description: LocaleString;
-  image?: File | null;     // single image upload
+  updated_at?: string;
 };
 
 // Full API Response — data is a single object
