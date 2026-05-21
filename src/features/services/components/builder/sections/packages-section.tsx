@@ -3,12 +3,12 @@ import { useTranslation } from "react-i18next";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Save, Loader2, Package, ListChecks } from "lucide-react";
+import { Plus, Trash2, Package, ListChecks } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
-import { api } from "@/lib/api";
-import { toast } from "sonner";
+import { useEmbeddedSectionWatch } from "@/features/services/hooks/useEmbeddedSectionWatch";
+import type { SectionEmbeddedProps } from "../section-embedded-props";
 
 const localizedSchema = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
@@ -17,6 +17,7 @@ const localizedSchema = z.object({
 
 const packageItemSchema = z.object({
   title: localizedSchema,
+  description: z.object({ ar: z.string().optional(), en: z.string().optional() }).optional(),
   price: z.coerce.number().min(0),
   currency: z.string().min(1),
   features: z.object({
@@ -27,25 +28,29 @@ const packageItemSchema = z.object({
 
 const packagesSchema = z.object({
   title: localizedSchema,
+  description: z.object({ ar: z.string().optional(), en: z.string().optional() }).optional(),
   items: z.array(packageItemSchema).min(1),
 });
 
 type PackagesValues = z.infer<typeof packagesSchema>;
 
-interface PackagesSectionProps {
+interface PackagesSectionProps extends SectionEmbeddedProps {
   serviceId: number;
   initialData?: any;
 }
 
-export default function PackagesSection({ serviceId, initialData }: PackagesSectionProps) {
+export default function PackagesSection({
+  initialData,
+  embedded,
+  onDataChange,
+}: PackagesSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
-  const { t: tToast } = useTranslation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<PackagesValues>({
+  const { control, watch, getValues, formState: { errors } } = useForm<PackagesValues>({
     resolver: zodResolver(packagesSchema),
     values: {
       title: initialData?.title || { ar: "", en: "" },
+      description: initialData?.description || { ar: "", en: "" },
       items: initialData?.items || [{ 
         title: { ar: "", en: "" }, 
         price: 0, 
@@ -60,21 +65,10 @@ export default function PackagesSection({ serviceId, initialData }: PackagesSect
     name: "items",
   });
 
-  const onSubmit = async (data: PackagesValues) => {
-    setIsSubmitting(true);
-    try {
-      const res = await api.post(`/v1/admin/services/${serviceId}/packages`, data);
-      toast.success(res?.data?.message || tToast("toasts.section_saved"));
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || tToast("toasts.section_save_error"));
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  useEmbeddedSectionWatch(embedded, onDataChange, watch, getValues);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-12 animate-in fade-in duration-500">
+    <div className="space-y-12 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Section Title */}
         <div className="space-y-6 p-6 rounded-[24px] border border-dashed bg-muted/5">
@@ -107,6 +101,29 @@ export default function PackagesSection({ serviceId, initialData }: PackagesSect
             )}
           />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Controller
+          name="description.ar"
+          control={control}
+          render={({ field }) => (
+            <Field>
+              <FieldLabel>packages_description (AR)</FieldLabel>
+              <Textarea {...field} dir="rtl" className="min-h-[80px] rounded-xl" />
+            </Field>
+          )}
+        />
+        <Controller
+          name="description.en"
+          control={control}
+          render={({ field }) => (
+            <Field>
+              <FieldLabel>packages_description (EN)</FieldLabel>
+              <Textarea {...field} dir="ltr" className="min-h-[80px] rounded-xl" />
+            </Field>
+          )}
+        />
       </div>
 
       <div className="space-y-6">
@@ -142,17 +159,7 @@ export default function PackagesSection({ serviceId, initialData }: PackagesSect
         </div>
       </div>
 
-      <div className="flex justify-end pt-8 border-t">
-        <Button 
-          type="submit" 
-          disabled={isSubmitting}
-          className="rounded-full h-14 px-12 font-bold text-lg gap-3 shadow-2xl shadow-primary/30"
-        >
-          {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
-          {t("save_section")}
-        </Button>
-      </div>
-    </form>
+    </div>
   );
 }
 

@@ -55,11 +55,17 @@ const serviceImageSchema = z
     message: "validation.cover_required",
   });
 
+const optionalLocalizedSchema = z.object({
+  ar: z.string().optional(),
+  en: z.string().optional(),
+});
+
 const basicInfoSchema = z.object({
   slug: localizedSchema,
   country_ids: z
     .array(z.string())
     .min(1, { message: "validation.country_required" }),
+  package_ids: z.array(z.string()).optional(),
   is_active: z.boolean(),
   title: localizedSchema,
   description: localizedSchema,
@@ -72,9 +78,30 @@ const basicInfoSchema = z.object({
     en: z.string().optional(),
   }),
   show_footer: z.boolean(),
+  sort_order: z.coerce.number().optional(),
+  media_url: z.string().optional(),
+  media_type: z.string().optional(),
+  og_title: optionalLocalizedSchema.optional(),
+  og_description: optionalLocalizedSchema.optional(),
+  og_type: z.string().optional(),
+  og_image: z.any().optional(),
+  twitter_card: z.string().optional(),
+  twitter_title: optionalLocalizedSchema.optional(),
+  twitter_description: optionalLocalizedSchema.optional(),
+  twitter_image: z.any().optional(),
 });
 
 export type BasicInfoValues = z.infer<typeof basicInfoSchema>;
+
+function pickLocalizedFromService(
+  service: Record<string, unknown>,
+  key: string,
+): { ar: string; en: string } {
+  const field = service[key];
+  if (!field || typeof field !== "object") return { ar: "", en: "" };
+  const o = field as { ar?: string; en?: string };
+  return { ar: o.ar ?? "", en: o.en ?? "" };
+}
 
 export interface BasicInfoFormHandle {
   validate: () => Promise<BasicInfoValues | null>;
@@ -121,6 +148,18 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
       meta_description: { ar: "", en: "" },
       image: { ar: null, en: null },
       image_alt: { ar: "", en: "" },
+      package_ids: [],
+      sort_order: 0,
+      media_url: "",
+      media_type: "",
+      og_title: { ar: "", en: "" },
+      og_description: { ar: "", en: "" },
+      og_type: "website",
+      og_image: null,
+      twitter_card: "summary_large_image",
+      twitter_title: { ar: "", en: "" },
+      twitter_description: { ar: "", en: "" },
+      twitter_image: null,
     },
   });
 
@@ -163,6 +202,30 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
           ar: service.image_alt?.ar ?? "",
           en: service.image_alt?.en ?? "",
         },
+        package_ids:
+          (service as { package_ids?: number[] }).package_ids?.map(String) ?? [],
+        sort_order: service.sort_order ?? 0,
+        media_url: service.media_url ?? "",
+        media_type: service.media_type ?? "",
+        og_title: pickLocalizedFromService(service as Record<string, unknown>, "og_title"),
+        og_description: pickLocalizedFromService(
+          service as Record<string, unknown>,
+          "og_description",
+        ),
+        og_type: (service as { og_type?: string }).og_type ?? "website",
+        og_image: (service as { og_image?: string | null }).og_image ?? null,
+        twitter_card:
+          (service as { twitter_card?: string }).twitter_card ?? "summary_large_image",
+        twitter_title: pickLocalizedFromService(
+          service as Record<string, unknown>,
+          "twitter_title",
+        ),
+        twitter_description: pickLocalizedFromService(
+          service as Record<string, unknown>,
+          "twitter_description",
+        ),
+        twitter_image:
+          (service as { twitter_image?: string | null }).twitter_image ?? null,
       });
 
       setCoverPreviewAr(service.image?.ar ?? null);
@@ -642,6 +705,48 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
               )}
             />
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Controller
+              name="media_url"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>media_url</FieldLabel>
+                  <Input {...field} dir="ltr" className="h-12 rounded-2xl" />
+                </Field>
+              )}
+            />
+            <Controller
+              name="media_type"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>media_type</FieldLabel>
+                  <Input
+                    {...field}
+                    placeholder="video | image"
+                    className="h-12 rounded-2xl"
+                  />
+                </Field>
+              )}
+            />
+            <Controller
+              name="sort_order"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>sort_order</FieldLabel>
+                  <Input
+                    {...field}
+                    type="number"
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    className="h-12 rounded-2xl"
+                  />
+                </Field>
+              )}
+            />
+          </div>
         </div>
 
         {/* SEO Metadata */}
@@ -735,6 +840,62 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                           message: translateError(errors.meta_description?.en),
                         },
                       ]}
+                    />
+                  </Field>
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-6 border-t pt-6">
+            <h4 className="font-bold text-sm opacity-60">Open Graph / Twitter</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {(["og_title", "og_description", "twitter_title", "twitter_description"] as const).map(
+                (name) => (
+                  <div key={name} className="grid grid-cols-2 gap-4 md:col-span-2">
+                    <Controller
+                      name={`${name}.ar`}
+                      control={control}
+                      render={({ field }) => (
+                        <Field>
+                          <FieldLabel>{name} (AR)</FieldLabel>
+                          <Input {...field} dir="rtl" className="h-11 rounded-xl" />
+                        </Field>
+                      )}
+                    />
+                    <Controller
+                      name={`${name}.en`}
+                      control={control}
+                      render={({ field }) => (
+                        <Field>
+                          <FieldLabel>{name} (EN)</FieldLabel>
+                          <Input {...field} dir="ltr" className="h-11 rounded-xl" />
+                        </Field>
+                      )}
+                    />
+                  </div>
+                ),
+              )}
+              <Controller
+                name="og_type"
+                control={control}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel>og_type</FieldLabel>
+                    <Input {...field} placeholder="website" className="h-11 rounded-xl" />
+                  </Field>
+                )}
+              />
+              <Controller
+                name="twitter_card"
+                control={control}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel>twitter_card</FieldLabel>
+                    <Input
+                      {...field}
+                      placeholder="summary_large_image"
+                      className="h-11 rounded-xl"
                     />
                   </Field>
                 )}

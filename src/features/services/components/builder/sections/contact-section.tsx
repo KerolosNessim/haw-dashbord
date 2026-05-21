@@ -17,6 +17,7 @@ const localizedSchema = z.object({
 
 const contactSchema = z.object({
   title: localizedSchema,
+  button_text: localizedSchema,
   phone_number: z.string().min(1, { message: "validation.required" }),
   description: z
     .object({ ar: z.any().optional(), en: z.any().optional() })
@@ -41,6 +42,7 @@ export default function ContactSection({
     resolver: zodResolver(contactSchema),
     values: {
       title: initialData?.title || { ar: "", en: "" },
+      button_text: initialData?.button_text || { ar: "", en: "" },
       phone_number: initialData?.phone_number || initialData?.phone || "",
       description: initialData?.description || { ar: null, en: null },
     },
@@ -77,6 +79,16 @@ export default function ContactSection({
                     },
                   ]}
                 />
+              </Field>
+            )}
+          />
+          <Controller
+            name="button_text.ar"
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>ctas_button_text (AR)</FieldLabel>
+                <Input {...field} dir="rtl" className="h-12 rounded-xl bg-background" />
               </Field>
             )}
           />
@@ -125,6 +137,16 @@ export default function ContactSection({
                     },
                   ]}
                 />
+              </Field>
+            )}
+          />
+          <Controller
+            name="button_text.en"
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>ctas_button_text (EN)</FieldLabel>
+                <Input {...field} dir="ltr" className="h-12 rounded-xl bg-background" />
               </Field>
             )}
           />

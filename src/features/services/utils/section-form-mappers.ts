@@ -3,6 +3,7 @@ import type {
   BenefitsSectionData,
   FaqSectionData,
   ListSectionData,
+  PackagesSectionData,
   ServiceSectionsPayload,
   ToolsSectionData,
 } from "../service-section-types";
@@ -100,10 +101,48 @@ export function mapContactToCtas(data: Record<string, unknown>): Record<string, 
   const description = data.description as { ar?: unknown; en?: unknown } | undefined;
   return {
     title: data.title,
+    button_text: data.button_text,
     phone_number: data.phone_number ?? data.phone,
     description: description
       ? { ar: editorHtml(description.ar), en: editorHtml(description.en) }
       : undefined,
+  };
+}
+
+export function mapPackagesToPayload(data: Record<string, unknown>): PackagesSectionData {
+  const items = (data.items as Array<Record<string, unknown>> | undefined)?.map(
+    (item, index) => ({
+      title: item.title as PackagesSectionData["items"][0]["title"],
+      description: item.description as PackagesSectionData["items"][0]["description"],
+      price: Number(item.price ?? 0),
+      currency: String(item.currency ?? ""),
+      features: item.features as PackagesSectionData["items"][0]["features"],
+      sort_order: index + 1,
+    }),
+  );
+  return {
+    title: data.title as PackagesSectionData["title"],
+    description: data.description as PackagesSectionData["description"],
+    items,
+  };
+}
+
+export function mapAuditsToPayload(data: Record<string, unknown>): ListSectionData {
+  const items = (data.items as Array<Record<string, unknown>> | undefined)?.map(
+    (item, index) => ({
+      title: item.title as ListSectionData["items"][0]["title"],
+      description: {
+        ar: editorHtml((item.description as { ar?: unknown })?.ar ?? item.description),
+        en: editorHtml((item.description as { en?: unknown })?.en ?? item.description),
+      },
+      button_text: item.button_text as ListSectionData["items"][0]["button_text"],
+      sort_order: index + 1,
+    }),
+  );
+  return {
+    title: data.title as ListSectionData["title"],
+    description: data.description as ListSectionData["description"],
+    items,
   };
 }
 
@@ -117,6 +156,8 @@ const MAPPERS: Record<
   cards: mapCardsToOfferings,
   dual_desc: mapDualDescToTools,
   contact: mapContactToCtas,
+  packages: mapPackagesToPayload,
+  audits: mapAuditsToPayload,
 };
 
 export function mapSectionFormToPayload(

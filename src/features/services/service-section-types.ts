@@ -6,26 +6,45 @@ export type BenefitsSectionData = {
   image?: File | string | null;
 };
 
+export type ListSectionItem = {
+  title?: { ar: string; en: string };
+  description?: { ar: unknown; en: unknown };
+  question?: { ar: string; en: string };
+  answer?: { ar: unknown; en: unknown };
+  button_text?: { ar: string; en: string };
+  sort_order?: number;
+  image?: File | string | null;
+};
+
 export type ListSectionData = {
   title?: { ar: string; en: string };
   description?: { ar: string; en: string };
   image?: File | string | null;
-  items?: Array<{
-    title?: { ar: string; en: string };
-    description?: { ar: unknown; en: unknown };
-    question?: { ar: string; en: string };
-    answer?: { ar: unknown; en: unknown };
-    sort_order?: number;
-    image?: File | string | null;
-  }>;
+  items?: ListSectionItem[];
 };
 
 export type FaqSectionData = ListSectionData;
+
 export type ToolsSectionData = {
   title?: { ar: string; en: string };
   description?: { ar: unknown; en: unknown };
   sub_title?: { ar: string; en: string };
   sub_description?: { ar: unknown; en: unknown };
+};
+
+export type PackagesSectionItem = {
+  title?: { ar: string; en: string };
+  description?: { ar: string; en: string };
+  price?: number;
+  currency?: string;
+  sort_order?: number;
+  features?: { ar: string[]; en: string[] };
+};
+
+export type PackagesSectionData = {
+  title?: { ar: string; en: string };
+  description?: { ar: string; en: string };
+  items?: PackagesSectionItem[];
 };
 
 export interface ServiceSectionsPayload {
@@ -36,19 +55,7 @@ export interface ServiceSectionsPayload {
   tools?: ToolsSectionData;
   ctas?: Record<string, unknown>;
   audits?: ListSectionData;
-  seo?: {
-    og?: {
-      title?: { ar: string; en: string };
-      description?: { ar: string; en: string };
-      type?: string;
-      image?: File | string | null;
-    };
-    twitter?: {
-      title?: { ar: string; en: string };
-      description?: { ar: string; en: string };
-      card?: string;
-    };
-  };
+  packages?: PackagesSectionData;
 }
 
 export const SECTION_TYPE_TO_API_KEY = {
@@ -58,6 +65,8 @@ export const SECTION_TYPE_TO_API_KEY = {
   cards: "offerings",
   dual_desc: "tools",
   contact: "ctas",
+  packages: "packages",
+  audits: "audits",
 } as const;
 
 export type SectionType = keyof typeof SECTION_TYPE_TO_API_KEY;

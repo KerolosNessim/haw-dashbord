@@ -57,3 +57,8 @@ export function appendIndexedField(
 ) {
   fd.append(`${base}[${index}][${field}]`, String(value));
 }
+
+export function appendScalar(fd: FormData, key: string, value: unknown) {
+  if (value == null || value === "") return;
+  fd.append(key, String(value));
+}

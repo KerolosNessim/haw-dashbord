@@ -3,6 +3,7 @@ import type {
   BenefitsSectionData,
   FaqSectionData,
   ListSectionData,
+  PackagesSectionData,
   ServiceSectionsPayload,
   ToolsSectionData,
 } from "../service-section-types";
@@ -11,6 +12,7 @@ import {
   appendIndexedLocalized,
   appendLocalized,
   appendLocalizedHtml,
+  appendScalar,
   htmlFromUnknown,
 } from "../utils/form-data-helpers";
 
@@ -25,12 +27,18 @@ function appendBenefits(fd: FormData, data: BenefitsSectionData) {
   }
 }
 
-function appendListSection(fd: FormData, prefix: string, data: ListSectionData) {
+function appendListSection(
+  fd: FormData,
+  prefix: string,
+  data: ListSectionData,
+  options?: { itemLocalizedFields?: string[] },
+) {
   appendLocalized(fd, `${prefix}_title`, data.title);
   appendLocalized(fd, `${prefix}_description`, data.description);
   if (data.image instanceof File) {
     fd.append(`${prefix}_image`, data.image);
   }
+  const extraFields = options?.itemLocalizedFields ?? [];
   data.items?.forEach((item, index) => {
     appendIndexedLocalized(fd, prefix, index, "title", item.title);
     appendIndexedLocalized(fd, prefix, index, "description", {
@@ -45,7 +53,13 @@ function appendListSection(fd: FormData, prefix: string, data: ListSectionData) 
           : item.description,
       ),
     });
-    appendIndexedField(fd, prefix, index, "sort_order", item.sort_order ?? index);
+    for (const field of extraFields) {
+      const value = item[field as keyof typeof item] as
+        | { ar?: string; en?: string }
+        | undefined;
+      appendIndexedLocalized(fd, prefix, index, field, value);
+    }
+    appendIndexedField(fd, prefix, index, "sort_order", item.sort_order ?? index + 1);
     if (item.image instanceof File) {
       fd.append(`${prefix}[${index}][image]`, item.image);
     }
@@ -56,16 +70,24 @@ function appendSteps(fd: FormData, data: ListSectionData) {
   appendListSection(fd, "steps", data);
 }
 
+function appendAudits(fd: FormData, data: ListSectionData) {
+  appendListSection(fd, "audits", data, { itemLocalizedFields: ["button_text"] });
+}
+
 function appendFaqs(fd: FormData, data: FaqSectionData) {
   appendLocalized(fd, "faqs_title", data.title);
   appendLocalized(fd, "faqs_description", data.description);
   data.items?.forEach((item, index) => {
     appendIndexedLocalized(fd, "faqs", index, "question", item.question ?? item.title);
-    const answerAr = item.answer ? htmlFromUnknown(item.answer.ar) : htmlFromUnknown(item.description?.ar);
-    const answerEn = item.answer ? htmlFromUnknown(item.answer.en) : htmlFromUnknown(item.description?.en);
+    const answerAr = item.answer
+      ? htmlFromUnknown(item.answer.ar)
+      : htmlFromUnknown(item.description?.ar);
+    const answerEn = item.answer
+      ? htmlFromUnknown(item.answer.en)
+      : htmlFromUnknown(item.description?.en);
     if (answerAr) fd.append(`faqs[${index}][answer][ar]`, answerAr);
     if (answerEn) fd.append(`faqs[${index}][answer][en]`, answerEn);
-    appendIndexedField(fd, "faqs", index, "sort_order", item.sort_order ?? index);
+    appendIndexedField(fd, "faqs", index, "sort_order", item.sort_order ?? index + 1);
   });
 }
 
@@ -78,7 +100,7 @@ function appendOfferings(fd: FormData, data: ListSectionData) {
     const descEn = htmlFromUnknown(item.description?.en ?? item.description);
     if (descAr) fd.append(`offerings[${index}][description][ar]`, descAr);
     if (descEn) fd.append(`offerings[${index}][description][en]`, descEn);
-    appendIndexedField(fd, "offerings", index, "sort_order", item.sort_order ?? index);
+    appendIndexedField(fd, "offerings", index, "sort_order", item.sort_order ?? index + 1);
   });
 }
 
@@ -94,25 +116,67 @@ function appendTools(fd: FormData, data: ToolsSectionData) {
 function appendCtas(fd: FormData, data: Record<string, unknown>) {
   const title = data.title as { ar?: string; en?: string } | undefined;
   if (title) appendLocalized(fd, "ctas_title", { ar: title.ar ?? "", en: title.en ?? "" });
+  const buttonText = data.button_text as { ar?: string; en?: string } | undefined;
+  if (buttonText) appendLocalized(fd, "ctas_button_text", buttonText);
   if (data.phone_number) fd.append("ctas_phone_number", String(data.phone_number));
   if (data.phone) fd.append("ctas_phone_number", String(data.phone));
   appendLocalizedHtml(fd, "ctas_description", (data.description as { ar?: unknown })?.ar, "ar");
   appendLocalizedHtml(fd, "ctas_description", (data.description as { en?: unknown })?.en, "en");
 }
 
-function appendSeoFields(fd: FormData, seo?: ServiceSectionsPayload["seo"]) {
-  if (!seo) return;
-  if (seo.og) {
-    appendLocalized(fd, "og_title", seo.og.title);
-    appendLocalized(fd, "og_description", seo.og.description);
-    if (seo.og.type) fd.append("og_type", seo.og.type);
-    if (seo.og.image instanceof File) fd.append("og_image", seo.og.image);
-    else if (seo.og.image) fd.append("og_image", String(seo.og.image));
+function appendPackages(fd: FormData, data: PackagesSectionData) {
+  appendLocalized(fd, "packages_title", data.title);
+  appendLocalized(fd, "packages_description", data.description);
+  data.items?.forEach((item, index) => {
+    appendIndexedLocalized(fd, "packages", index, "title", item.title);
+    if (item.description) {
+      appendIndexedLocalized(fd, "packages", index, "description", item.description);
+    }
+    if (item.price != null) {
+      fd.append(`packages[${index}][price]`, String(item.price));
+    }
+    if (item.currency) {
+      fd.append(`packages[${index}][currency]`, item.currency);
+    }
+    appendIndexedField(fd, "packages", index, "sort_order", item.sort_order ?? index + 1);
+    item.features?.ar?.forEach((feature, fi) => {
+      if (feature?.trim()) {
+        fd.append(`packages[${index}][features][ar][${fi}]`, feature);
+      }
+    });
+    item.features?.en?.forEach((feature, fi) => {
+      if (feature?.trim()) {
+        fd.append(`packages[${index}][features][en][${fi}]`, feature);
+      }
+    });
+  });
+}
+
+function appendBasicSocialAndMedia(fd: FormData, basic: BasicInfoValues) {
+  appendScalar(fd, "media_url", basic.media_url);
+  appendScalar(fd, "media_type", basic.media_type);
+  if (basic.sort_order != null) {
+    fd.append("sort_order", String(basic.sort_order));
   }
-  if (seo.twitter) {
-    appendLocalized(fd, "twitter_title", seo.twitter.title);
-    appendLocalized(fd, "twitter_description", seo.twitter.description);
-    if (seo.twitter.card) fd.append("twitter_card", seo.twitter.card);
+
+  basic.package_ids?.forEach((id) => fd.append("package_ids[]", id));
+
+  appendLocalized(fd, "og_title", basic.og_title);
+  appendLocalized(fd, "og_description", basic.og_description);
+  appendScalar(fd, "og_type", basic.og_type);
+  if (basic.og_image instanceof File) {
+    fd.append("og_image", basic.og_image);
+  } else if (basic.og_image) {
+    fd.append("og_image", String(basic.og_image));
+  }
+
+  appendScalar(fd, "twitter_card", basic.twitter_card);
+  appendLocalized(fd, "twitter_title", basic.twitter_title);
+  appendLocalized(fd, "twitter_description", basic.twitter_description);
+  if (basic.twitter_image instanceof File) {
+    fd.append("twitter_image", basic.twitter_image);
+  } else if (basic.twitter_image) {
+    fd.append("twitter_image", String(basic.twitter_image));
   }
 }
 
@@ -151,15 +215,16 @@ export function buildServicePageFormData(
   if (basic.image.ar instanceof File) fd.append("image[ar]", basic.image.ar);
   if (basic.image.en instanceof File) fd.append("image[en]", basic.image.en);
 
+  appendBasicSocialAndMedia(fd, basic);
+
   if (sections.benefits) appendBenefits(fd, sections.benefits);
   if (sections.steps) appendSteps(fd, sections.steps);
   if (sections.faqs) appendFaqs(fd, sections.faqs);
   if (sections.offerings) appendOfferings(fd, sections.offerings);
   if (sections.tools) appendTools(fd, sections.tools);
   if (sections.ctas) appendCtas(fd, sections.ctas);
-  if (sections.audits) appendListSection(fd, "audits", sections.audits);
-
-  appendSeoFields(fd, sections.seo);
+  if (sections.audits) appendAudits(fd, sections.audits);
+  if (sections.packages) appendPackages(fd, sections.packages);
 
   return fd;
 }

@@ -31,6 +31,7 @@ import DualDescSection from "./sections/dual-desc-section";
 import FAQSection from "./sections/faq-section";
 import ContactSection from "./sections/contact-section";
 import PackagesSection from "./sections/packages-section";
+import AuditsSection from "./sections/audits-section";
 import { useEffect } from "react";
 import type { Service } from "../../type";
 import type { ServiceSectionsPayload } from "../../service-section-types";
@@ -46,6 +47,8 @@ export type SectionType =
   | "dual_desc"
   | "faq"
   | "contact"
+  | "packages"
+  | "audits"
 
 
 interface SectionInstance {
@@ -100,6 +103,34 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
           data: initialService.offerings,
         });
       }
+      if (initialService.packages) {
+        const raw = initialService as Record<string, unknown>;
+        mappedSections.push({
+          id: "packages",
+          type: "packages",
+          data: {
+            title: raw.packages_title ?? (initialService.packages as { title?: unknown })?.title,
+            description: raw.packages_description,
+            items: Array.isArray(initialService.packages)
+              ? initialService.packages
+              : (initialService.packages as { items?: unknown })?.items,
+          },
+        });
+      }
+      if (initialService.audits) {
+        const raw = initialService as Record<string, unknown>;
+        mappedSections.push({
+          id: "audits",
+          type: "audits",
+          data: {
+            title: raw.audits_title,
+            description: raw.audits_description,
+            items: Array.isArray(initialService.audits)
+              ? initialService.audits
+              : (initialService.audits as { items?: unknown })?.items,
+          },
+        });
+      }
 
       setSections(mappedSections);
     }
@@ -146,6 +177,8 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
     },
     { id: "faq", icon: HelpCircle, color: "bg-orange-50 text-orange-600" },
     { id: "contact", icon: PhoneCall, color: "bg-rose-50 text-rose-600" },
+    { id: "packages", icon: Package, color: "bg-amber-50 text-amber-600" },
+    { id: "audits", icon: AlignLeft, color: "bg-cyan-50 text-cyan-600" },
   ] as const;
 
   const addSection = (type: SectionType) => {
@@ -199,6 +232,10 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
         return <FAQSection {...props} />;
       case "contact":
         return <ContactSection {...props} />;
+      case "packages":
+        return <PackagesSection {...props} />;
+      case "audits":
+        return <AuditsSection {...props} />;
       default:
         return null;
     }
