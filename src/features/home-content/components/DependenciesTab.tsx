@@ -19,7 +19,11 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { buildAccreditationFormData } from "../services/accreditation-form-data";
+import {
+  buildAccreditationFormData,
+  mediaAltFromApi,
+  type BilingualAlt,
+} from "../services/accreditation-form-data";
 import { useAccreditations } from "../hooks/useAccreditations";
 
 const dependenciesSchema = z.object({
@@ -36,13 +40,13 @@ type DependenciesFormValues = z.infer<typeof dependenciesSchema>;
 type ExistingImage = {
   id: number;
   url: string;
-  alt: string;
+  alt: BilingualAlt;
 };
 
 type NewImage = {
   file: File;
   preview: string;
-  alt: string;
+  alt: BilingualAlt;
 };
 
 export default function DependenciesTab() {
@@ -91,7 +95,7 @@ export default function DependenciesTab() {
       (apiData.images ?? []).map((img) => ({
         id: img.id,
         url: img.url,
-        alt: img.alt ?? "",
+        alt: mediaAltFromApi(img.alt),
       })),
     );
     setNewImages([]);
@@ -99,9 +103,12 @@ export default function DependenciesTab() {
   }, [apiData, reset]);
 
   const onSubmit = (data: DependenciesFormValues) => {
-    const existingImagesAlt: Record<string, string> = {};
+    const existingImagesAlt: Record<string, BilingualAlt> = {};
     existingImages.forEach((img) => {
-      existingImagesAlt[String(img.id)] = img.alt.trim();
+      existingImagesAlt[String(img.id)] = {
+        ar: img.alt.ar.trim(),
+        en: img.alt.en.trim(),
+      };
     });
 
     const formData = buildAccreditationFormData({
@@ -129,7 +136,7 @@ export default function DependenciesTab() {
           {
             file,
             preview: reader.result as string,
-            alt: "",
+            alt: { ar: "", en: "" },
           },
         ]);
       };
@@ -148,17 +155,23 @@ export default function DependenciesTab() {
     setNewImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const updateExistingAlt = (id: number, alt: string) => {
+  const updateExistingAlt = (id: number, lang: keyof BilingualAlt, value: string) => {
     setExistingImages((prev) =>
-      prev.map((img) => (img.id === id ? { ...img, alt } : img)),
+      prev.map((img) =>
+        img.id === id ? { ...img, alt: { ...img.alt, [lang]: value } } : img,
+      ),
     );
   };
 
-  const updateNewAlt = (index: number, alt: string) => {
+  const updateNewAlt = (index: number, lang: keyof BilingualAlt, value: string) => {
     setNewImages((prev) =>
-      prev.map((img, i) => (i === index ? { ...img, alt } : img)),
+      prev.map((img, i) =>
+        i === index ? { ...img, alt: { ...img.alt, [lang]: value } } : img,
+      ),
     );
   };
+
+  const previewAlt = (alt: BilingualAlt) => alt.ar.trim() || alt.en.trim() || "";
 
   const galleryCount = existingImages.length + newImages.length;
 
@@ -324,7 +337,7 @@ export default function DependenciesTab() {
                   <img
                     src={img.url}
                     className="w-full h-full object-contain p-2"
-                    alt={img.alt || t("image_alt_placeholder")}
+                    alt={previewAlt(img.alt) || t("image_alt_placeholder")}
                   />
                   <button
                     type="button"
@@ -334,17 +347,34 @@ export default function DependenciesTab() {
                     <X className="w-3 h-3" />
                   </button>
                 </div>
-                <div className="p-3 space-y-1.5 border-t border-border/40">
+                <div className="p-3 space-y-2 border-t border-border/40">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                     <ImageIcon className="w-3 h-3" />
                     {t("image_alt")}
                   </label>
-                  <Input
-                    value={img.alt}
-                    onChange={(e) => updateExistingAlt(img.id, e.target.value)}
-                    placeholder={t("image_alt_placeholder")}
-                    className="h-9 rounded-lg text-sm"
-                  />
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-semibold text-muted-foreground">
+                      {t("image_alt_ar")}
+                    </span>
+                    <Input
+                      value={img.alt.ar}
+                      onChange={(e) => updateExistingAlt(img.id, "ar", e.target.value)}
+                      dir="rtl"
+                      placeholder={t("image_alt_placeholder")}
+                      className="h-9 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-semibold text-muted-foreground">
+                      {t("image_alt_en")}
+                    </span>
+                    <Input
+                      value={img.alt.en}
+                      onChange={(e) => updateExistingAlt(img.id, "en", e.target.value)}
+                      placeholder={t("image_alt_placeholder")}
+                      className="h-9 rounded-lg text-sm"
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -358,7 +388,7 @@ export default function DependenciesTab() {
                   <img
                     src={img.preview}
                     className="w-full h-full object-contain p-2"
-                    alt={img.alt || t("image_alt_placeholder")}
+                    alt={previewAlt(img.alt) || t("image_alt_placeholder")}
                   />
                   <span className="absolute top-2 left-2 text-[9px] font-bold uppercase bg-primary/90 text-white px-1.5 py-0.5 rounded">
                     {t("new_image_badge")}
@@ -371,17 +401,34 @@ export default function DependenciesTab() {
                     <X className="w-3 h-3" />
                   </button>
                 </div>
-                <div className="p-3 space-y-1.5 border-t border-border/40">
+                <div className="p-3 space-y-2 border-t border-border/40">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                     <ImageIcon className="w-3 h-3" />
                     {t("image_alt")}
                   </label>
-                  <Input
-                    value={img.alt}
-                    onChange={(e) => updateNewAlt(idx, e.target.value)}
-                    placeholder={t("image_alt_placeholder")}
-                    className="h-9 rounded-lg text-sm"
-                  />
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-semibold text-muted-foreground">
+                      {t("image_alt_ar")}
+                    </span>
+                    <Input
+                      value={img.alt.ar}
+                      onChange={(e) => updateNewAlt(idx, "ar", e.target.value)}
+                      dir="rtl"
+                      placeholder={t("image_alt_placeholder")}
+                      className="h-9 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-semibold text-muted-foreground">
+                      {t("image_alt_en")}
+                    </span>
+                    <Input
+                      value={img.alt.en}
+                      onChange={(e) => updateNewAlt(idx, "en", e.target.value)}
+                      placeholder={t("image_alt_placeholder")}
+                      className="h-9 rounded-lg text-sm"
+                    />
+                  </div>
                 </div>
               </div>
             ))}

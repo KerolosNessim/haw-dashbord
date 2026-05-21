@@ -59,7 +59,8 @@ export interface StatsResponse {
 export interface AccreditationMedia {
   id: number;
   url: string;
-  alt?: string | null;
+  /** Bilingual alt from API; legacy responses may use a plain string */
+  alt?: LocaleString | string | null;
 }
 
 // Accreditation — single item from GET /v1/admin/accreditations

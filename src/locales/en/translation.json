@@ -957,6 +957,8 @@
       "images": "Gallery Images",
       "add_images": "Add Images",
       "image_alt": "Alt text",
+      "image_alt_ar": "Alt text (Arabic)",
+      "image_alt_en": "Alt text (English)",
       "image_alt_placeholder": "Describe the image for accessibility",
       "new_image_badge": "New",
       "sort_order": "Sort order",
