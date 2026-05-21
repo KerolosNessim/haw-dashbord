@@ -11,12 +11,10 @@ export const getAccreditations = (): Promise<AccreditationResponse> => {
 };
 
 export const updateAccreditation = (
-   data: FormData,
+  data: FormData,
 ): Promise<AccreditationResponse> => {
   return api
-    .post<AccreditationResponse>(`/v1/admin/accreditations`, data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
+    .post<AccreditationResponse>(`/v1/admin/accreditations`, data)
     .then((res) => res.data)
     .catch((error) => {
       throw error;

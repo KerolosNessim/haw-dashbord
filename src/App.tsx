@@ -6,6 +6,7 @@ import { Login } from "./pages/Login"
 import ServicesPage from "./pages/services/Services"
 import CreateServicesPage from "./pages/services/CreateServices"
 import EditServicesPage from "./pages/services/EditServices"
+import ServicePricingPage from "./pages/services/ServicePricingPage"
 import FaqPage from "./pages/faq/FaqPage"
 import CreateFaqPage from "./pages/faq/CreateFaqPage"
 import EditFaqPage from "./pages/faq/EditFaqPage"
@@ -187,6 +188,10 @@ const router = createBrowserRouter([
       {
         path: "/services/edit/:id",
         element: <EditServicesPage />,
+      },
+      {
+        path: "/services/pricing",
+        element: <ServicePricingPage />,
       },
       {
         path: "/testimonials",

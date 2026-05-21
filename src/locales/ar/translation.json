@@ -39,7 +39,11 @@
     "clients_updated": "تم تحديث العملاء بنجاح",
     "clients_update_failed": "فشل تحديث العملاء",
     "hero_updated": "تم تحديث البانر الرئيسي بنجاح",
-    "hero_update_failed": "فشل تحديث البانر الرئيسي"
+    "hero_update_failed": "فشل تحديث البانر الرئيسي",
+    "forbidden": "ليس لديك صلاحية لتنفيذ هذا الإجراء.",
+    "unauthorized": "انتهت جلستك. يرجى تسجيل الدخول مرة أخرى.",
+    "server_error": "خطأ في الخادم. يرجى المحاولة لاحقاً.",
+    "network_error": "خطأ في الشبكة. تحقق من الاتصال وحاول مرة أخرى."
   },
   "forms": {
     "smart_slug": {
@@ -69,6 +73,7 @@
     "help_you": "كيف نساعدك",
     "countries": "الدول",
     "services": "الخدمات",
+    "service_pricing": "أسعار الخدمات",
     "settings": "الإعدادات",
     "faq": "الأسئلة الشائعة",
     "blogs": "المدونات",
@@ -116,6 +121,15 @@
 
   "services":{
     "title": "الخدمات",
+    "pricing": {
+      "title": "باقات أسعار الخدمات",
+      "description": "اختر خدمة ثم أدر خطط الأسعار والمميزات والعملة.",
+      "select_service": "الخدمة",
+      "select_placeholder": "اختر خدمة…",
+      "empty_select": "اختر خدمة لبدء تعديل باقات الأسعار.",
+      "loading": "جاري التحميل…",
+      "save": "حفظ الأسعار"
+    },
     "add_service": "إضافة خدمة",
     "edit_service": "تعديل",
     "delete_service": "حذف",
@@ -123,6 +137,7 @@
     "delete_confirm_description": "هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الخدمة وجميع بياناتها نهائياً.",
     "delete_success": "تم حذف الخدمة بنجاح",
     "delete_error": "حدث خطأ أثناء حذف الخدمة",
+    "no_cover": "لا توجد صورة غلاف",
     "form": {
       "country": "الدولة",
       "country_placeholder": "اختر الدولة",
@@ -152,11 +167,33 @@
       "is_active": "نشط",
       "sort_order": "ترتيب العرض",
       "highlight_description": "وصف مميز",
+      "inside_desc": "الوصف الداخلي",
       "meta_title": "عنوان (Meta Title)",
       "meta_description": "وصف (Meta Description)",
+      "social_meta_button": "Open Graph / Twitter",
+      "social_meta_dialog_title": "Open Graph و Twitter",
+      "social_meta_dialog_desc": "العناوين والأوصاف عند مشاركة الخدمة على الشبكات الاجتماعية.",
+      "social_meta_done": "تم",
+      "og_title": "عنوان OG",
+      "og_description": "وصف OG",
+      "og_type": "نوع OG",
+      "twitter_title": "عنوان Twitter",
+      "twitter_description": "وصف Twitter",
+      "twitter_card": "بطاقة Twitter",
       "image_icon": "الأيقونة",
       "media_url_cover": "صورة الغلاف",
+      "cover_ar": "الغلاف (عربي)",
+      "cover_en": "الغلاف (إنجليزي)",
+      "image_alt_ar": "النص البديل (عربي)",
+      "image_alt_en": "النص البديل (إنجليزي)",
       "show_footer": "إظهار الفوتر",
+      "price": "السعر",
+      "currency": "العملة",
+      "packages_description": "وصف القسم",
+      "package_number": "باقة #{{n}}",
+      "package_image": "صورة الباقة",
+      "add_feature": "إضافة ميزة",
+      "feature_placeholder": "ميزة…",
       "upload_icon": "رفع أيقونة",
       "upload_cover": "رفع صورة غلاف",
       "arabic": "باللغة العربية",
@@ -166,6 +203,8 @@
         "title": "أدخل العنوان هنا...",
         "description": "أدخل الوصف المختصر...",
         "highlight": "أدخل النص المميز...",
+        "inside_desc": "أدخل الوصف الداخلي للصفحة...",
+        "image_alt": "وصف الصورة لإمكانية الوصول",
         "meta_title": "عنوان الصفحة لمحركات البحث",
         "meta_description": "وصف الصفحة لمحركات البحث"
       },
@@ -189,7 +228,8 @@
         "save_first": "قم بحفظ البيانات الأساسية أولاً لتتمكن من إضافة أقسام الصفحة",
         "types": {
           "image_text": "صورة ووصف",
-          "cards": "بطاقات (Cards)",
+          "cards": "ما نقدمه (Offerings)",
+          "offerings": "ما نقدمه",
           "full_section": "سكشن كامل (Full Section)",
           "dual_desc": "وصف مزدوج",
           "faq": "الأسئلة الشائعة (FAQ)",
@@ -210,7 +250,8 @@
           "add_item": "إضافة عنصر جديد",
           "add_question": "إضافة سؤال جديد",
           "items_list": "قائمة العناصر الإضافية",
-          "faq_list": "قائمة الأسئلة والأجوبة"
+          "faq_list": "قائمة الأسئلة والأجوبة",
+          "features": "المميزات"
         }
       },
       "errors": {
@@ -934,7 +975,9 @@
       "delete_image": "حذف الصورة",
       "ar": "بالعربية",
       "en": "بالإنجليزية",
-      "save": "حفظ التغييرات"
+      "save": "حفظ التغييرات",
+      "load_error": "تعذر تحميل محتوى القسم الرئيسي.",
+      "retry": "إعادة المحاولة"
     },
     "states": {
       "title": "الإحصائيات",
@@ -952,6 +995,13 @@
       "sec_des": "وصف القسم",
       "images": "معرض الصور",
       "add_images": "إضافة صور",
+      "image_alt": "النص البديل",
+      "image_alt_ar": "النص البديل (عربي)",
+      "image_alt_en": "النص البديل (إنجليزي)",
+      "image_alt_placeholder": "وصف الصورة لإمكانية الوصول",
+      "new_image_badge": "جديد",
+      "sort_order": "ترتيب العرض",
+      "is_active": "مفعّل",
       "save": "حفظ التغييرات"
     },
     "our_clients": {
@@ -961,6 +1011,11 @@
       "sec_des": "وصف القسم",
       "images": "شعارات العملاء",
       "add_images": "إضافة شعارات",
+      "image_alt": "النص البديل",
+      "image_alt_ar": "النص البديل (عربي)",
+      "image_alt_en": "النص البديل (إنجليزي)",
+      "image_alt_placeholder": "وصف الشعار لإمكانية الوصول",
+      "new_image_badge": "جديد",
       "save": "حفظ التغييرات"
     }
   },

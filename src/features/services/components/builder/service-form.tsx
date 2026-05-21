@@ -1,53 +1,88 @@
 import { useTranslation } from "react-i18next";
-import SectionBuilder from "./section-builder";
-import { useState } from "react";
-import BasicInfoForm from "./basic-info-form";
-import { Layout } from "lucide-react";
+import SectionBuilder, { type SectionBuilderHandle } from "./section-builder";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import BasicInfoForm, { type BasicInfoFormHandle } from "./basic-info-form";
+import { Loader2, Save } from "lucide-react";
 import { useAdminService } from "../../hooks/useAdminService";
+import { Button } from "@/components/ui/button";
+import { useServicePageSave } from "../../hooks/useServicePageSave";
 
 interface ServiceFormProps {
   initialId?: number;
 }
 
-// Edit mode: Both form and sections are shown side by side and fully editable from the start.
-// Create mode: Sections are locked until the Basic Info form is saved (serviceId is obtained).
-export default function ServiceForm({ initialId }: ServiceFormProps) {
+export interface ServiceFormHandle {
+  openSocialMetaDialog: () => void;
+}
+
+const ServiceForm = forwardRef<ServiceFormHandle, ServiceFormProps>(function ServiceForm(
+  { initialId },
+  ref,
+) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
-  const isEditMode = !!initialId;
-
-  const [serviceId, setServiceId] = useState<number | null>(initialId || null);
+  const [serviceId, setServiceId] = useState<number | null>(initialId ?? null);
   const { service, isLoading } = useAdminService(serviceId ?? undefined);
+  const basicFormRef = useRef<BasicInfoFormHandle>(null);
+  const sectionBuilderRef = useRef<SectionBuilderHandle>(null);
+  const { saveServicePage, isPending } = useServicePageSave();
 
-  const handleBasicInfoSuccess = (id: number) => {
-    setServiceId(id);
+  useImperativeHandle(ref, () => ({
+    openSocialMetaDialog: () => basicFormRef.current?.openSocialMetaDialog(),
+  }));
+
+  const handleSavePage = async () => {
+    const basic = await basicFormRef.current?.validate();
+    if (!basic) return;
+
+    const res = await saveServicePage({
+      basic,
+      sections: sectionBuilderRef.current?.getSectionsPayload() ?? {},
+      serviceId: serviceId ?? undefined,
+    });
+    const newId =
+      typeof res?.data === "object" && res.data && "id" in res.data
+        ? Number((res.data as { id: number }).id)
+        : undefined;
+    if (newId && !serviceId) {
+      setServiceId(newId);
+    }
   };
 
   return (
     <div className="space-y-8">
-      {/* Part 1: Basic Info Form — Always editable */}
       <section>
         <BasicInfoForm
-          onSuccess={handleBasicInfoSuccess}
+          ref={basicFormRef}
+          embedded
           initialId={serviceId ?? undefined}
         />
       </section>
 
-      {/* Part 2: Section Builder */}
-      {serviceId ? (
-        <SectionBuilder
-          serviceId={serviceId}
-          initialService={service}
-          isLoading={isLoading}
-        />
-      ) : (
-        // Only shown on create mode before first save
-        !isEditMode && (
-          <div className="p-12 border-2 border-dashed rounded-[32px] bg-muted/5 flex flex-col items-center justify-center text-muted-foreground">
-            <Layout className="w-12 h-12 mb-4 opacity-20" />
-            <p className="font-bold opacity-40">{t("save_first")}</p>
-          </div>
-        )
-      )}
+      <SectionBuilder
+        ref={sectionBuilderRef}
+        serviceId={serviceId ?? undefined}
+        initialService={service}
+        isLoading={isLoading}
+      />
+
+      <div className="flex justify-end sticky bottom-6 z-10">
+        <Button
+          type="button"
+          size="lg"
+          disabled={isPending}
+          onClick={handleSavePage}
+          className="h-12 rounded-full px-12 font-bold text-base gap-3 shadow-2xl shadow-primary/40"
+        >
+          {isPending ? (
+            <Loader2 className="size-5 animate-spin" />
+          ) : (
+            <Save className="size-5" />
+          )}
+          {t("save")}
+        </Button>
+      </div>
     </div>
   );
-}
+});
+
+export default ServiceForm;

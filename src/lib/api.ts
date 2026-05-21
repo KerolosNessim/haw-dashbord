@@ -35,11 +35,16 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401 && !error.config?.url?.includes("/login")) {
+    const status = error.response?.status
+    const url = error.config?.url ?? ""
+
+    if (status === 401 && !url.includes("/login")) {
       clearPersistedAuth()
       window.location.href = "/login"
+      return Promise.reject(error)
     }
 
+    // 403: stay logged in; callers show a permission message via getHttpErrorMessage
     return Promise.reject(error)
   }
 )

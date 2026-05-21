@@ -17,25 +17,37 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { cn } from "@/lib/utils";
+import { getHttpErrorMessage } from "@/lib/http-error-message";
+import { htmlForMultipartApi } from "@/lib/html-for-multipart-api";
 import { useHero } from "../hooks/useHero";
 
 /**
  * Validation schema for the Hero section
  * Handles both Arabic and English content
  */
-// Shape returned by the RichTextEditor component
-type EditorValue = { html: string; text: string; isEmpty: boolean; json: unknown };
+function htmlFromEditor(value: unknown): string {
+  return editorOnChangeToHtml(value);
+}
+
+function editorHasContent(value: unknown): boolean {
+  const plain = htmlFromEditor(value)
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .trim();
+  return plain.length > 0;
+}
+
+const editorRequired = z.custom<unknown>(editorHasContent, { message: "Required" });
 
 const heroSchema = z.object({
-  title_ar: z.any(), // EditorValue from RichTextEditor
-  title_en: z.any(), // EditorValue from RichTextEditor
-  des_ar: z.string().min(1, "Required"),
-  des_en: z.string().min(1, "Required"),
-  sup_des_ar: z.string().optional(),
-  sup_des_en: z.string().optional(),
+  title_ar: editorRequired,
+  title_en: editorRequired,
+  des_ar: editorRequired,
+  des_en: editorRequired,
+  sup_des_ar: z.any().optional(),
+  sup_des_en: z.any().optional(),
   phone: z.string().optional(),
 });
 
@@ -51,10 +63,9 @@ export default function HeroTab() {
     keyPrefix: "home_content.hero",
   });
 
-  const { getHero, updateHero, isPending } = useHero();
+  const { getHero, updateHero, isPending, heroErrorFallbacks } = useHero();
 
-  const { data, isLoading } = getHero;
-  console.log("data", data);
+  const { data, isLoading, isError, error, refetch, isFetching } = getHero;
 
   // userImage: undefined (using API data), null (deleted), string (new upload)
   const [userImage, setUserImage] = useState<string | null | undefined>(
@@ -84,21 +95,30 @@ export default function HeroTab() {
   });
 
   const onSubmit = (formValues: HeroFormValues) => {
-    // Extract HTML string from RichTextEditor output objects
-    const titleAr = (formValues.title_ar as EditorValue)?.html ?? formValues.title_ar ?? "";
-    const titleEn = (formValues.title_en as EditorValue)?.html ?? formValues.title_en ?? "";
-
     const formData = new FormData();
-    formData.append("title[ar]", String(titleAr));
-    formData.append("title[en]", String(titleEn));
-    formData.append("description[ar]", formValues.des_ar);
-    formData.append("description[en]", formValues.des_en);
-    formData.append("sub_description[ar]", formValues.sup_des_ar ?? "");
-    formData.append("sub_description[en]", formValues.sup_des_en ?? "");
+    formData.append("title[ar]", htmlForMultipartApi(htmlFromEditor(formValues.title_ar)));
+    formData.append("title[en]", htmlForMultipartApi(htmlFromEditor(formValues.title_en)));
+    formData.append(
+      "description[ar]",
+      htmlForMultipartApi(htmlFromEditor(formValues.des_ar)),
+    );
+    formData.append(
+      "description[en]",
+      htmlForMultipartApi(htmlFromEditor(formValues.des_en)),
+    );
+    formData.append(
+      "sub_description[ar]",
+      htmlForMultipartApi(htmlFromEditor(formValues.sup_des_ar)),
+    );
+    formData.append(
+      "sub_description[en]",
+      htmlForMultipartApi(htmlFromEditor(formValues.sup_des_en)),
+    );
     formData.append("phone", formValues.phone ?? "");
     if (userImageFile instanceof File) {
       formData.append("image", userImageFile);
     }
+
     updateHero(formData);
   };
 
@@ -127,9 +147,26 @@ export default function HeroTab() {
     fileInputRef.current?.click();
   };
 
+  const loadErrorMessage = isError
+    ? getHttpErrorMessage(error, {
+        ...heroErrorFallbacks,
+        default: t("load_error"),
+      })
+    : null;
+
   return isLoading ? (
     <div className="flex items-center justify-center h-screen">
       <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  ) : isError ? (
+    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-destructive/25 bg-destructive/5 p-10 text-center animate-in fade-in duration-300">
+      <p className="max-w-md text-sm font-medium text-destructive">{loadErrorMessage}</p>
+      <Button type="button" variant="outline" onClick={() => refetch()} disabled={isFetching}>
+        {isFetching ? (
+          <Loader2 className="me-2 size-4 animate-spin" />
+        ) : null}
+        {t("retry")}
+      </Button>
     </div>
   ) : (
     <form
@@ -162,13 +199,16 @@ export default function HeroTab() {
                 name="title_ar"
                 control={control}
                 render={({ field }) => (
-                  <RichTextEditor
-                    key="hero-title-ar"
-                    value={field.value}
-                    onChange={(val: any) => field.onChange(val.html)}
-                    dir="rtl"
-                    placeholder="أدخل العنوان هنا..."
-                  />
+                  <>
+                    <RichTextEditor
+                      key="hero-title-ar"
+                      value={field.value}
+                      onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                      dir="rtl"
+                      placeholder="أدخل العنوان هنا..."
+                    />
+                    <FieldError errors={[{ message: errors.title_ar?.message }]} />
+                  </>
                 )}
               />
             </div>
@@ -181,13 +221,16 @@ export default function HeroTab() {
                 name="title_en"
                 control={control}
                 render={({ field }) => (
-                  <RichTextEditor
-                    key="hero-title-en"
-                    value={field.value}
-                    onChange={(val: any) => field.onChange(val.html)}
-                    dir="ltr"
-                    placeholder="Enter title here..."
-                  />
+                  <>
+                    <RichTextEditor
+                      key="hero-title-en"
+                      value={field.value}
+                      onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                      dir="ltr"
+                      placeholder="Enter title here..."
+                    />
+                    <FieldError errors={[{ message: errors.title_en?.message }]} />
+                  </>
                 )}
               />
             </div>
@@ -206,11 +249,12 @@ export default function HeroTab() {
                     ({t("ar")}) {t("des")}
                     <AlignLeft className="w-4 h-4 text-primary" />
                   </FieldLabel>
-                  <Textarea
-                    {...field}
-                    placeholder="أدخل الوصف هنا..."
-                    className="min-h-[140px] rounded-[24px] bg-muted/5 border-border/60 focus:bg-white transition-all resize-none text-lg p-5"
+                  <RichTextEditor
+                    key="hero-des-ar"
+                    value={field.value}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                     dir="rtl"
+                    placeholder="أدخل الوصف هنا..."
                   />
                   <FieldError errors={[{ message: errors.des_ar?.message }]} />
                 </Field>
@@ -225,11 +269,12 @@ export default function HeroTab() {
                     <AlignLeft className="w-4 h-4 text-primary" />
                     {t("des")} ({t("en")})
                   </FieldLabel>
-                  <Textarea
-                    {...field}
-                    placeholder="Enter description here..."
-                    className="min-h-[140px] rounded-[24px] bg-muted/5 border-border/60 focus:bg-white transition-all resize-none text-lg p-5"
+                  <RichTextEditor
+                    key="hero-des-en"
+                    value={field.value}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                     dir="ltr"
+                    placeholder="Enter description here..."
                   />
                   <FieldError errors={[{ message: errors.des_en?.message }]} />
                 </Field>
@@ -250,11 +295,12 @@ export default function HeroTab() {
                     ({t("ar")}) {t("sup_des")}
                     <AlignLeft className="w-4 h-4 text-primary/60" />
                   </FieldLabel>
-                  <Textarea
-                    {...field}
-                    placeholder="أدخل الوصف الإضافي هنا..."
-                    className="min-h-[100px] rounded-[24px] bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-5"
+                  <RichTextEditor
+                    key="hero-sup-des-ar"
+                    value={field.value}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                     dir="rtl"
+                    placeholder="أدخل الوصف الإضافي هنا..."
                   />
                 </Field>
               )}
@@ -268,11 +314,12 @@ export default function HeroTab() {
                     <AlignLeft className="w-4 h-4 text-primary/60" />
                     {t("sup_des")} ({t("en")})
                   </FieldLabel>
-                  <Textarea
-                    {...field}
-                    placeholder="Enter supplementary description here..."
-                    className="min-h-[100px] rounded-[24px] bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-5"
+                  <RichTextEditor
+                    key="hero-sup-des-en"
+                    value={field.value}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                     dir="ltr"
+                    placeholder="Enter supplementary description here..."
                   />
                 </Field>
               )}

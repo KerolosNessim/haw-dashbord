@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import { applyHeadingLevel } from "./editor-font-utils";
+import FontSizeSelect from "./font-size-select";
 import {
   INSERT_ORDERED_LIST_COMMAND,
   INSERT_UNORDERED_LIST_COMMAND
@@ -28,6 +30,9 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Heading4,
+  Heading5,
+  Heading6,
   Italic,
   Link2,
   List,
@@ -38,6 +43,7 @@ import {
   Underline,
   Undo
 } from "lucide-react";
+import type { ReactNode } from "react";
 
 interface ToolbarButtonProps {
   onClick: () => void;
@@ -56,24 +62,42 @@ function ToolbarButton({ onClick, icon: Icon, active, title }: ToolbarButtonProp
       }}
       title={title}
       className={cn(
-        "p-2 rounded-md hover:bg-muted transition-colors",
-        active && "bg-muted text-primary"
+        "flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors",
+        "hover:bg-background hover:text-foreground",
+        active && "bg-background text-primary shadow-sm",
       )}
     >
-      <Icon size={18} />
+      <Icon size={17} strokeWidth={2} />
     </button>
+  );
+}
+
+function ToolbarDivider() {
+  return <div className="mx-0.5 h-6 w-px shrink-0 self-center bg-border" />;
+}
+
+function ToolbarGroup({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <div
+      className={cn(
+        "flex shrink-0 items-center gap-0.5 rounded-lg border border-border/60 bg-muted/25 p-0.5",
+        className,
+      )}
+    >
+      {children}
+    </div>
   );
 }
 
 export default function Toolbar() {
   const [editor] = useLexicalComposerContext();
 
-  const formatHeading = (level: "h1" | "h2" | "h3") => {
+  const formatHeading = (level: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") => {
     editor.update(() => {
       const selection = $getSelection();
-      if ($isRangeSelection(selection)) {
-        $setBlocksType(selection, () => $createHeadingNode(level));
-      }
+      if (!$isRangeSelection(selection)) return;
+      $setBlocksType(selection, () => $createHeadingNode(level));
+      applyHeadingLevel(selection, level);
     });
   };
 
@@ -87,87 +111,104 @@ export default function Toolbar() {
   };
 
   return (
-    <div className="flex flex-wrap gap-1 mb-2 p-1 bg-muted/20 border-b rounded-t-xl">
-      {/* Undo/Redo */}
-      <ToolbarButton onClick={() => editor.dispatchCommand(UNDO_COMMAND, undefined)} icon={Undo} />
-      <ToolbarButton onClick={() => editor.dispatchCommand(REDO_COMMAND, undefined)} icon={Redo} />
-      
-      <div className="w-px h-6 bg-border mx-1 self-center" />
+    <div className="flex flex-wrap items-center gap-1.5 border-b border-border/80 bg-muted/15 px-2 py-2">
+      <ToolbarGroup>
+        <ToolbarButton onClick={() => editor.dispatchCommand(UNDO_COMMAND, undefined)} icon={Undo} title="Undo" />
+        <ToolbarButton onClick={() => editor.dispatchCommand(REDO_COMMAND, undefined)} icon={Redo} title="Redo" />
+      </ToolbarGroup>
 
-      {/* Text Styles */}
-      <ToolbarButton
-        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")}
-        icon={Bold}
-      />
-      <ToolbarButton
-        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic")}
-        icon={Italic}
-      />
-      <ToolbarButton
-        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")}
-        icon={Underline}
-      />
-      <ToolbarButton
-        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough")}
-        icon={Strikethrough}
-      />
-      <ToolbarButton
-        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code")}
-        icon={Code}
-      />
+      <ToolbarGroup>
+        <ToolbarButton
+          onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")}
+          icon={Bold}
+          title="Bold"
+        />
+        <ToolbarButton
+          onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic")}
+          icon={Italic}
+          title="Italic"
+        />
+        <ToolbarButton
+          onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")}
+          icon={Underline}
+          title="Underline"
+        />
+        <ToolbarButton
+          onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough")}
+          icon={Strikethrough}
+          title="Strikethrough"
+        />
+        <ToolbarButton
+          onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code")}
+          icon={Code}
+          title="Code"
+        />
+      </ToolbarGroup>
 
-      <div className="w-px h-6 bg-border mx-1 self-center" />
+      <FontSizeSelect />
 
-      <ToolbarButton
-        title="Insert / edit link"
-        onClick={() => {
-          const current = window.prompt("URL (leave empty to remove link):");
-          if (current === null) return;
-          const trimmed = current.trim();
-          editor.dispatchCommand(TOGGLE_LINK_COMMAND, trimmed === "" ? null : trimmed);
-        }}
-        icon={Link2}
-      />
+      <ToolbarGroup>
+        <ToolbarButton
+          title="Insert / edit link"
+          onClick={() => {
+            const current = window.prompt("URL (leave empty to remove link):");
+            if (current === null) return;
+            const trimmed = current.trim();
+            editor.dispatchCommand(TOGGLE_LINK_COMMAND, trimmed === "" ? null : trimmed);
+          }}
+          icon={Link2}
+        />
+      </ToolbarGroup>
 
-      <div className="w-px h-6 bg-border mx-1 self-center" />
+      <ToolbarDivider />
 
-      {/* Block Styles */}
-      <ToolbarButton onClick={() => formatHeading("h1")} icon={Heading1} />
-      <ToolbarButton onClick={() => formatHeading("h2")} icon={Heading2} />
-      <ToolbarButton onClick={() => formatHeading("h3")} icon={Heading3} />
-      <ToolbarButton onClick={formatQuote} icon={Quote} />
+      <ToolbarGroup className="max-w-full flex-wrap">
+        <ToolbarButton onClick={() => formatHeading("h1")} icon={Heading1} title="Heading 1" />
+        <ToolbarButton onClick={() => formatHeading("h2")} icon={Heading2} title="Heading 2" />
+        <ToolbarButton onClick={() => formatHeading("h3")} icon={Heading3} title="Heading 3" />
+        <ToolbarButton onClick={() => formatHeading("h4")} icon={Heading4} title="Heading 4" />
+        <ToolbarButton onClick={() => formatHeading("h5")} icon={Heading5} title="Heading 5" />
+        <ToolbarButton onClick={() => formatHeading("h6")} icon={Heading6} title="Heading 6" />
+        <ToolbarButton onClick={formatQuote} icon={Quote} title="Quote" />
+      </ToolbarGroup>
 
-      <div className="w-px h-6 bg-border mx-1 self-center" />
+      <ToolbarDivider />
 
-      {/* Lists */}
-      <ToolbarButton
-        onClick={() => editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)}
-        icon={List}
-      />
-      <ToolbarButton
-        onClick={() => editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)}
-        icon={ListOrdered}
-      />
+      <ToolbarGroup>
+        <ToolbarButton
+          onClick={() => editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)}
+          icon={List}
+          title="Bullet list"
+        />
+        <ToolbarButton
+          onClick={() => editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)}
+          icon={ListOrdered}
+          title="Numbered list"
+        />
+      </ToolbarGroup>
 
-      <div className="w-px h-6 bg-border mx-1 self-center" />
-
-      {/* Alignment */}
-      <ToolbarButton
-        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")}
-        icon={AlignLeft}
-      />
-      <ToolbarButton
-        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center")}
-        icon={AlignCenter}
-      />
-      <ToolbarButton
-        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")}
-        icon={AlignRight}
-      />
-      <ToolbarButton
-        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")}
-        icon={AlignJustify}
-      />
+      <ToolbarGroup>
+        <ToolbarButton
+          onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")}
+          icon={AlignLeft}
+          title="Align left"
+        />
+        <ToolbarButton
+          onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center")}
+          icon={AlignCenter}
+          title="Align center"
+        />
+        <ToolbarButton
+          onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")}
+          icon={AlignRight}
+          title="Align right"
+        />
+        <ToolbarButton
+          onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")}
+          icon={AlignJustify}
+          title="Justify"
+        />
+      </ToolbarGroup>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { Pencil, Trash2, Loader2 } from "lucide-react";
 import type { Service } from "../type";
+import { serviceCoverUrl } from "../utils/service-mapper";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,9 +24,20 @@ type ServiceCardProps = {
 };
 
 export default function ServiceCard({ service }: ServiceCardProps) {
-  const { t } = useTranslation("translation", { keyPrefix: "services" });
+  const { t, i18n } = useTranslation("translation", { keyPrefix: "services" });
   const queryClient = useQueryClient();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const coverUrl = serviceCoverUrl(
+    service.image,
+    i18n.language?.startsWith("en") ? "en" : "ar",
+  );
+  const alt = service.image_alt;
+  const cardAlt =
+    (i18n.language?.startsWith("en")
+      ? alt?.en || alt?.ar
+      : alt?.ar || alt?.en) ||
+    service.title.en ||
+    service.title.ar;
 
   const { mutate: deleteService, isPending } = useMutation({
     mutationFn: () => deleteAdminServiceApi(service.id),
@@ -43,11 +55,17 @@ export default function ServiceCard({ service }: ServiceCardProps) {
     <div className="group overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
       {/* Image */}
       <div className="h-48 w-full overflow-hidden">
-        <img
-          src={service?.image}
-          alt={service?.title?.en || service?.title?.ar}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        {coverUrl ? (
+          <img
+            src={coverUrl}
+            alt={cardAlt}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-muted/30 text-xs text-muted-foreground">
+            {t("no_cover")}
+          </div>
+        )}
       </div>
 
       {/* Content */}

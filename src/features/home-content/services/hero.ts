@@ -12,9 +12,7 @@ export const getHeroContent = (): Promise<HeroResponse> => {
 
 export const updateHeroContent = (data: FormData): Promise<HeroResponse> => {
   return api
-    .post<HeroResponse>("/v1/admin/hero", data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
+    .post<HeroResponse>("/v1/admin/hero", data)
     .then((res) => res.data)
     .catch((error) => {
       throw error;

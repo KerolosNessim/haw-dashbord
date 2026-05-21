@@ -26,6 +26,7 @@ import {
   MessageSquare,
   Users,
   MessageCircle,
+  Package,
 } from "lucide-react"
 
 
@@ -115,6 +116,11 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
         titleKey: "services",
         href: "/services",
         icon: BriefcaseBusiness,
+      },
+      {
+        titleKey: "service_pricing",
+        href: "/services/pricing",
+        icon: Package,
       },
     ],
   },

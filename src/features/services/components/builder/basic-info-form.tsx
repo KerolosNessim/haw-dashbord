@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useAdminCountries } from "@/features/countries/hooks/useCountries";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -25,15 +25,14 @@ import {
   Layout,
   Loader2,
   Monitor,
-  Save,
   Search,
   X,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import ServiceSocialMetaDialog from "./service-social-meta-dialog";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
-import { useBasicForm } from "../../hooks/useBasicForm";
 import { useAdminService } from "../../hooks/useAdminService";
 import { useEffect } from "react";
 
@@ -48,45 +47,89 @@ const localizedEditorSchema = z.object({
   en: z.any().optional(),
 }).optional();
 
+const serviceImageSchema = z
+  .object({
+    ar: z.any().nullable().optional(),
+    en: z.any().nullable().optional(),
+  })
+  .refine((val) => !!(val.ar || val.en), {
+    message: "validation.cover_required",
+  });
+
+const optionalLocalizedSchema = z.object({
+  ar: z.string().optional(),
+  en: z.string().optional(),
+});
+
 const basicInfoSchema = z.object({
-  slug: z.string().min(1, { message: "validation.slug_required" }),
+  slug: localizedSchema,
   country_ids: z
     .array(z.string())
     .min(1, { message: "validation.country_required" }),
+  package_ids: z.array(z.string()).optional(),
   is_active: z.boolean(),
   title: localizedSchema,
-  slug: localizedSchema,
   description: localizedSchema,
   highlight_description: localizedEditorSchema,
+  inside_desc: localizedEditorSchema,
   meta_title: localizedSchema,
   meta_description: localizedSchema,
-  image: z
-    .any()
-    .refine((val) => !!val, { message: "validation.cover_image_required" }),
+  image: serviceImageSchema,
+  image_alt: z.object({
+    ar: z.string().optional(),
+    en: z.string().optional(),
+  }),
   show_footer: z.boolean(),
+  og_title: optionalLocalizedSchema.optional(),
+  og_description: optionalLocalizedSchema.optional(),
+  og_type: z.string().optional(),
+  og_image: z.any().optional(),
+  twitter_card: z.string().optional(),
+  twitter_title: optionalLocalizedSchema.optional(),
+  twitter_description: optionalLocalizedSchema.optional(),
+  twitter_image: z.any().optional(),
 });
 
 export type BasicInfoValues = z.infer<typeof basicInfoSchema>;
 
-interface BasicInfoFormProps {
-  onSuccess?: (id: number) => void;
-  initialId?: number;
+function pickLocalizedFromService(
+  service: Record<string, unknown>,
+  key: string,
+): { ar: string; en: string } {
+  const field = service[key];
+  if (!field || typeof field !== "object") return { ar: "", en: "" };
+  const o = field as { ar?: string; en?: string };
+  return { ar: o.ar ?? "", en: o.en ?? "" };
 }
 
-export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormProps) {
+export interface BasicInfoFormHandle {
+  validate: () => Promise<BasicInfoValues | null>;
+  openSocialMetaDialog: () => void;
+}
+
+interface BasicInfoFormProps {
+  initialId?: number;
+  /** When true, parent owns submit (unified page save). */
+  embedded?: boolean;
+}
+
+const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
+  function BasicInfoForm({ initialId, embedded }, ref) {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "services.form" });
+  const [socialMetaOpen, setSocialMetaOpen] = useState(false);
   const { data: countriesData } = useAdminCountries();
   const countries = countriesData?.data ?? [];
   
   const { service, isLoading: isFetching } = useAdminService(initialId);
-  const { basicFormMutation, isPending } = useBasicForm(initialId);
 
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [coverPreviewAr, setCoverPreviewAr] = useState<string | null>(null);
+  const [coverPreviewEn, setCoverPreviewEn] = useState<string | null>(null);
+  const coverInputRefAr = useRef<HTMLInputElement>(null);
+  const coverInputRefEn = useRef<HTMLInputElement>(null);
 
   const {
     control,
-    handleSubmit,
+    getValues,
     setValue,
     watch,
     trigger,
@@ -102,9 +145,20 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
       title: { ar: "", en: "" },
       description: { ar: "", en: "" },
       highlight_description: { ar: null, en: null },
+      inside_desc: { ar: null, en: null },
       meta_title: { ar: "", en: "" },
       meta_description: { ar: "", en: "" },
-      image: null,
+      image: { ar: null, en: null },
+      image_alt: { ar: "", en: "" },
+      package_ids: [],
+      og_title: { ar: "", en: "" },
+      og_description: { ar: "", en: "" },
+      og_type: "website",
+      og_image: null,
+      twitter_card: "summary_large_image",
+      twitter_title: { ar: "", en: "" },
+      twitter_description: { ar: "", en: "" },
+      twitter_image: null,
     },
   });
 
@@ -131,6 +185,10 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
           ar: service.highlight_description?.ar ?? null,
           en: service.highlight_description?.en ?? null,
         },
+        inside_desc: {
+          ar: service.inside_desc?.ar ?? null,
+          en: service.inside_desc?.en ?? null,
+        },
         meta_title: {
           ar: service.meta_title?.ar ?? "",
           en: service.meta_title?.en ?? "",
@@ -139,51 +197,101 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
           ar: service.meta_description?.ar ?? "",
           en: service.meta_description?.en ?? "",
         },
-        image: service.image ?? null,
+        image: {
+          ar: service.image?.ar ?? null,
+          en: service.image?.en ?? null,
+        },
+        image_alt: {
+          ar: service.image_alt?.ar ?? "",
+          en: service.image_alt?.en ?? "",
+        },
+        package_ids:
+          (service as { package_ids?: number[] }).package_ids?.map(String) ?? [],
+        og_title: pickLocalizedFromService(service as Record<string, unknown>, "og_title"),
+        og_description: pickLocalizedFromService(
+          service as Record<string, unknown>,
+          "og_description",
+        ),
+        og_type: (service as { og_type?: string }).og_type ?? "website",
+        og_image: (service as { og_image?: string | null }).og_image ?? null,
+        twitter_card:
+          (service as { twitter_card?: string }).twitter_card ?? "summary_large_image",
+        twitter_title: pickLocalizedFromService(
+          service as Record<string, unknown>,
+          "twitter_title",
+        ),
+        twitter_description: pickLocalizedFromService(
+          service as Record<string, unknown>,
+          "twitter_description",
+        ),
+        twitter_image:
+          (service as { twitter_image?: string | null }).twitter_image ?? null,
       });
 
-      if (service.image) {
-        setCoverPreview(service.image);
-      }
+      setCoverPreviewAr(service.image?.ar ?? null);
+      setCoverPreviewEn(service.image?.en ?? null);
     }
-  }, [service]);
+  }, [service, reset]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (
+    locale: "ar" | "en",
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setValue("image", file, { shouldValidate: true });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCoverPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const current = watch("image") ?? { ar: null, en: null };
+    setValue(
+      "image",
+      { ...current, [locale]: file },
+      { shouldValidate: true },
+    );
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const preview = reader.result as string;
+      if (locale === "ar") setCoverPreviewAr(preview);
+      else setCoverPreviewEn(preview);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = (locale: "ar" | "en") => {
+    const current = watch("image") ?? { ar: null, en: null };
+    setValue(
+      "image",
+      { ...current, [locale]: null },
+      { shouldValidate: true },
+    );
+    if (locale === "ar") {
+      setCoverPreviewAr(null);
+      if (coverInputRefAr.current) coverInputRefAr.current.value = "";
+    } else {
+      setCoverPreviewEn(null);
+      if (coverInputRefEn.current) coverInputRefEn.current.value = "";
     }
   };
 
-  const removeImage = () => {
-    setValue("image", null, { shouldValidate: true });
-    setCoverPreview(null);
-    if (coverInputRef.current) coverInputRef.current.value = "";
-  };
+  const normalizeValues = (data: BasicInfoValues): BasicInfoValues => ({
+    ...data,
+    highlight_description: {
+      ar: editorOnChangeToHtml(data.highlight_description?.ar),
+      en: editorOnChangeToHtml(data.highlight_description?.en),
+    },
+    inside_desc: {
+      ar: editorOnChangeToHtml(data.inside_desc?.ar),
+      en: editorOnChangeToHtml(data.inside_desc?.en),
+    },
+  });
 
-  const onSubmit = async (data: BasicInfoValues) => {
-    // Transform highlight_description - handle both string (from API) and object (from editor)
-    const getHtml = (val: any): string => {
-      if (!val) return "";
-      if (typeof val === "string") return val; // already HTML string from API
-      return val?.html || "";
-    };
-
-    const finalData = {
-      ...data,
-      highlight_description: {
-        ar: getHtml(data.highlight_description?.ar),
-        en: getHtml(data.highlight_description?.en),
-      },
-    };
-    const res = await basicFormMutation(finalData);
-    onSuccess?.(res?.data?.id);
-  };
+  useImperativeHandle(ref, () => ({
+    validate: async () => {
+      const valid = await trigger();
+      if (!valid) return null;
+      return normalizeValues(getValues());
+    },
+    openSocialMetaDialog: () => setSocialMetaOpen(true),
+  }));
 
   /**
    * Helper to translate error messages if they are keys
@@ -204,10 +312,7 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
   const watchTitleEn = watch("title.en");
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-8 animate-in fade-in duration-500 "
-    >
+    <div className="space-y-8 animate-in fade-in duration-500">
       <div className="p-8 rounded-[32px] border bg-card shadow-sm space-y-12">
         <div className="flex items-center gap-4 border-b pb-6">
           <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
@@ -452,7 +557,10 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
                   <div className="min-h-[200px]">
                     <RichTextEditor
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        if (field.value !== html) field.onChange(html);
+                      }}
                       dir="rtl"
                       placeholder={t("placeholders.highlight")}
                     />
@@ -481,7 +589,10 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
                   <div className="min-h-[200px]">
                     <RichTextEditor
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        if (field.value !== html) field.onChange(html);
+                      }}
                       dir="ltr"
                       placeholder={t("placeholders.highlight")}
                     />
@@ -499,6 +610,70 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
               )}
             />
           </div>
+
+          {/* Inside description (Rich Text) */}
+          <div className="grid grid-cols-1 gap-8 border-t pt-8 md:grid-cols-2">
+            <Controller
+              name="inside_desc.ar"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 opacity-40" />
+                    {t("inside_desc")} (AR)
+                  </FieldLabel>
+                  <div className="min-h-[200px]">
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        if (field.value !== html) field.onChange(html);
+                      }}
+                      dir="rtl"
+                      placeholder={t("placeholders.inside_desc")}
+                    />
+                  </div>
+                  <FieldError
+                    errors={[
+                      {
+                        message: translateError(errors.inside_desc?.ar),
+                      },
+                    ]}
+                  />
+                </Field>
+              )}
+            />
+            <Controller
+              name="inside_desc.en"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 opacity-40" />
+                    {t("inside_desc")} (EN)
+                  </FieldLabel>
+                  <div className="min-h-[200px]">
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        if (field.value !== html) field.onChange(html);
+                      }}
+                      dir="ltr"
+                      placeholder={t("placeholders.inside_desc")}
+                    />
+                  </div>
+                  <FieldError
+                    errors={[
+                      {
+                        message: translateError(errors.inside_desc?.en),
+                      },
+                    ]}
+                  />
+                </Field>
+              )}
+            />
+          </div>
         </div>
 
         {/* Media Settings (Dual Uploaders) */}
@@ -508,58 +683,96 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
             <h3 className="font-bold text-lg">{t("media_settings")}</h3>
           </div>
 
-          {/* Cover */}
-          <div className=" space-y-4">
-            <FieldLabel className="text-xs font-bold uppercase tracking-wider opacity-40">
-              {t("media_url_cover")}
-            </FieldLabel>
-            <div
-              className={cn(
-                "relative h-full aspect-21/9 md:aspect-auto rounded-3xl border-2 border-dashed transition-all overflow-hidden bg-muted/10 flex flex-col items-center justify-center cursor-pointer",
-                coverPreview
-                  ? "border-primary/20"
-                  : "border-border hover:border-primary/40",
-              )}
-              onClick={() => !coverPreview && coverInputRef.current?.click()}
-            >
-              {coverPreview ? (
-                <>
-                  <img
-                    src={coverPreview}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-all flex items-center justify-center">
-                    <Button
-                      type="button"
-                      size="icon"
-                      className="rounded-full h-10 w-10 shadow-xl bg-red-500 text-white"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeImage();
-                      }}
-                    >
-                      <X className="w-5 h-5" />
-                    </Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {(["ar", "en"] as const).map((locale) => {
+              const preview = locale === "ar" ? coverPreviewAr : coverPreviewEn;
+              const inputRef = locale === "ar" ? coverInputRefAr : coverInputRefEn;
+              return (
+                <div key={locale} className="space-y-3">
+                  <FieldLabel className="text-xs font-bold uppercase tracking-wider opacity-40">
+                    {locale === "ar" ? t("cover_ar") : t("cover_en")}
+                  </FieldLabel>
+                  <div
+                    className={cn(
+                      "relative aspect-21/9 rounded-3xl border-2 border-dashed transition-all overflow-hidden bg-muted/10 flex flex-col items-center justify-center cursor-pointer",
+                      preview
+                        ? "border-primary/20"
+                        : "border-border hover:border-primary/40",
+                    )}
+                    onClick={() => !preview && inputRef.current?.click()}
+                  >
+                    {preview ? (
+                      <>
+                        <img
+                          src={preview}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-all flex items-center justify-center">
+                          <Button
+                            type="button"
+                            size="icon"
+                            className="rounded-full h-10 w-10 shadow-xl bg-red-500 text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeImage(locale);
+                            }}
+                          >
+                            <X className="w-5 h-5" />
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 p-8">
+                        <ImagePlus className="w-10 h-10 opacity-20" />
+                        <p className="text-xs font-bold opacity-30">
+                          {t("upload_cover")}
+                        </p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      ref={inputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => handleImageChange(locale, e)}
+                    />
                   </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center gap-2 p-8">
-                  <ImagePlus className="w-10 h-10 opacity-20" />
-                  <p className="text-xs font-bold opacity-30">
-                    {t("upload_cover")}
-                  </p>
                 </div>
+              );
+            })}
+          </div>
+          <FieldError errors={[{ message: translateError(errors.image) }]} />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Controller
+              name="image_alt.ar"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>{t("image_alt_ar")}</FieldLabel>
+                  <Input
+                    {...field}
+                    dir="rtl"
+                    className="h-12 rounded-2xl bg-background border-border/50"
+                  />
+                </Field>
               )}
-              <input
-                type="file"
-                ref={coverInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={(e) => handleImageChange(e)}
-              />
-            </div>
-            <FieldError errors={[{ message: translateError(errors.image) }]} />
+            />
+            <Controller
+              name="image_alt.en"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>{t("image_alt_en")}</FieldLabel>
+                  <Input
+                    {...field}
+                    dir="ltr"
+                    className="h-12 rounded-2xl bg-background border-border/50"
+                  />
+                </Field>
+              )}
+            />
           </div>
         </div>
 
@@ -660,22 +873,17 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
               />
             </div>
           </div>
+
         </div>
       </div>
 
-      <Button
-        type="submit"
-        size="lg"
-        disabled={isPending}
-        className="w-fit h-12 rounded-full px-12 font-bold text-base gap-3 shadow-2xl shadow-primary/40 pointer-events-auto hover:scale-105 active:scale-95 transition-all"
-      >
-        {isPending || isFetching ? (
-          <Loader2 className="size-5 animate-spin" />
-        ) : (
-          <Save className="size-5" />
-        )}
-        {t("save")}
-      </Button>
-    </form>
+      <ServiceSocialMetaDialog
+        open={socialMetaOpen}
+        onOpenChange={setSocialMetaOpen}
+        control={control}
+      />
+    </div>
   );
-}
+});
+
+export default BasicInfoForm;

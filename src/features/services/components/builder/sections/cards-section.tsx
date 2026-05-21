@@ -2,27 +2,34 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Save, Loader2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
-import { saveCardsSection } from "@/features/services/services/section-api";
-import { toast } from "sonner";
+import { useEmbeddedSectionWatch } from "@/features/services/hooks/useEmbeddedSectionWatch";
+import type { SectionEmbeddedProps } from "../section-embedded-props";
 
 const localizedSchema = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
   en: z.string().min(1, { message: "validation.required" }),
 });
 
+function editorNotEmpty(val: unknown): boolean {
+  if (val == null || val === "") return false;
+  if (typeof val === "string") {
+    const text = val.replace(/<[^>]*>/g, "").trim();
+    return text.length > 0;
+  }
+  if (typeof val === "object" && val !== null && "isEmpty" in val) {
+    return !(val as { isEmpty?: boolean }).isEmpty;
+  }
+  return false;
+}
+
 const localizedEditorSchema = z.object({
-  ar: z
-    .any()
-    .refine((val) => val && !val.isEmpty, { message: "validation.required" }),
-  en: z
-    .any()
-    .refine((val) => val && !val.isEmpty, { message: "validation.required" }),
+  ar: z.any().refine(editorNotEmpty, { message: "validation.required" }),
+  en: z.any().refine(editorNotEmpty, { message: "validation.required" }),
 });
 
 const cardsSchema = z.object({
@@ -40,31 +47,32 @@ const cardsSchema = z.object({
 
 type CardsValues = z.infer<typeof cardsSchema>;
 
-interface CardsSectionProps {
+interface CardsSectionProps extends SectionEmbeddedProps {
   serviceId: number;
   initialData?: any;
 }
 
 export default function CardsSection({
-  serviceId,
   initialData,
+  embedded,
+  onDataChange,
 }: CardsSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
-  const { t: tToast } = useTranslation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     control,
-    handleSubmit,
+    watch,
+    getValues,
     formState: { errors },
   } = useForm<CardsValues>({
     resolver: zodResolver(cardsSchema),
     values: {
       title: initialData?.title || { ar: "", en: "" },
       description: initialData?.description || { ar: "", en: "" },
-      items: initialData?.items || [
-        { title: { ar: "", en: "" }, description: { ar: null, en: null } },
-      ],
+      items:
+        (Array.isArray(initialData?.items) ? initialData.items : null) || [
+          { title: { ar: "", en: "" }, description: { ar: null, en: null } },
+        ],
     },
   });
 
@@ -73,34 +81,10 @@ export default function CardsSection({
     name: "items",
   });
 
-  const onSubmit = async (data: CardsValues) => {
-    setIsSubmitting(true);
-    try {
-      const finalData = {
-        ...data,
-        items: data.items.map((item) => ({
-          ...item,
-          description: {
-            ar: item.description.ar?.html || "",
-            en: item.description.en?.html || "",
-          },
-        })),
-      };
-      const res = await saveCardsSection(serviceId, finalData);
-      toast.success(res?.data?.message || tToast("toasts.section_saved"));
-    } catch (error) {
-      toast.error(error?.response?.data?.message || tToast("toasts.section_save_error"));
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  useEmbeddedSectionWatch(embedded, onDataChange, watch, getValues);
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-12 animate-in fade-in duration-500"
-    >
+    <div className="space-y-12 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Arabic Main Info */}
         <div className="space-y-6 p-6 rounded-[24px] border border-dashed bg-muted/5">
@@ -215,7 +199,7 @@ export default function CardsSection({
 
       <div className="space-y-6">
         <h3 className="text-xl font-bold flex items-center gap-2 px-2">
-          {t("sections.types.cards")}
+          {t("sections.types.offerings")}
         </h3>
         <div className="grid grid-cols-1 gap-6">
           {fields.map((field, index) => (
@@ -272,8 +256,12 @@ export default function CardsSection({
                             <div className="min-h-[150px]">
                               <RichTextEditor
                                 value={field.value}
-                                onChange={field.onChange}
+                                onChange={(val) => {
+                                  const html = editorOnChangeToHtml(val);
+                                  if (field.value !== html) field.onChange(html || null);
+                                }}
                                 dir="rtl"
+                                placeholder={t("placeholders.description")}
                               />
                             </div>
                           </Field>
@@ -309,8 +297,12 @@ export default function CardsSection({
                             <div className="min-h-[150px]">
                               <RichTextEditor
                                 value={field.value}
-                                onChange={field.onChange}
+                                onChange={(val) => {
+                                  const html = editorOnChangeToHtml(val);
+                                  if (field.value !== html) field.onChange(html || null);
+                                }}
                                 dir="ltr"
+                                placeholder={t("placeholders.description")}
                               />
                             </div>
                           </Field>
@@ -343,20 +335,6 @@ export default function CardsSection({
         </div>
       </div>
 
-      <div className="flex justify-end pt-8 border-t">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-full h-14 px-12 font-bold text-lg gap-3 shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all"
-        >
-          {isSubmitting ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
-          ) : (
-            <Save className="w-6 h-6" />
-          )}
-          {t("save_section")}
-        </Button>
-      </div>
-    </form>
+    </div>
   );
 }

@@ -55,25 +55,29 @@ export interface StatsResponse {
   data: StatsData[];
 };
 
+/** Bilingual image alt from GET /v1/admin/accreditations */
+export interface AccreditationImageAlt {
+  ar: string | null;
+  en: string | null;
+}
+
+/** Spatie media item from GET /v1/admin/accreditations */
+export interface AccreditationMedia {
+  id: number;
+  url: string;
+  image_alt: AccreditationImageAlt;
+}
+
 // Accreditation — single item from GET /v1/admin/accreditations
 export interface AccreditationData {
   id: number;
   title: LocaleString;
   description: LocaleString;
-  images: { //array of image URLs
-    id:number,
-    url:string
-  }[];        
+  images: AccreditationMedia[];
   sort_order: number;
   is_active: boolean;
   created_at: string;
-};
-
-// POST / PUT request body
-export interface AccreditationRequest {
-  title: LocaleString;
-  description: LocaleString;
-  image?: File | null;     // single image upload
+  updated_at?: string;
 };
 
 // Full API Response — data is a single object
@@ -81,4 +85,13 @@ export interface AccreditationResponse {
   status: string;
   message: string;
   data: AccreditationData;
+};
+
+/** GET /v1/admin/partners — list wrapper with first item used in dashboard */
+export interface PartnersResponse {
+  status: string;
+  message: string;
+  data: {
+    data: AccreditationData[];
+  };
 };

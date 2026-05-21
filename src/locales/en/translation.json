@@ -39,7 +39,11 @@
     "clients_updated": "Clients updated successfully",
     "clients_update_failed": "Failed to update clients",
     "hero_updated": "Hero updated successfully",
-    "hero_update_failed": "Failed to update hero"
+    "hero_update_failed": "Failed to update hero",
+    "forbidden": "You do not have permission to perform this action.",
+    "unauthorized": "Your session has expired. Please sign in again.",
+    "server_error": "Server error. Please try again later.",
+    "network_error": "Network error. Check your connection and try again."
   },
   "forms": {
     "smart_slug": {
@@ -68,6 +72,7 @@
     "solution_categories": "Client categories",
     "help_you": "How We Help You",
     "services": "Services",
+    "service_pricing": "Service pricing",
     "countries": "Countries",
     "settings": "Settings",
     "faq": "FAQ",
@@ -115,6 +120,15 @@
 
   "services":{
     "title": "Services",
+    "pricing": {
+      "title": "Service pricing packages",
+      "description": "Select a service and manage its pricing plans, features, and currencies.",
+      "select_service": "Service",
+      "select_placeholder": "Choose a service…",
+      "empty_select": "Select a service to edit its pricing packages.",
+      "loading": "Loading…",
+      "save": "Save pricing"
+    },
     "add_service": "Add Service",
     "edit_service": "Edit",
     "delete_service": "Delete",
@@ -122,6 +136,7 @@
     "delete_confirm_description": "This action cannot be undone. The service and all its data will be permanently deleted.",
     "delete_success": "Service deleted successfully",
     "delete_error": "An error occurred while deleting the service",
+    "no_cover": "No cover image",
     "save_first": "Save the basic information first to be able to add page sections",
     "form": {
       "country": "Country",
@@ -147,13 +162,35 @@
       "status_online": "Status Online",
       "sort_order": "Sort Order",
       "highlight_description": "Highlight Description",
+      "inside_desc": "Inside description",
       "meta_title": "Meta Title",
       "meta_description": "Meta Description",
+      "social_meta_button": "Open Graph / Twitter",
+      "social_meta_dialog_title": "Open Graph & Twitter",
+      "social_meta_dialog_desc": "Titles and descriptions used when this service is shared on social networks.",
+      "social_meta_done": "Done",
+      "og_title": "OG title",
+      "og_description": "OG description",
+      "og_type": "OG type",
+      "twitter_title": "Twitter title",
+      "twitter_description": "Twitter description",
+      "twitter_card": "Twitter card",
       "image_icon": "Icon",
       "media_url_cover": "Cover Image",
+      "cover_ar": "Cover (Arabic)",
+      "cover_en": "Cover (English)",
+      "image_alt_ar": "Image alt (Arabic)",
+      "image_alt_en": "Image alt (English)",
       "upload_icon": "Upload Icon",
       "show_footer": "Show Footer",
-      "upload_cover": "Upload Cover",
+      "price": "Price",
+      "currency": "Currency",
+      "packages_description": "Section description",
+      "package_number": "Package #{{n}}",
+      "package_image": "Package image",
+      "add_feature": "Add feature",
+      "feature_placeholder": "Feature…",
+      "upload_cover": "Upload cover",
       "arabic": "In Arabic",
       "english": "In English",
       "title_ar": "Title (AR)",
@@ -165,6 +202,8 @@
         "title": "Enter title here...",
         "description": "Enter short description...",
         "highlight": "Enter highlight text...",
+        "inside_desc": "Enter inside page description...",
+        "image_alt": "Describe the image for accessibility",
         "meta_title": "Page title for search engines",
         "meta_description": "Page description for search engines"
       },
@@ -187,7 +226,8 @@
         "picker_desc": "Select the type of content you want to add to your page.",
         "types": {
           "image_text": "Image & Description",
-          "cards": "Cards List",
+          "cards": "Offerings (Cards)",
+          "offerings": "Offerings",
           "full_section": "Full Section Builder",
           "dual_desc": "Dual Description",
           "faq": "Questions (FAQ)",
@@ -208,7 +248,8 @@
           "add_item": "Add New Item",
           "add_question": "Add New Question",
           "items_list": "Additional Items List",
-          "faq_list": "Questions & Answers List"
+          "faq_list": "Questions & Answers List",
+          "features": "Features"
         }
       },
       "errors": {
@@ -932,7 +973,9 @@
       "delete_image": "Delete Image",
       "ar": "Arabic",
       "en": "English",
-      "save": "Save Changes"
+      "save": "Save Changes",
+      "load_error": "Could not load hero content.",
+      "retry": "Try again"
     },
     "states": {
       "title": "Statistics",
@@ -950,6 +993,13 @@
       "sec_des": "Section Description",
       "images": "Gallery Images",
       "add_images": "Add Images",
+      "image_alt": "Alt text",
+      "image_alt_ar": "Alt text (Arabic)",
+      "image_alt_en": "Alt text (English)",
+      "image_alt_placeholder": "Describe the image for accessibility",
+      "new_image_badge": "New",
+      "sort_order": "Sort order",
+      "is_active": "Active",
       "save": "Save Changes"
     },
     "our_clients": {
@@ -959,6 +1009,11 @@
       "sec_des": "Section Description",
       "images": "Client Logos",
       "add_images": "Add Logos",
+      "image_alt": "Alt text",
+      "image_alt_ar": "Alt text (Arabic)",
+      "image_alt_en": "Alt text (English)",
+      "image_alt_placeholder": "Describe the logo for accessibility",
+      "new_image_badge": "New",
       "save": "Save Changes"
     }
   },
