@@ -216,7 +216,8 @@
         "picker_desc": "Select the type of content you want to add to your page.",
         "types": {
           "image_text": "Image & Description",
-          "cards": "Cards List",
+          "cards": "Offerings (Cards)",
+          "offerings": "Offerings",
           "full_section": "Full Section Builder",
           "dual_desc": "Dual Description",
           "faq": "Questions (FAQ)",

@@ -2,7 +2,7 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,13 +15,21 @@ const localizedSchema = z.object({
   en: z.string().min(1, { message: "validation.required" }),
 });
 
+function editorNotEmpty(val: unknown): boolean {
+  if (val == null || val === "") return false;
+  if (typeof val === "string") {
+    const text = val.replace(/<[^>]*>/g, "").trim();
+    return text.length > 0;
+  }
+  if (typeof val === "object" && val !== null && "isEmpty" in val) {
+    return !(val as { isEmpty?: boolean }).isEmpty;
+  }
+  return false;
+}
+
 const localizedEditorSchema = z.object({
-  ar: z
-    .any()
-    .refine((val) => val && !val.isEmpty, { message: "validation.required" }),
-  en: z
-    .any()
-    .refine((val) => val && !val.isEmpty, { message: "validation.required" }),
+  ar: z.any().refine(editorNotEmpty, { message: "validation.required" }),
+  en: z.any().refine(editorNotEmpty, { message: "validation.required" }),
 });
 
 const cardsSchema = z.object({
@@ -61,9 +69,10 @@ export default function CardsSection({
     values: {
       title: initialData?.title || { ar: "", en: "" },
       description: initialData?.description || { ar: "", en: "" },
-      items: initialData?.items || [
-        { title: { ar: "", en: "" }, description: { ar: null, en: null } },
-      ],
+      items:
+        (Array.isArray(initialData?.items) ? initialData.items : null) || [
+          { title: { ar: "", en: "" }, description: { ar: null, en: null } },
+        ],
     },
   });
 
@@ -190,7 +199,7 @@ export default function CardsSection({
 
       <div className="space-y-6">
         <h3 className="text-xl font-bold flex items-center gap-2 px-2">
-          {t("sections.types.cards")}
+          {t("sections.types.offerings")}
         </h3>
         <div className="grid grid-cols-1 gap-6">
           {fields.map((field, index) => (
@@ -247,8 +256,12 @@ export default function CardsSection({
                             <div className="min-h-[150px]">
                               <RichTextEditor
                                 value={field.value}
-                                onChange={field.onChange}
+                                onChange={(val) => {
+                                  const html = editorOnChangeToHtml(val);
+                                  if (field.value !== html) field.onChange(html || null);
+                                }}
                                 dir="rtl"
+                                placeholder={t("placeholders.description")}
                               />
                             </div>
                           </Field>
@@ -284,8 +297,12 @@ export default function CardsSection({
                             <div className="min-h-[150px]">
                               <RichTextEditor
                                 value={field.value}
-                                onChange={field.onChange}
+                                onChange={(val) => {
+                                  const html = editorOnChangeToHtml(val);
+                                  if (field.value !== html) field.onChange(html || null);
+                                }}
                                 dir="ltr"
+                                placeholder={t("placeholders.description")}
                               />
                             </div>
                           </Field>

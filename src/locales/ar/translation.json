@@ -218,7 +218,8 @@
         "save_first": "قم بحفظ البيانات الأساسية أولاً لتتمكن من إضافة أقسام الصفحة",
         "types": {
           "image_text": "صورة ووصف",
-          "cards": "بطاقات (Cards)",
+          "cards": "ما نقدمه (Offerings)",
+          "offerings": "ما نقدمه",
           "full_section": "سكشن كامل (Full Section)",
           "dual_desc": "وصف مزدوج",
           "faq": "الأسئلة الشائعة (FAQ)",

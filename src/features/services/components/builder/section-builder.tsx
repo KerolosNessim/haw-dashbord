@@ -29,8 +29,8 @@ import FullSection from "./sections/full-section";
 import DualDescSection from "./sections/dual-desc-section";
 import FAQSection from "./sections/faq-section";
 import ContactSection from "./sections/contact-section";
-import AuditsSection from "./sections/audits-section";
 import { useEffect } from "react";
+import { offeringsDataFromService } from "../../utils/service-api-mappers";
 import type { Service } from "../../type";
 import type { ServiceSectionsPayload } from "../../service-section-types";
 import {
@@ -44,9 +44,7 @@ export type SectionType =
   | "full_section"
   | "dual_desc"
   | "faq"
-  | "contact"
-  | "audits"
-
+  | "contact";
 
 interface SectionInstance {
   id: string;
@@ -75,8 +73,9 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
 
   useEffect(() => {
     if (initialService && sections.length === 0) {
+      const raw = initialService as Record<string, unknown>;
       const mappedSections: SectionInstance[] = [];
-      
+
       // Mapping keys to SectionInstance
       if (initialService.benefits) {
         mappedSections.push({ id: "benefits", type: "image_text", data: initialService.benefits });
@@ -93,25 +92,11 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
       if (initialService.ctas) {
         mappedSections.push({ id: "ctas", type: "contact", data: initialService.ctas });
       }
-      if (initialService.offerings) {
+      if (initialService.offerings || raw.offerings_title) {
         mappedSections.push({
           id: "offerings",
           type: "cards",
-          data: initialService.offerings,
-        });
-      }
-      if (initialService.audits) {
-        const raw = initialService as Record<string, unknown>;
-        mappedSections.push({
-          id: "audits",
-          type: "audits",
-          data: {
-            title: raw.audits_title,
-            description: raw.audits_description,
-            items: Array.isArray(initialService.audits)
-              ? initialService.audits
-              : (initialService.audits as { items?: unknown })?.items,
-          },
+          data: offeringsDataFromService(initialService),
         });
       }
 
@@ -160,7 +145,6 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
     },
     { id: "faq", icon: HelpCircle, color: "bg-orange-50 text-orange-600" },
     { id: "contact", icon: PhoneCall, color: "bg-rose-50 text-rose-600" },
-    { id: "audits", icon: AlignLeft, color: "bg-cyan-50 text-cyan-600" },
   ] as const;
 
   const addSection = (type: SectionType) => {
@@ -214,8 +198,6 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
         return <FAQSection {...props} />;
       case "contact":
         return <ContactSection {...props} />;
-      case "audits":
-        return <AuditsSection {...props} />;
       default:
         return null;
     }
@@ -262,7 +244,9 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
                     {index + 1}
                   </span>
                   <h4 className="font-bold text-sm uppercase tracking-wider opacity-60">
-                    {t(`sections.types.${section.type}`)}
+                    {section.type === "cards"
+                      ? t("sections.types.offerings")
+                      : t(`sections.types.${section.type}`)}
                   </h4>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -339,7 +323,9 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
                   <type.icon className="w-8 h-8" />
                 </div>
                 <span className="font-bold text-sm leading-tight text-card-foreground">
-                  {t(`sections.types.${type.id}`)}
+                  {type.id === "cards"
+                    ? t("sections.types.offerings")
+                    : t(`sections.types.${type.id}`)}
                 </span>
               </button>
             ))}
