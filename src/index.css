@@ -165,6 +165,54 @@
   line-height: inherit;
 }
 
+/* Lexical inline formats — theme classes are not always picked up by Tailwind purge */
+[contenteditable] .font-bold,
+[contenteditable] strong,
+[contenteditable] b {
+  font-weight: 700;
+}
+
+[contenteditable] .italic,
+[contenteditable] em,
+[contenteditable] i {
+  font-style: italic;
+}
+
+[contenteditable] .underline,
+[contenteditable] u {
+  text-decoration: underline;
+}
+
+[contenteditable] .line-through,
+[contenteditable] s,
+[contenteditable] del {
+  text-decoration: line-through;
+}
+
+[contenteditable] .underline.line-through {
+  text-decoration: underline line-through;
+}
+
+[contenteditable] .editor-list-ol {
+  list-style-type: decimal;
+}
+
+[contenteditable] .editor-list-ul {
+  list-style-type: disc;
+}
+
+[contenteditable] .editor-quote {
+  border-inline-start: 4px solid var(--border);
+  padding-inline-start: 1rem;
+  font-style: italic;
+}
+
+[contenteditable] a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -17,7 +17,7 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { cn } from "@/lib/utils";
 import { getHttpErrorMessage } from "@/lib/http-error-message";
 import { htmlForMultipartApi } from "@/lib/html-for-multipart-api";
@@ -27,13 +27,8 @@ import { useHero } from "../hooks/useHero";
  * Validation schema for the Hero section
  * Handles both Arabic and English content
  */
-type EditorValue = { html: string; text: string; isEmpty: boolean; json: unknown };
-
 function htmlFromEditor(value: unknown): string {
-  if (value != null && typeof value === "object" && "html" in value) {
-    return String((value as EditorValue).html ?? "");
-  }
-  return String(value ?? "");
+  return editorOnChangeToHtml(value);
 }
 
 function editorHasContent(value: unknown): boolean {
@@ -208,7 +203,7 @@ export default function HeroTab() {
                     <RichTextEditor
                       key="hero-title-ar"
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                       dir="rtl"
                       placeholder="أدخل العنوان هنا..."
                     />
@@ -230,7 +225,7 @@ export default function HeroTab() {
                     <RichTextEditor
                       key="hero-title-en"
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                       dir="ltr"
                       placeholder="Enter title here..."
                     />
@@ -257,7 +252,7 @@ export default function HeroTab() {
                   <RichTextEditor
                     key="hero-des-ar"
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                     dir="rtl"
                     placeholder="أدخل الوصف هنا..."
                   />
@@ -277,7 +272,7 @@ export default function HeroTab() {
                   <RichTextEditor
                     key="hero-des-en"
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                     dir="ltr"
                     placeholder="Enter description here..."
                   />
@@ -303,7 +298,7 @@ export default function HeroTab() {
                   <RichTextEditor
                     key="hero-sup-des-ar"
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                     dir="rtl"
                     placeholder="أدخل الوصف الإضافي هنا..."
                   />
@@ -322,7 +317,7 @@ export default function HeroTab() {
                   <RichTextEditor
                     key="hero-sup-des-en"
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                     dir="ltr"
                     placeholder="Enter supplementary description here..."
                   />

@@ -13,9 +13,39 @@ import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { LinkNode } from "@lexical/link";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { $generateHtmlFromNodes, $generateNodesFromDOM } from "@lexical/html";
-import { useEffect } from "react";
+import { useEffect, useRef, type MutableRefObject } from "react";
 import Toolbar from "./tool-bar";
 import { cn } from "@/lib/utils";
+
+export type EditorChangeValue = {
+  html: string;
+  text: string;
+  isEmpty: boolean;
+  json: unknown;
+};
+
+/** Use with react-hook-form: keeps field value as HTML string for API round-trip. */
+export function editorOnChangeToHtml(val: unknown): string {
+  if (val != null && typeof val === "object" && "html" in val) {
+    return String((val as EditorChangeValue).html ?? "");
+  }
+  return typeof val === "string" ? val : "";
+}
+
+function editorValueSignature(value: unknown): string {
+  if (value == null || value === "") return "";
+  if (typeof value === "object" && value !== null && "json" in value) {
+    try {
+      return JSON.stringify((value as EditorChangeValue).json);
+    } catch {
+      return "";
+    }
+  }
+  if (typeof value === "object" && value !== null && "html" in value) {
+    return String((value as EditorChangeValue).html ?? "");
+  }
+  return String(value);
+}
 
 const editorTheme = {
   ltr: "ltr text-left",
@@ -63,6 +93,8 @@ export default function RichTextEditor({
   placeholder = "Write...",
   dir = "ltr",
 }: Props) {
+  const skipNextLoadRef = useRef(false);
+
   const config = {
     namespace: "editor",
     theme: editorTheme,
@@ -123,14 +155,20 @@ export default function RichTextEditor({
         <LinkPlugin />
         <AutoFocusPlugin />
 
-        <LoadContentPlugin value={value} />
-        <HtmlPlugin onChange={onChange} />
+        <LoadContentPlugin value={value} skipNextLoadRef={skipNextLoadRef} />
+        <HtmlPlugin onChange={onChange} skipNextLoadRef={skipNextLoadRef} />
       </LexicalComposer>
     </div>
   );
 }
 
-function HtmlPlugin({ onChange }: { onChange?: (val: unknown) => void }) {
+function HtmlPlugin({
+  onChange,
+  skipNextLoadRef,
+}: {
+  onChange?: (val: unknown) => void;
+  skipNextLoadRef: MutableRefObject<boolean>;
+}) {
   return (
     <OnChangePlugin
       onChange={(editorState, editor) => {
@@ -139,6 +177,7 @@ function HtmlPlugin({ onChange }: { onChange?: (val: unknown) => void }) {
           const text = root.getTextContent();
           const json = editorState.toJSON();
           const html = $generateHtmlFromNodes(editor, null);
+          skipNextLoadRef.current = true;
           onChange?.({ json, text, html, isEmpty: text.trim().length === 0 });
         });
       }}
@@ -146,51 +185,74 @@ function HtmlPlugin({ onChange }: { onChange?: (val: unknown) => void }) {
   );
 }
 
-function LoadContentPlugin({ value }: { value: any }) {
+function LoadContentPlugin({
+  value,
+  skipNextLoadRef,
+}: {
+  value: unknown;
+  skipNextLoadRef: MutableRefObject<boolean>;
+}) {
   const [editor] = useLexicalComposerContext();
+  const loadedSignature = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!value) return;
+    const signature = editorValueSignature(value);
+
+    if (skipNextLoadRef.current) {
+      skipNextLoadRef.current = false;
+      loadedSignature.current = signature;
+      return;
+    }
+
+    if (loadedSignature.current === signature) return;
+    loadedSignature.current = signature;
 
     editor.update(() => {
       const root = $getRoot();
-      
-      // If we already have content that isn't just an empty initial state, don't overwrite
-      const currentText = root.getTextContent();
-      if (currentText.trim().length > 0) return;
+      root.clear();
 
-      if (typeof value === "string") {
-        if (value.startsWith("{")) {
-          try {
-            const json = JSON.parse(value);
-            editor.setEditorState(editor.parseEditorState(json));
-            return;
-          } catch (e) {}
+      if (!signature) return;
+
+      if (typeof value === "object" && value !== null && "json" in value && (value as EditorChangeValue).json) {
+        editor.setEditorState(editor.parseEditorState((value as EditorChangeValue).json));
+        return;
+      }
+
+      const html =
+        typeof value === "string"
+          ? value
+          : typeof value === "object" && value !== null && "html" in value
+            ? String((value as EditorChangeValue).html ?? "")
+            : "";
+
+      if (html.startsWith("{")) {
+        try {
+          const json = JSON.parse(html);
+          editor.setEditorState(editor.parseEditorState(json));
+          return;
+        } catch {
+          /* fall through to HTML parse */
         }
-        
-        root.clear();
-        const parser = new DOMParser();
-        const dom = parser.parseFromString(value, "text/html");
-        const nodes = $generateNodesFromDOM(editor, dom);
-        
-        if (nodes.length > 0) {
-          nodes.forEach((node) => {
-            if ($isElementNode(node)) {
-              root.append(node);
-            } else {
-              const paragraph = $createParagraphNode();
-              paragraph.append(node);
-              root.append(paragraph);
-            }
-          });
-        } else {
-          // Fallback for very simple plain text
-          const paragraph = $createParagraphNode();
-          paragraph.append($createTextNode(value));
-          root.append(paragraph);
-        }
-      } else if (typeof value === "object" && value !== null && "json" in value && (value as any).json) {
-        editor.setEditorState(editor.parseEditorState((value as any).json));
+      }
+
+      const parser = new DOMParser();
+      const dom = parser.parseFromString(html, "text/html");
+      const nodes = $generateNodesFromDOM(editor, dom);
+
+      if (nodes.length > 0) {
+        nodes.forEach((node) => {
+          if ($isElementNode(node)) {
+            root.append(node);
+          } else {
+            const paragraph = $createParagraphNode();
+            paragraph.append(node);
+            root.append(paragraph);
+          }
+        });
+      } else if (html.trim()) {
+        const paragraph = $createParagraphNode();
+        paragraph.append($createTextNode(html));
+        root.append(paragraph);
       }
     });
   }, [value, editor]);
