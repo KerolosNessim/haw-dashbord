@@ -55,12 +55,17 @@ export interface StatsResponse {
   data: StatsData[];
 };
 
+/** Bilingual image alt from GET /v1/admin/accreditations */
+export interface AccreditationImageAlt {
+  ar: string | null;
+  en: string | null;
+}
+
 /** Spatie media item from GET /v1/admin/accreditations */
 export interface AccreditationMedia {
   id: number;
   url: string;
-  /** Bilingual alt from API; legacy responses may use a plain string */
-  alt?: LocaleString | string | null;
+  image_alt: AccreditationImageAlt;
 }
 
 // Accreditation — single item from GET /v1/admin/accreditations

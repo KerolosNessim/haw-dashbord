@@ -1,4 +1,4 @@
-import type { LocaleString } from "../types";
+import type { AccreditationImageAlt, LocaleString } from "../types";
 
 export type BilingualAlt = LocaleString;
 
@@ -53,9 +53,11 @@ export function buildAccreditationFormData(input: AccreditationFormInput): FormD
   return fd;
 }
 
-/** Normalizes API alt (object or legacy string) for the form. */
-export function mediaAltFromApi(alt: LocaleString | string | null | undefined): BilingualAlt {
-  if (alt == null) return { ar: "", en: "" };
-  if (typeof alt === "string") return { ar: alt, en: alt };
-  return { ar: alt.ar ?? "", en: alt.en ?? "" };
+/** Maps GET `image_alt` (nullable ar/en) to form values. */
+export function mediaAltFromApi(imageAlt: AccreditationImageAlt | null | undefined): BilingualAlt {
+  if (imageAlt == null) return { ar: "", en: "" };
+  return {
+    ar: imageAlt.ar ?? "",
+    en: imageAlt.en ?? "",
+  };
 }

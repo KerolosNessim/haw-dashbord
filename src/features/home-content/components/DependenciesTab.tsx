@@ -95,7 +95,7 @@ export default function DependenciesTab() {
       (apiData.images ?? []).map((img) => ({
         id: img.id,
         url: img.url,
-        alt: mediaAltFromApi(img.alt),
+        alt: mediaAltFromApi(img.image_alt),
       })),
     );
     setNewImages([]);
