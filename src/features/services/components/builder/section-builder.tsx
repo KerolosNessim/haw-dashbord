@@ -11,7 +11,6 @@ import {
   Trash2,
   ChevronUp,
   ChevronDown,
-  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +29,6 @@ import FullSection from "./sections/full-section";
 import DualDescSection from "./sections/dual-desc-section";
 import FAQSection from "./sections/faq-section";
 import ContactSection from "./sections/contact-section";
-import PackagesSection from "./sections/packages-section";
 import AuditsSection from "./sections/audits-section";
 import { useEffect } from "react";
 import type { Service } from "../../type";
@@ -47,7 +45,6 @@ export type SectionType =
   | "dual_desc"
   | "faq"
   | "contact"
-  | "packages"
   | "audits"
 
 
@@ -101,20 +98,6 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
           id: "offerings",
           type: "cards",
           data: initialService.offerings,
-        });
-      }
-      if (initialService.packages) {
-        const raw = initialService as Record<string, unknown>;
-        mappedSections.push({
-          id: "packages",
-          type: "packages",
-          data: {
-            title: raw.packages_title ?? (initialService.packages as { title?: unknown })?.title,
-            description: raw.packages_description,
-            items: Array.isArray(initialService.packages)
-              ? initialService.packages
-              : (initialService.packages as { items?: unknown })?.items,
-          },
         });
       }
       if (initialService.audits) {
@@ -177,7 +160,6 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
     },
     { id: "faq", icon: HelpCircle, color: "bg-orange-50 text-orange-600" },
     { id: "contact", icon: PhoneCall, color: "bg-rose-50 text-rose-600" },
-    { id: "packages", icon: Package, color: "bg-amber-50 text-amber-600" },
     { id: "audits", icon: AlignLeft, color: "bg-cyan-50 text-cyan-600" },
   ] as const;
 
@@ -232,8 +214,6 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
         return <FAQSection {...props} />;
       case "contact":
         return <ContactSection {...props} />;
-      case "packages":
-        return <PackagesSection {...props} />;
       case "audits":
         return <AuditsSection {...props} />;
       default:

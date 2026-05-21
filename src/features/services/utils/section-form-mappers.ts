@@ -111,14 +111,19 @@ export function mapContactToCtas(data: Record<string, unknown>): Record<string, 
 
 export function mapPackagesToPayload(data: Record<string, unknown>): PackagesSectionData {
   const items = (data.items as Array<Record<string, unknown>> | undefined)?.map(
-    (item, index) => ({
-      title: item.title as PackagesSectionData["items"][0]["title"],
-      description: item.description as PackagesSectionData["items"][0]["description"],
-      price: Number(item.price ?? 0),
-      currency: String(item.currency ?? ""),
-      features: item.features as PackagesSectionData["items"][0]["features"],
-      sort_order: index + 1,
-    }),
+    (item, index) => {
+      const desc = item.description as { ar?: unknown; en?: unknown } | undefined;
+      return {
+        title: item.title as PackagesSectionData["items"][0]["title"],
+        description: desc
+          ? { ar: editorHtml(desc.ar), en: editorHtml(desc.en) }
+          : { ar: "", en: "" },
+        price: Number(item.price ?? 0),
+        currency: String(item.currency ?? ""),
+        features: item.features as PackagesSectionData["items"][0]["features"],
+        sort_order: index + 1,
+      };
+    },
   );
   return {
     title: data.title as PackagesSectionData["title"],

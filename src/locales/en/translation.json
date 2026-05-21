@@ -72,6 +72,7 @@
     "solution_categories": "Client categories",
     "help_you": "How We Help You",
     "services": "Services",
+    "service_pricing": "Service pricing",
     "countries": "Countries",
     "settings": "Settings",
     "faq": "FAQ",
@@ -119,6 +120,15 @@
 
   "services":{
     "title": "Services",
+    "pricing": {
+      "title": "Service pricing packages",
+      "description": "Select a service and manage its pricing plans, features, and currencies.",
+      "select_service": "Service",
+      "select_placeholder": "Choose a service…",
+      "empty_select": "Select a service to edit its pricing packages.",
+      "loading": "Loading…",
+      "save": "Save pricing"
+    },
     "add_service": "Add Service",
     "edit_service": "Edit",
     "delete_service": "Delete",
@@ -162,6 +172,12 @@
       "image_alt_en": "Image alt (English)",
       "upload_icon": "Upload Icon",
       "show_footer": "Show Footer",
+      "price": "Price",
+      "currency": "Currency",
+      "packages_description": "Section description",
+      "package_number": "Package #{{n}}",
+      "add_feature": "Add feature",
+      "feature_placeholder": "Feature…",
       "upload_cover": "Upload cover",
       "arabic": "In Arabic",
       "english": "In English",
@@ -217,7 +233,8 @@
           "add_item": "Add New Item",
           "add_question": "Add New Question",
           "items_list": "Additional Items List",
-          "faq_list": "Questions & Answers List"
+          "faq_list": "Questions & Answers List",
+          "features": "Features"
         }
       },
       "errors": {

@@ -10,6 +10,7 @@ import type {
 import {
   appendIndexedField,
   appendIndexedLocalized,
+  appendIndexedLocalizedHtml,
   appendLocalized,
   appendLocalizedHtml,
   appendScalar,
@@ -129,9 +130,7 @@ function appendPackages(fd: FormData, data: PackagesSectionData) {
   appendLocalized(fd, "packages_description", data.description);
   data.items?.forEach((item, index) => {
     appendIndexedLocalized(fd, "packages", index, "title", item.title);
-    if (item.description) {
-      appendIndexedLocalized(fd, "packages", index, "description", item.description);
-    }
+    appendIndexedLocalizedHtml(fd, "packages", index, "description", item.description);
     if (item.price != null) {
       fd.append(`packages[${index}][price]`, String(item.price));
     }

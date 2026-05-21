@@ -73,6 +73,7 @@
     "help_you": "كيف نساعدك",
     "countries": "الدول",
     "services": "الخدمات",
+    "service_pricing": "أسعار الخدمات",
     "settings": "الإعدادات",
     "faq": "الأسئلة الشائعة",
     "blogs": "المدونات",
@@ -120,6 +121,15 @@
 
   "services":{
     "title": "الخدمات",
+    "pricing": {
+      "title": "باقات أسعار الخدمات",
+      "description": "اختر خدمة ثم أدر خطط الأسعار والمميزات والعملة.",
+      "select_service": "الخدمة",
+      "select_placeholder": "اختر خدمة…",
+      "empty_select": "اختر خدمة لبدء تعديل باقات الأسعار.",
+      "loading": "جاري التحميل…",
+      "save": "حفظ الأسعار"
+    },
     "add_service": "إضافة خدمة",
     "edit_service": "تعديل",
     "delete_service": "حذف",
@@ -166,6 +176,12 @@
       "image_alt_ar": "النص البديل (عربي)",
       "image_alt_en": "النص البديل (إنجليزي)",
       "show_footer": "إظهار الفوتر",
+      "price": "السعر",
+      "currency": "العملة",
+      "packages_description": "وصف القسم",
+      "package_number": "باقة #{{n}}",
+      "add_feature": "إضافة ميزة",
+      "feature_placeholder": "ميزة…",
       "upload_icon": "رفع أيقونة",
       "upload_cover": "رفع صورة غلاف",
       "arabic": "باللغة العربية",
@@ -219,7 +235,8 @@
           "add_item": "إضافة عنصر جديد",
           "add_question": "إضافة سؤال جديد",
           "items_list": "قائمة العناصر الإضافية",
-          "faq_list": "قائمة الأسئلة والأجوبة"
+          "faq_list": "قائمة الأسئلة والأجوبة",
+          "features": "المميزات"
         }
       },
       "errors": {

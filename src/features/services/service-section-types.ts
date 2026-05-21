@@ -34,7 +34,7 @@ export type ToolsSectionData = {
 
 export type PackagesSectionItem = {
   title?: { ar: string; en: string };
-  description?: { ar: string; en: string };
+  description?: { ar: unknown; en: unknown };
   price?: number;
   currency?: string;
   sort_order?: number;

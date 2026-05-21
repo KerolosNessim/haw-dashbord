@@ -58,6 +58,21 @@ export function appendIndexedField(
   fd.append(`${base}[${index}][${field}]`, String(value));
 }
 
+/** Appends `packages[0][description][ar]` as HTML */
+export function appendIndexedLocalizedHtml(
+  fd: FormData,
+  base: string,
+  index: number,
+  field: string,
+  value: { ar?: unknown; en?: unknown } | null | undefined,
+) {
+  if (!value) return;
+  const ar = htmlForMultipartApi(htmlFromUnknown(value.ar));
+  const en = htmlForMultipartApi(htmlFromUnknown(value.en));
+  if (ar) fd.append(`${base}[${index}][${field}][ar]`, ar);
+  if (en) fd.append(`${base}[${index}][${field}][en]`, en);
+}
+
 export function appendScalar(fd: FormData, key: string, value: unknown) {
   if (value == null || value === "") return;
   fd.append(key, String(value));
