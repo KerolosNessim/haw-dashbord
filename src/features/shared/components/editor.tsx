@@ -97,7 +97,7 @@ export default function RichTextEditor({
             contentEditable={
               <ContentEditable
                 className={cn(
-                  "min-h-[250px] p-4 outline-none cursor-text",
+                  "min-h-[250px] p-4 text-base outline-none cursor-text",
                   isRTL ? "text-right" : "text-left",
                 )}
                 style={{ direction: dir, caretColor: "black" }}
