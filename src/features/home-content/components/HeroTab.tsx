@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import RichTextEditor from "@/features/shared/components/editor";
 import { cn } from "@/lib/utils";
+import { getHttpErrorMessage } from "@/lib/http-error-message";
 import { useHero } from "../hooks/useHero";
 
 /**
@@ -51,10 +52,9 @@ export default function HeroTab() {
     keyPrefix: "home_content.hero",
   });
 
-  const { getHero, updateHero, isPending } = useHero();
+  const { getHero, updateHero, isPending, heroErrorFallbacks } = useHero();
 
-  const { data, isLoading } = getHero;
-  console.log("data", data);
+  const { data, isLoading, isError, error, refetch, isFetching } = getHero;
 
   // userImage: undefined (using API data), null (deleted), string (new upload)
   const [userImage, setUserImage] = useState<string | null | undefined>(
@@ -99,6 +99,7 @@ export default function HeroTab() {
     if (userImageFile instanceof File) {
       formData.append("image", userImageFile);
     }
+
     updateHero(formData);
   };
 
@@ -127,9 +128,26 @@ export default function HeroTab() {
     fileInputRef.current?.click();
   };
 
+  const loadErrorMessage = isError
+    ? getHttpErrorMessage(error, {
+        ...heroErrorFallbacks,
+        default: t("load_error"),
+      })
+    : null;
+
   return isLoading ? (
     <div className="flex items-center justify-center h-screen">
       <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  ) : isError ? (
+    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-destructive/25 bg-destructive/5 p-10 text-center animate-in fade-in duration-300">
+      <p className="max-w-md text-sm font-medium text-destructive">{loadErrorMessage}</p>
+      <Button type="button" variant="outline" onClick={() => refetch()} disabled={isFetching}>
+        {isFetching ? (
+          <Loader2 className="me-2 size-4 animate-spin" />
+        ) : null}
+        {t("retry")}
+      </Button>
     </div>
   ) : (
     <form

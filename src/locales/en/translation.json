@@ -39,7 +39,11 @@
     "clients_updated": "Clients updated successfully",
     "clients_update_failed": "Failed to update clients",
     "hero_updated": "Hero updated successfully",
-    "hero_update_failed": "Failed to update hero"
+    "hero_update_failed": "Failed to update hero",
+    "forbidden": "You do not have permission to perform this action.",
+    "unauthorized": "Your session has expired. Please sign in again.",
+    "server_error": "Server error. Please try again later.",
+    "network_error": "Network error. Check your connection and try again."
   },
   "forms": {
     "smart_slug": {
@@ -932,7 +936,9 @@
       "delete_image": "Delete Image",
       "ar": "Arabic",
       "en": "English",
-      "save": "Save Changes"
+      "save": "Save Changes",
+      "load_error": "Could not load hero content.",
+      "retry": "Try again"
     },
     "states": {
       "title": "Statistics",

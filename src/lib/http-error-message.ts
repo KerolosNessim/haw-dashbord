@@ -1,20 +1,44 @@
 import { isAxiosError } from "axios";
+import { axiosResponseErrorSummary } from "@/lib/api-error-message";
 
-/** Best-effort message from Axios / Laravel `{ message }` JSON bodies */
-export function getHttpErrorMessage(error: unknown): string {
-  if (isAxiosError(error)) {
-    const raw = error.response?.data;
-    if (raw && typeof raw === "object") {
-      const msg = (raw as { message?: unknown }).message;
-      if (typeof msg === "string") return msg;
-      if (Array.isArray(msg)) return msg.map(String).join(", ");
-    }
-    if (error.response?.status) {
-      const base = error.message || "Request failed";
-      return `${base} (HTTP ${error.response.status})`;
-    }
-    return error.message || "Request failed";
+export type HttpErrorFallbacks = Partial<
+  Record<401 | 403 | 404 | 422 | 500, string>
+> & {
+  default?: string;
+  network?: string;
+};
+
+/** Best-effort message from Axios / Laravel JSON or plain-text bodies. */
+export function getHttpErrorMessage(
+  error: unknown,
+  options?: HttpErrorFallbacks,
+): string {
+  const defaultMsg = options?.default ?? "Request failed";
+
+  if (!isAxiosError(error)) {
+    if (error instanceof Error && error.message.trim()) return error.message;
+    return defaultMsg;
   }
-  if (error instanceof Error) return error.message;
-  return typeof error === "string" ? error : "Request failed";
+
+  if (!error.response) {
+    return options?.network ?? defaultMsg;
+  }
+
+  const { status, data } = error.response;
+
+  if (typeof data === "string" && data.trim()) {
+    return data.trim();
+  }
+
+  const summary = axiosResponseErrorSummary(data);
+  if (summary) return summary;
+
+  if (status === 401 && options?.[401]) return options[401];
+  if (status === 403 && options?.[403]) return options[403];
+  if (status === 404 && options?.[404]) return options[404];
+  if (status === 422 && options?.[422]) return options[422];
+  if (status && status >= 500 && options?.[500]) return options[500];
+
+  if (status) return `${defaultMsg} (HTTP ${status})`;
+  return error.message?.trim() || defaultMsg;
 }
