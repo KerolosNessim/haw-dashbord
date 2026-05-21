@@ -25,15 +25,13 @@ import {
   Layout,
   Loader2,
   Monitor,
-  Save,
   Search,
   X,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
-import { useBasicForm } from "../../hooks/useBasicForm";
 import { useAdminService } from "../../hooks/useAdminService";
 import { useEffect } from "react";
 
@@ -78,18 +76,23 @@ const basicInfoSchema = z.object({
 
 export type BasicInfoValues = z.infer<typeof basicInfoSchema>;
 
-interface BasicInfoFormProps {
-  onSuccess?: (id: number) => void;
-  initialId?: number;
+export interface BasicInfoFormHandle {
+  validate: () => Promise<BasicInfoValues | null>;
 }
 
-export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormProps) {
+interface BasicInfoFormProps {
+  initialId?: number;
+  /** When true, parent owns submit (unified page save). */
+  embedded?: boolean;
+}
+
+const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
+  function BasicInfoForm({ initialId, embedded }, ref) {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "services.form" });
   const { data: countriesData } = useAdminCountries();
   const countries = countriesData?.data ?? [];
   
   const { service, isLoading: isFetching } = useAdminService(initialId);
-  const { basicFormMutation, isPending } = useBasicForm(initialId);
 
   const [coverPreviewAr, setCoverPreviewAr] = useState<string | null>(null);
   const [coverPreviewEn, setCoverPreviewEn] = useState<string | null>(null);
@@ -98,7 +101,7 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
 
   const {
     control,
-    handleSubmit,
+    getValues,
     setValue,
     watch,
     trigger,
@@ -206,17 +209,21 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
     }
   };
 
-  const onSubmit = async (data: BasicInfoValues) => {
-    const finalData: BasicInfoValues = {
-      ...data,
-      highlight_description: {
-        ar: editorOnChangeToHtml(data.highlight_description?.ar),
-        en: editorOnChangeToHtml(data.highlight_description?.en),
-      },
-    };
-    const res = await basicFormMutation(finalData);
-    onSuccess?.(res?.data?.id);
-  };
+  const normalizeValues = (data: BasicInfoValues): BasicInfoValues => ({
+    ...data,
+    highlight_description: {
+      ar: editorOnChangeToHtml(data.highlight_description?.ar),
+      en: editorOnChangeToHtml(data.highlight_description?.en),
+    },
+  });
+
+  useImperativeHandle(ref, () => ({
+    validate: async () => {
+      const valid = await trigger();
+      if (!valid) return null;
+      return normalizeValues(getValues());
+    },
+  }));
 
   /**
    * Helper to translate error messages if they are keys
@@ -237,10 +244,7 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
   const watchTitleEn = watch("title.en");
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-8 animate-in fade-in duration-500 "
-    >
+    <div className="space-y-8 animate-in fade-in duration-500">
       <div className="p-8 rounded-[32px] border bg-card shadow-sm space-y-12">
         <div className="flex items-center gap-4 border-b pb-6">
           <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
@@ -485,7 +489,10 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
                   <div className="min-h-[200px]">
                     <RichTextEditor
                       value={field.value}
-                      onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        if (field.value !== html) field.onChange(html);
+                      }}
                       dir="rtl"
                       placeholder={t("placeholders.highlight")}
                     />
@@ -514,7 +521,10 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
                   <div className="min-h-[200px]">
                     <RichTextEditor
                       value={field.value}
-                      onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        if (field.value !== html) field.onChange(html);
+                      }}
                       dir="ltr"
                       placeholder={t("placeholders.highlight")}
                     />
@@ -734,19 +744,8 @@ export default function BasicInfoForm({ onSuccess, initialId }: BasicInfoFormPro
         </div>
       </div>
 
-      <Button
-        type="submit"
-        size="lg"
-        disabled={isPending}
-        className="w-fit h-12 rounded-full px-12 font-bold text-base gap-3 shadow-2xl shadow-primary/40 pointer-events-auto hover:scale-105 active:scale-95 transition-all"
-      >
-        {isPending || isFetching ? (
-          <Loader2 className="size-5 animate-spin" />
-        ) : (
-          <Save className="size-5" />
-        )}
-        {t("save")}
-      </Button>
-    </form>
+    </div>
   );
-}
+});
+
+export default BasicInfoForm;

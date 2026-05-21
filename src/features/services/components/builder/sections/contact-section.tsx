@@ -4,12 +4,11 @@ import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import RichTextEditor from "@/features/shared/components/editor";
 import { Button } from "@/components/ui/button";
-import { PhoneCall, Save, Loader2, Contact } from "lucide-react";
+import { PhoneCall, Contact } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
-import { saveContactSection } from "@/features/services/services/section-api";
-import { toast } from "sonner";
+import { useEmbeddedSectionWatch } from "@/features/services/hooks/useEmbeddedSectionWatch";
+import type { SectionEmbeddedProps } from "../section-embedded-props";
 
 const localizedSchema = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
@@ -26,17 +25,19 @@ const contactSchema = z.object({
 
 type ContactValues = z.infer<typeof contactSchema>;
 
-interface ContactSectionProps {
+interface ContactSectionProps extends SectionEmbeddedProps {
   serviceId: number;
   initialData?: any;
 }
 
-export default function ContactSection({ serviceId, initialData }: ContactSectionProps) {
+export default function ContactSection({
+  initialData,
+  embedded,
+  onDataChange,
+}: ContactSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
-  const { t: tToast } = useTranslation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<ContactValues>({
+  const { control, watch, getValues, formState: { errors } } = useForm<ContactValues>({
     resolver: zodResolver(contactSchema),
     values: {
       title: initialData?.title || { ar: "", en: "" },
@@ -45,33 +46,10 @@ export default function ContactSection({ serviceId, initialData }: ContactSectio
     },
   });
 
-  const onSubmit = async (data: ContactValues) => {
-    setIsSubmitting(true);
-    try {
-      const finalData = {
-        title: data.title,
-        phone_number: data.phone_number,
-        description: {
-          ar: data.description?.ar?.html || "",
-          en: data.description?.en?.html || "",
-        },
-      };
-      const res = await saveContactSection(serviceId, finalData);
-      console.log(res);
-      toast.success(res?.data?.message || tToast("toasts.section_saved"));
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || tToast("toasts.section_save_error"));
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  useEmbeddedSectionWatch(embedded, onDataChange, watch, getValues);
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-12 animate-in fade-in duration-500"
-    >
+    <div className="space-y-12 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Arabic Contact Info */}
         <div className="space-y-6 p-6 rounded-[24px] border border-dashed bg-muted/5">
@@ -206,20 +184,6 @@ export default function ContactSection({ serviceId, initialData }: ContactSectio
         </div>
       </div>
 
-      <div className="flex justify-end pt-8 border-t">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-full h-14 px-12 font-bold text-lg gap-3 shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all"
-        >
-          {isSubmitting ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
-          ) : (
-            <Save className="w-6 h-6" />
-          )}
-          {t("save_section")}
-        </Button>
-      </div>
-    </form>
+    </div>
   );
 }

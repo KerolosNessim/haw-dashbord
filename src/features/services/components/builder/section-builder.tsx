@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Plus,
@@ -33,6 +33,11 @@ import ContactSection from "./sections/contact-section";
 import PackagesSection from "./sections/packages-section";
 import { useEffect } from "react";
 import type { Service } from "../../type";
+import type { ServiceSectionsPayload } from "../../service-section-types";
+import {
+  buildSectionsPayloadFromInstances,
+  type SectionInstanceInput,
+} from "../../utils/section-form-mappers";
 
 export type SectionType =
   | "image_text"
@@ -49,16 +54,24 @@ interface SectionInstance {
   data?: any;
 }
 
+export interface SectionBuilderHandle {
+  getSectionsPayload: () => ServiceSectionsPayload;
+}
+
 interface SectionBuilderProps {
-  serviceId: number;
+  serviceId?: number;
   initialService?: Service;
   isLoading?: boolean;
 }
 
-export default function SectionBuilder({ serviceId, initialService, isLoading }: SectionBuilderProps) {
+const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
+  function SectionBuilder({ serviceId, initialService, isLoading }, ref) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [sections, setSections] = useState<SectionInstance[]>([]);
+  const [sectionDataById, setSectionDataById] = useState<
+    Record<string, Record<string, unknown>>
+  >({});
 
   useEffect(() => {
     if (initialService && sections.length === 0) {
@@ -80,11 +93,47 @@ export default function SectionBuilder({ serviceId, initialService, isLoading }:
       if (initialService.ctas) {
         mappedSections.push({ id: "ctas", type: "contact", data: initialService.ctas });
       }
+      if (initialService.offerings) {
+        mappedSections.push({
+          id: "offerings",
+          type: "cards",
+          data: initialService.offerings,
+        });
+      }
 
-      
       setSections(mappedSections);
     }
   }, [initialService]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      getSectionsPayload: () => {
+        const instances: SectionInstanceInput[] = sections.map((s) => ({
+          id: s.id,
+          type: s.type,
+        }));
+        return buildSectionsPayloadFromInstances(instances, sectionDataById);
+      },
+    }),
+    [sections, sectionDataById],
+  );
+
+  const handleSectionDataChange = useCallback(
+    (sectionId: string, data: Record<string, unknown>) => {
+      setSectionDataById((prev) => {
+        const prevData = prev[sectionId];
+        if (
+          prevData &&
+          JSON.stringify(prevData) === JSON.stringify(data)
+        ) {
+          return prev;
+        }
+        return { ...prev, [sectionId]: data };
+      });
+    },
+    [],
+  );
 
   const sectionTypes = [
     { id: "image_text", icon: ImageIcon, color: "bg-blue-50 text-blue-600" },
@@ -109,7 +158,15 @@ export default function SectionBuilder({ serviceId, initialService, isLoading }:
   };
 
   const removeSection = (index: number) => {
+    const removed = sections[index];
     setSections(sections.filter((_, i) => i !== index));
+    if (removed) {
+      setSectionDataById((prev) => {
+        const next = { ...prev };
+        delete next[removed.id];
+        return next;
+      });
+    }
   };
 
   const moveSection = (from: number, to: number) => {
@@ -121,9 +178,12 @@ export default function SectionBuilder({ serviceId, initialService, isLoading }:
 
   const renderSectionContent = (section: SectionInstance, index: number) => {
     const props = {
-      serviceId,
+      serviceId: serviceId ?? 0,
       index,
       initialData: section.data,
+      embedded: true,
+      onDataChange: (data: Record<string, unknown>) =>
+        handleSectionDataChange(section.id, data),
     };
 
     switch (section.type) {
@@ -225,16 +285,14 @@ export default function SectionBuilder({ serviceId, initialService, isLoading }:
           ))
         )}
 
-        {serviceId && (
-          <Button
-            type="button"
-            onClick={() => setIsPickerOpen(true)}
-            size="lg"
-            className="rounded-xl shadow-md gap-2 font-bold px-6"
-          >
-            <Plus className="w-5 h-5" /> {t("sections.add_button")}
-          </Button>
-        )}
+        <Button
+          type="button"
+          onClick={() => setIsPickerOpen(true)}
+          size="lg"
+          className="rounded-xl shadow-md gap-2 font-bold px-6"
+        >
+          <Plus className="w-5 h-5" /> {t("sections.add_button")}
+        </Button>
       </div>
 
       {/* Picker Dialog */}
@@ -273,4 +331,6 @@ export default function SectionBuilder({ serviceId, initialService, isLoading }:
       </Dialog>
     </div>
   );
-}
+});
+
+export default SectionBuilder;

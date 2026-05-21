@@ -58,7 +58,21 @@ export interface Service {
   steps?: any;
   tools?: any;
   ctas?: any;
+  audits?: any;
+  offerings?: any;
 }
+
+export type {
+  BenefitsSectionData,
+  FaqSectionData,
+  ListSectionData,
+  ServiceSectionsPayload,
+  ToolsSectionData,
+  SectionApiKey,
+  SectionType,
+} from "./service-section-types";
+
+export { SECTION_TYPE_TO_API_KEY } from "./service-section-types";
 
 export interface GetServicesResponse {
   status: string;

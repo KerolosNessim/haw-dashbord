@@ -1,15 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { saveImageTextSection } from "@/features/services/services/section-api";
+import { useEmbeddedSectionWatch } from "@/features/services/hooks/useEmbeddedSectionWatch";
+import type { SectionEmbeddedProps } from "../section-embedded-props";
 import RichTextEditor from "@/features/shared/components/editor";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImageIcon, ImagePlus, Loader2, Save, X } from "lucide-react";
+import { ImageIcon, ImagePlus, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import * as z from "zod";
 
 const localizedSchema = z.object({
@@ -34,7 +34,7 @@ const imageTextSchema = z.object({
 
 type ImageTextValues = z.infer<typeof imageTextSchema>;
 
-interface ImageTextSectionProps {
+interface ImageTextSectionProps extends SectionEmbeddedProps {
   serviceId: number;
   index: number;
   initialData?: any;
@@ -43,19 +43,20 @@ interface ImageTextSectionProps {
 export default function ImageTextSection({
   serviceId,
   initialData,
+  embedded,
+  onDataChange,
 }: ImageTextSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
-  const { t: tToast } = useTranslation();
 
   const [imagePreview, setImagePreview] = useState<string | null>(
     initialData?.image || null,
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     control,
-    handleSubmit,
+    watch,
+    getValues,
     setValue,
     formState: { errors },
   } = useForm<ImageTextValues>({
@@ -86,35 +87,10 @@ export default function ImageTextSection({
     }
   };
 
-  const onSubmit = async (data: ImageTextValues) => {
-    setIsSubmitting(true);
-    try {
-      const finalData = {
-        ...data,
-        description: {
-          ar: data.description.ar?.html || "",
-          en: data.description.en?.html || "",
-        },
-      };
-
-      const res = await saveImageTextSection(serviceId, finalData);
-      console.log(res);
-      toast.success(res?.data?.message || tToast("toasts.section_saved"));
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message || tToast("toasts.section_save_error"),
-      );
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  useEmbeddedSectionWatch(embedded, onDataChange, watch, getValues);
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-12 animate-in fade-in duration-500"
-    >
+    <div className="space-y-12 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Arabic Content */}
         <div className="space-y-6 p-6 rounded-[24px] border border-dashed bg-muted/5">
@@ -311,20 +287,6 @@ export default function ImageTextSection({
         />
       </div>
 
-      <div className="flex justify-end pt-8 border-t">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-full h-14 px-12 font-bold text-lg gap-3 shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all"
-        >
-          {isSubmitting ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
-          ) : (
-            <Save className="w-6 h-6" />
-          )}
-          {t("save_section")}
-        </Button>
-      </div>
-    </form>
+    </div>
   );
 }
