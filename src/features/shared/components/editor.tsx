@@ -24,9 +24,12 @@ const editorTheme = {
   paragraph: "editor-paragraph leading-normal min-h-[1.5em]",
   quote: "editor-quote border-s-4 border-gray-300 ps-4 italic my-2",
   heading: {
-    h1: "editor-heading-h1 text-3xl font-bold my-4",
-    h2: "editor-heading-h2 text-2xl font-bold my-3",
-    h3: "editor-heading-h3 text-xl font-bold my-2",
+    h1: "editor-heading-h1",
+    h2: "editor-heading-h2",
+    h3: "editor-heading-h3",
+    h4: "editor-heading-h4",
+    h5: "editor-heading-h5",
+    h6: "editor-heading-h6",
   },
   list: {
     nested: {

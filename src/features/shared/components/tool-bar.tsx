@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import FontSizeSelect from "./font-size-select";
 import {
   INSERT_ORDERED_LIST_COMMAND,
   INSERT_UNORDERED_LIST_COMMAND
@@ -28,6 +29,9 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Heading4,
+  Heading5,
+  Heading6,
   Italic,
   Link2,
   List,
@@ -68,7 +72,7 @@ function ToolbarButton({ onClick, icon: Icon, active, title }: ToolbarButtonProp
 export default function Toolbar() {
   const [editor] = useLexicalComposerContext();
 
-  const formatHeading = (level: "h1" | "h2" | "h3") => {
+  const formatHeading = (level: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") => {
     editor.update(() => {
       const selection = $getSelection();
       if ($isRangeSelection(selection)) {
@@ -92,6 +96,10 @@ export default function Toolbar() {
       <ToolbarButton onClick={() => editor.dispatchCommand(UNDO_COMMAND, undefined)} icon={Undo} />
       <ToolbarButton onClick={() => editor.dispatchCommand(REDO_COMMAND, undefined)} icon={Redo} />
       
+      <div className="w-px h-6 bg-border mx-1 self-center" />
+
+      <FontSizeSelect />
+
       <div className="w-px h-6 bg-border mx-1 self-center" />
 
       {/* Text Styles */}
@@ -132,9 +140,12 @@ export default function Toolbar() {
       <div className="w-px h-6 bg-border mx-1 self-center" />
 
       {/* Block Styles */}
-      <ToolbarButton onClick={() => formatHeading("h1")} icon={Heading1} />
-      <ToolbarButton onClick={() => formatHeading("h2")} icon={Heading2} />
-      <ToolbarButton onClick={() => formatHeading("h3")} icon={Heading3} />
+      <ToolbarButton onClick={() => formatHeading("h1")} icon={Heading1} title="Heading 1" />
+      <ToolbarButton onClick={() => formatHeading("h2")} icon={Heading2} title="Heading 2" />
+      <ToolbarButton onClick={() => formatHeading("h3")} icon={Heading3} title="Heading 3" />
+      <ToolbarButton onClick={() => formatHeading("h4")} icon={Heading4} title="Heading 4" />
+      <ToolbarButton onClick={() => formatHeading("h5")} icon={Heading5} title="Heading 5" />
+      <ToolbarButton onClick={() => formatHeading("h6")} icon={Heading6} title="Heading 6" />
       <ToolbarButton onClick={formatQuote} icon={Quote} />
 
       <div className="w-px h-6 bg-border mx-1 self-center" />
