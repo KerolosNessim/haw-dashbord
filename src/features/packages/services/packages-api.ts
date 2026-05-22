@@ -1,4 +1,6 @@
 import { api } from "@/lib/api";
+import { appendBilingualImageAlt, bilingualImageAltFromApi } from "@/lib/bilingual-image-alt";
+import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
 import type { PackageFormValues, PackageRow } from "../types";
 
@@ -39,6 +41,9 @@ function resolveUploadedMediaUrl(raw: unknown): string {
 }
 
 function resolvePackageIconPreview(r: Record<string, unknown>): string {
+  if (typeof r.image === "string" && r.image.trim()) {
+    return resolveUploadedMediaUrl(r.image);
+  }
   const fileUrl = r.icon_url ?? r.icon_full_url ?? r.icon_original_url ?? r.original_icon_url ?? r.original_image_url;
   if (typeof fileUrl === "string" && fileUrl.trim()) return resolveUploadedMediaUrl(fileUrl);
   const nested = r.icon;
@@ -267,6 +272,10 @@ function appendLocalized(fd: FormData, prefix: string, value: { ar: string; en: 
   fd.append(`${prefix}[en]`, value.en);
 }
 
+function appendDescription(fd: FormData, value: { ar: string; en: string }) {
+  appendLocalizedDescriptionHtml(fd, "description", value.ar, value.en);
+}
+
 export function packageValuesToFormData(values: PackageFormValues, iconFile: File | null): FormData {
   const { existing_icon_url: _preview, ...v } = values;
   void _preview;
@@ -274,7 +283,7 @@ export function packageValuesToFormData(values: PackageFormValues, iconFile: Fil
   const fd = new FormData();
   fd.append("package_category_id", v.package_category_id);
   appendLocalized(fd, "title", v.title);
-  appendLocalized(fd, "description", v.description);
+  appendDescription(fd, v.description);
   appendLocalized(fd, "button_text", v.button_text);
   appendLocalized(fd, "slug", {
     ar: v.slug.ar.trim(),
@@ -287,8 +296,10 @@ export function packageValuesToFormData(values: PackageFormValues, iconFile: Fil
   if (v.currency.trim()) fd.append("currency", v.currency.trim());
 
   if (iconFile instanceof File) {
+    fd.append("image", iconFile);
     fd.append("icon", iconFile);
   }
+  appendBilingualImageAlt(fd, "image_alt", v.icon_alt);
 
   v.features.forEach((feat, i) => {
     appendLocalized(fd, `features[${i}][title]`, feat.title);
@@ -369,6 +380,7 @@ export function recordToPackageFormValues(raw: unknown): PackageFormValues | nul
     price: r.price != null ? String(r.price) : "",
     currency: typeof r.currency === "string" ? r.currency : "",
     features: parseFeatures(r.features),
+    icon_alt: bilingualImageAltFromApi(r.icon_alt ?? r.image_alt),
     ...(iconPreview ? { existing_icon_url: iconPreview } : {}),
     ...(categoryTitleAr ? { categoryTitleAr } : {}),
     ...(categoryTitleEn ? { categoryTitleEn } : {}),

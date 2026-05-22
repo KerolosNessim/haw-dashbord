@@ -10,6 +10,7 @@ import { Languages, Link as LinkIcon, Save } from "lucide-react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { localizedSlugRequired } from "@/lib/zod-localized-slug";
 import * as z from "zod";
 
 const localizedRequired = z.object({
@@ -17,24 +18,9 @@ const localizedRequired = z.object({
   en: z.string().min(1, { message: "validation.required" }),
 });
 
-const slugLatinPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const slugArabicPattern =
-  /^(?:[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:-[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)$/u;
-
-const localizedCategorySlug = z.object({
-  ar: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugArabicPattern.test(s), { message: "validation.slug_format" }),
-  en: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugLatinPattern.test(s), { message: "validation.slug_format" }),
-});
-
 const packageCategorySchema = z.object({
   title: localizedRequired,
-  slug: localizedCategorySlug,
+  slug: localizedSlugRequired,
   sort_order: z.coerce.number().int().min(0),
   is_active: z.boolean(),
 });

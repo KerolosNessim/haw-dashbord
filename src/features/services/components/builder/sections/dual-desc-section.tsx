@@ -2,7 +2,8 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { LocalizedRichTextField } from "../localized-rich-text-field";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -61,18 +62,16 @@ export default function DualDescSection({
             <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-widest">
               {t("arabic")}
             </div>
-            <Controller
-              name="title.ar"
+            <LocalizedRichTextField
               control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel className="text-lg font-bold text-primary underline underline-offset-8 decoration-primary/20">
-                    {t("sections.fields.title")}
-                  </FieldLabel>
-                  <Input {...field} dir="rtl" placeholder={t("placeholders.title")} className="h-12 rounded-xl bg-background border-border/50 text-lg font-semibold" />
-                  <FieldError errors={[{ message: errors.title?.ar?.message ? t(errors.title.ar.message as any) : undefined }]} />
-                </Field>
-              )}
+              name="title.ar"
+              label={t("sections.fields.title")}
+              dir="rtl"
+              placeholder={t("placeholders.title")}
+              labelClassName="text-lg font-bold text-primary underline underline-offset-8 decoration-primary/20"
+              errorMessage={
+                errors.title?.ar?.message ? t(errors.title.ar.message as any) : undefined
+              }
             />
             <Controller
               name="description.ar"
@@ -81,7 +80,7 @@ export default function DualDescSection({
                 <Field>
                   <FieldLabel>{t("sections.fields.content")}</FieldLabel>
                   <div className="min-h-[250px] rounded-2xl overflow-hidden border shadow-inner">
-                    <RichTextEditor value={field.value} onChange={field.onChange} dir="rtl" placeholder={t("placeholders.description")} />
+                    <RichTextEditor value={field.value} onChange={(val) => field.onChange(editorOnChangeToHtml(val))} dir="rtl" placeholder={t("placeholders.description")} />
                   </div>
                   <FieldError errors={[{ message: errors.description?.ar?.message ? t(errors.description.ar.message as any) : undefined }]} />
                 </Field>
@@ -94,18 +93,16 @@ export default function DualDescSection({
             <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-widest">
               {t("english")}
             </div>
-            <Controller
-              name="title.en"
+            <LocalizedRichTextField
               control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel className="text-lg font-bold text-primary underline underline-offset-8 decoration-primary/20">
-                    {t("sections.fields.title")}
-                  </FieldLabel>
-                  <Input {...field} dir="ltr" placeholder={t("placeholders.title")} className="h-12 rounded-xl bg-background border-border/50 text-lg font-semibold" />
-                  <FieldError errors={[{ message: errors.title?.en?.message ? t(errors.title.en.message as any) : undefined }]} />
-                </Field>
-              )}
+              name="title.en"
+              label={t("sections.fields.title")}
+              dir="ltr"
+              placeholder={t("placeholders.title")}
+              labelClassName="text-lg font-bold text-primary underline underline-offset-8 decoration-primary/20"
+              errorMessage={
+                errors.title?.en?.message ? t(errors.title.en.message as any) : undefined
+              }
             />
             <Controller
               name="description.en"
@@ -114,7 +111,7 @@ export default function DualDescSection({
                 <Field>
                   <FieldLabel>{t("sections.fields.content")}</FieldLabel>
                   <div className="min-h-[250px] rounded-2xl overflow-hidden border shadow-inner">
-                    <RichTextEditor value={field.value} onChange={field.onChange} dir="ltr" placeholder={t("placeholders.description")} />
+                    <RichTextEditor value={field.value} onChange={(val) => field.onChange(editorOnChangeToHtml(val))} dir="ltr" placeholder={t("placeholders.description")} />
                   </div>
                   <FieldError errors={[{ message: errors.description?.en?.message ? t(errors.description.en.message as any) : undefined }]} />
                 </Field>
@@ -129,15 +126,14 @@ export default function DualDescSection({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Arabic Secondary */}
             <div className="space-y-6 p-6 rounded-[24px] border bg-muted/5">
-                <Controller
-                  name="sub_title.ar"
+                <LocalizedRichTextField
                   control={control}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel className="text-md font-bold opacity-60 italic">{t("arabic")} - {t("sections.fields.sub_title")}</FieldLabel>
-                      <Input {...field} dir="rtl" placeholder={t("placeholders.title")} className="h-11 rounded-xl bg-background border-border/40" />
-                    </Field>
-                  )}
+                  name="sub_title.ar"
+                  label={`${t("arabic")} - ${t("sections.fields.sub_title")}`}
+                  dir="rtl"
+                  placeholder={t("placeholders.title")}
+                  minHeightClass="min-h-[100px]"
+                  labelClassName="text-md font-bold opacity-60 italic"
                 />
                 <Controller
                   name="sub_description.ar"
@@ -146,7 +142,7 @@ export default function DualDescSection({
                     <Field>
                       <FieldLabel>{t("sections.fields.sub_content")}</FieldLabel>
                       <div className="min-h-[200px] rounded-2xl overflow-hidden border bg-background">
-                        <RichTextEditor value={field.value} onChange={field.onChange} dir="rtl" placeholder={t("placeholders.description")} />
+                        <RichTextEditor value={field.value} onChange={(val) => field.onChange(editorOnChangeToHtml(val))} dir="rtl" placeholder={t("placeholders.description")} />
                       </div>
                     </Field>
                   )}
@@ -155,15 +151,14 @@ export default function DualDescSection({
 
             {/* English Secondary */}
             <div className="space-y-6 p-6 rounded-[24px] border bg-muted/5">
-                <Controller
-                  name="sub_title.en"
+                <LocalizedRichTextField
                   control={control}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel className="text-md font-bold opacity-60 italic">{t("english")} - {t("sections.fields.sub_title")}</FieldLabel>
-                      <Input {...field} dir="ltr" placeholder={t("placeholders.title")} className="h-11 rounded-xl bg-background border-border/40" />
-                    </Field>
-                  )}
+                  name="sub_title.en"
+                  label={`${t("english")} - ${t("sections.fields.sub_title")}`}
+                  dir="ltr"
+                  placeholder={t("placeholders.title")}
+                  minHeightClass="min-h-[100px]"
+                  labelClassName="text-md font-bold opacity-60 italic"
                 />
                 <Controller
                   name="sub_description.en"
@@ -172,7 +167,7 @@ export default function DualDescSection({
                     <Field>
                       <FieldLabel>{t("sections.fields.sub_content")}</FieldLabel>
                       <div className="min-h-[200px] rounded-2xl overflow-hidden border bg-background">
-                        <RichTextEditor value={field.value} onChange={field.onChange} dir="ltr" placeholder={t("placeholders.description")} />
+                        <RichTextEditor value={field.value} onChange={(val) => field.onChange(editorOnChangeToHtml(val))} dir="ltr" placeholder={t("placeholders.description")} />
                       </div>
                     </Field>
                   )}

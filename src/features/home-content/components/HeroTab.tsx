@@ -9,7 +9,7 @@ import {
   Save,
   Trash2,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
@@ -21,6 +21,13 @@ import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/componen
 import { cn } from "@/lib/utils";
 import { getHttpErrorMessage } from "@/lib/http-error-message";
 import { htmlForMultipartApi } from "@/lib/html-for-multipart-api";
+import { BilingualImageAltFields } from "@/components/form/bilingual-image-alt-fields";
+import {
+  appendBilingualImageAlt,
+  bilingualImageAltFromApi,
+  emptyBilingualImageAlt,
+  type BilingualImageAlt,
+} from "@/lib/bilingual-image-alt";
 import { useHero } from "../hooks/useHero";
 
 /**
@@ -72,7 +79,15 @@ export default function HeroTab() {
     undefined,
   );
   const [userImageFile, setUserImageFile] = useState<File | null>(null);
+  const [imageAlt, setImageAlt] = useState<BilingualImageAlt>(emptyBilingualImageAlt());
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const raw = data?.data?.content?.image_alt ?? data?.data?.image_alt;
+    if (raw != null) {
+      setImageAlt(bilingualImageAltFromApi(raw));
+    }
+  }, [data]);
 
   const displayImage =
     userImage !== undefined ? userImage : data?.data?.content?.image || null;
@@ -118,6 +133,7 @@ export default function HeroTab() {
     if (userImageFile instanceof File) {
       formData.append("image", userImageFile);
     }
+    appendBilingualImageAlt(formData, "image_alt", imageAlt);
 
     updateHero(formData);
   };
@@ -407,6 +423,13 @@ export default function HeroTab() {
               onChange={handleImageChange}
             />
           </div>
+
+          <BilingualImageAltFields
+            value={imageAlt}
+            onChange={setImageAlt}
+            keyPrefix="home_content.hero"
+            className="mt-6"
+          />
 
           {/* Action Buttons */}
           <div className="mt-8">

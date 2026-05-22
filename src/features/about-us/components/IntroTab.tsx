@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { cn } from "@/lib/utils";
 import {
   AlignLeft,
@@ -59,16 +60,11 @@ export default function IntroTab() {
     }
   }, [aboutUsData, reset]);
   const onSubmit = (values: IntroFormValues) => {
-    const extractHtml = (val: unknown) =>
-      typeof val === "object" && val !== null && "html" in val
-        ? (val as { html: string }).html
-        : (val as string);
-
     updateIntroSection({
       title: { ar: values.title_ar, en: values.title_en },
       description: { 
-        ar: extractHtml(values.description_ar), 
-        en: extractHtml(values.description_en) 
+        ar: localizedHtmlForApi(values.description_ar), 
+        en: localizedHtmlForApi(values.description_en) 
       },
       image: values?.image instanceof File ? values?.image : undefined,
     });
@@ -156,7 +152,10 @@ export default function IntroTab() {
                   <RichTextEditor
                     key={aboutUsData ? "ar-ready" : "ar-loading"}
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(val) => {
+                      const html = editorOnChangeToHtml(val);
+                      field.onChange(html);
+                    }}
                     placeholder="..."
                     dir="rtl"
                   />
@@ -175,7 +174,10 @@ export default function IntroTab() {
                   <RichTextEditor
                     key={aboutUsData ? "en-ready" : "en-loading"}
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(val) => {
+                      const html = editorOnChangeToHtml(val);
+                      field.onChange(html);
+                    }}
                     placeholder="..."
                     dir="ltr"
                   />

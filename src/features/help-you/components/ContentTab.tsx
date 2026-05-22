@@ -7,7 +7,8 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { cn } from "@/lib/utils";
 import { useHelpYou } from "../hooks/useHelpYou";
 import type { HelpYouItem } from "../types";
@@ -67,8 +68,10 @@ console.log("apiItemshelp", apiItems);
       }
       formData.append(`items[${index}][title][ar]`, item.title_ar);
       formData.append(`items[${index}][title][en]`, item.title_en);
-      formData.append(`items[${index}][description][ar]`, item.des_ar);
-      formData.append(`items[${index}][description][en]`, item.des_en);
+      const descAr = localizedHtmlForApi(item.des_ar);
+      const descEn = localizedHtmlForApi(item.des_en);
+      if (descAr) formData.append(`items[${index}][description][ar]`, descAr);
+      if (descEn) formData.append(`items[${index}][description][en]`, descEn);
       formData.append(`items[${index}][slug][ar]`, slugifyAr(item.title_ar));
       formData.append(`items[${index}][slug][en]`, slugify(item.title_en));
       
@@ -248,12 +251,17 @@ console.log("apiItemshelp", apiItems);
                           (AR) {t("item_description")}
                           <AlignLeft className="w-4 h-4 text-primary" />
                         </FieldLabel>
-                        <Textarea
-                          {...field}
-                          dir="rtl"
-                          placeholder="..."
-                          className="min-h-[100px] rounded-xl bg-white border-border/60 resize-none"
-                        />
+                        <div className="min-h-[160px] rounded-xl border overflow-hidden">
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={(val) => {
+                              const html = editorOnChangeToHtml(val);
+                              field.onChange(html);
+                            }}
+                            dir="rtl"
+                            placeholder="..."
+                          />
+                        </div>
                         {errors.items?.[index]?.des_ar && (
                           <p className="text-xs text-destructive font-bold mt-1">
                             {errors.items[index].des_ar.message}
@@ -271,11 +279,17 @@ console.log("apiItemshelp", apiItems);
                           <AlignLeft className="w-4 h-4 text-primary" />
                           {t("item_description")} (EN)
                         </FieldLabel>
-                        <Textarea
-                          {...field}
-                          placeholder="..."
-                          className="min-h-[100px] rounded-xl bg-white border-border/60 resize-none"
-                        />
+                        <div className="min-h-[160px] rounded-xl border overflow-hidden">
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={(val) => {
+                              const html = editorOnChangeToHtml(val);
+                              field.onChange(html);
+                            }}
+                            dir="ltr"
+                            placeholder="..."
+                          />
+                        </div>
                         {errors.items?.[index]?.des_en && (
                           <p className="text-xs text-destructive font-bold mt-1">
                             {errors.items[index].des_en.message}

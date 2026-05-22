@@ -30,7 +30,9 @@ import { useDeleteBlog } from "@/features/blogs/hooks/useDeleteBlog";
 import { useDeleteBlogsBulk } from "@/features/blogs/hooks/useDeleteBlogsBulk";
 import { getHttpErrorMessage } from "@/lib/http-error-message";
 import { cn } from "@/lib/utils";
-import { Pencil, Trash2 } from "lucide-react";
+import { useExportBlog } from "@/features/backup-export/hooks/use-export-blog";
+import { useExportBlogsBulk } from "@/features/backup-export/hooks/use-export-blogs-bulk";
+import { Download, Loader2, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -48,6 +50,10 @@ export default function BlogsTable() {
   const { blogs, meta, isLoading, isFetching, isError, error } = useAdminBlogs({ page });
   const { deleteBlogMutation, isPending: isDeleting } = useDeleteBlog();
   const { deleteBlogsBulkMutation, isPending: isBulkDeleting } = useDeleteBlogsBulk();
+  const { mutate: exportBlog, isPending: isExportingOne } = useExportBlog();
+  const { exportSelected, exportAll, isExporting: isExportingBulk } =
+    useExportBlogsBulk();
+  const isExporting = isExportingOne || isExportingBulk;
   const { data: categoryRows = [] } = useBlogCategories();
 
   useEffect(() => {
@@ -169,6 +175,36 @@ export default function BlogsTable() {
             onConfirm={handleBulkDelete}
             isPending={isBulkDeleting}
           />
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="rounded-xl shrink-0 font-bold"
+            disabled={isExporting || selectedCount === 0}
+            onClick={() => exportSelected.mutate([...selectedIds])}
+          >
+            {isExportingBulk ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 size-4" />
+            )}
+            {t("export_selected", { count: selectedCount })}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="rounded-xl shrink-0 font-bold"
+            disabled={isExporting || isLoading}
+            onClick={() => exportAll.mutate()}
+          >
+            {isExportingBulk ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 size-4" />
+            )}
+            {t("export_all_blogs")}
+          </Button>
           <BlogsTableSearch value={search} onChange={setSearch} />
         </div>
       </div>
@@ -281,6 +317,17 @@ export default function BlogsTable() {
                     <TableCell className="text-start text-xs text-muted-foreground tabular-nums align-middle">{blog.createdAt}</TableCell>
                     <TableCell className="py-5 px-6 text-start align-middle">
                       <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          title={t("export_excel")}
+                          disabled={isExporting}
+                          className="w-9 h-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all"
+                          onClick={() => exportBlog(blog.id)}
+                        >
+                          <Download className="w-4 h-4" />
+                        </Button>
                         <Button
                           type="button"
                           variant="ghost"

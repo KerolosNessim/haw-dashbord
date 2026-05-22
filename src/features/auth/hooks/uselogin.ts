@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/user-store";
 import type { AxiosError } from "axios";
 import type { LoginResponse } from "../types";
+import { extractAuthToken } from "../utils/extract-auth-token";
 
 export const useLogin = () => {
   const { t } = useTranslation();
@@ -17,9 +18,14 @@ export const useLogin = () => {
     mutationFn: (values: LoginValues) => loginApi(values),
     onSuccess: (data) => {
       if (data?.data) {
-        const { accessToken, ...user } = data.data;
+        const token = extractAuthToken(data.data);
+        if (!token) {
+          toast.error(t("toasts.login_error"));
+          return;
+        }
+        const { accessToken: _a, token: _t, ...user } = data.data;
         setAuth(user);
-        localStorage.setItem("token", accessToken);
+        localStorage.setItem("token", token);
       }
       toast.success(data?.message || t("toasts.login_success"));
       navigate("/");

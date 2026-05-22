@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImagePlus, Loader2, Save, X, Globe, Search, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -109,8 +110,10 @@ export default function LegalPageForm({ type }: LegalPageFormProps) {
   const onSubmit = (values: LegalPageValues) => {
     const formData = new FormData();
     formData.append("_method", "PUT"); // Laravel PUT workaround
-    formData.append("description[ar]", values.description_ar);
-    formData.append("description[en]", values.description_en);
+    const descAr = localizedHtmlForApi(values.description_ar);
+    const descEn = localizedHtmlForApi(values.description_en);
+    if (descAr) formData.append("description[ar]", descAr);
+    if (descEn) formData.append("description[en]", descEn);
     formData.append("meta_title[ar]", values.meta_title_ar);
     formData.append("meta_title[en]", values.meta_title_en);
     formData.append("meta_description[ar]", values.meta_description_ar);
@@ -186,7 +189,10 @@ export default function LegalPageForm({ type }: LegalPageFormProps) {
                     <div className="min-h-[400px]">
                       <RichTextEditor
                         value={field.value}
-                        onChange={(val: any) => field.onChange(val.html)}
+                        onChange={(val) => {
+                          const html = editorOnChangeToHtml(val);
+                          field.onChange(html);
+                        }}
                         dir="rtl"
                       />
                     </div>
@@ -232,7 +238,10 @@ export default function LegalPageForm({ type }: LegalPageFormProps) {
                     <div className="min-h-[400px]">
                       <RichTextEditor
                         value={field.value}
-                        onChange={(val: any) => field.onChange(val.html)}
+                        onChange={(val) => {
+                          const html = editorOnChangeToHtml(val);
+                          field.onChange(html);
+                        }}
                         dir="ltr"
                       />
                     </div>

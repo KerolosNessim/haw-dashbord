@@ -1,5 +1,4 @@
 import {
-  AlignLeft,
   Languages,
   Loader2,
   Save,
@@ -10,6 +9,8 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
+import { LocalizedDescriptionFields } from "@/features/shared/components/localized-description-fields";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { useTestimonialsGeneral } from "../hooks/useTestimonialsGeneral";
 
 interface GeneralFormValues {
@@ -46,8 +47,10 @@ export default function GeneralTab() {
     const formData = new FormData();
     formData.append("title[ar]", data.title_ar);
     formData.append("title[en]", data.title_en);
-    formData.append("description[ar]", data.description_ar);
-    formData.append("description[en]", data.description_en);
+    const descAr = localizedHtmlForApi(data.description_ar);
+    const descEn = localizedHtmlForApi(data.description_en);
+    if (descAr) formData.append("description[ar]", descAr);
+    if (descEn) formData.append("description[en]", descEn);
 
     updateGeneral(formData);
   };
@@ -119,45 +122,14 @@ export default function GeneralTab() {
           />
         </div>
 
-        {/* Description (AR & EN) */}
-        <div className="space-y-8">
-          <Controller
-            name="description_ar"
-            control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel className="text-base font-bold flex items-center gap-2 justify-start">
-                  ({t("ar")}) {t("sec_des")}
-                  <AlignLeft className="w-4 h-4 text-primary" />
-                </FieldLabel>
-                <Textarea
-                  {...field}
-                  placeholder="أدخل الوصف هنا..."
-                  className="min-h-[120px] rounded-[20px] bg-muted/5 border-border/60 focus:bg-white transition-all resize-none text-lg p-4"
-                  dir="rtl"
-                />
-              </Field>
-            )}
-          />
-          <Controller
-            name="description_en"
-            control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel className="text-base font-bold flex items-center gap-2">
-                  <AlignLeft className="w-4 h-4 text-primary" />
-                  {t("sec_des")} ({t("en")})
-                </FieldLabel>
-                <Textarea
-                  {...field}
-                  placeholder="Enter description here..."
-                  className="min-h-[120px] rounded-[20px] bg-muted/5 border-border/60 focus:bg-white transition-all resize-none text-lg p-4"
-                  dir="ltr"
-                />
-              </Field>
-            )}
-          />
-        </div>
+        <LocalizedDescriptionFields
+          control={control}
+          nameAr="description_ar"
+          nameEn="description_en"
+          labelAr={`(${t("ar")}) ${t("sec_des")}`}
+          labelEn={`${t("sec_des")} (${t("en")})`}
+          placeholder="..."
+        />
       </div>
 
       {/* Action Button */}

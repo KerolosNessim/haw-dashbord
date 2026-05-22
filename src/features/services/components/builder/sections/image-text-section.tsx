@@ -1,13 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { BilingualImageAltFields } from "@/components/form/bilingual-image-alt-fields";
 import { useEmbeddedSectionWatch } from "@/features/services/hooks/useEmbeddedSectionWatch";
 import type { SectionEmbeddedProps } from "../section-embedded-props";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { LocalizedRichTextField } from "../localized-rich-text-field";
+import { bilingualImageAltFromApi } from "@/lib/bilingual-image-alt";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImageIcon, ImagePlus, X } from "lucide-react";
-import { useRef, useState } from "react";
+import { resolveImagePreviewFromUnknown } from "@/lib/resolve-media-url";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
@@ -26,10 +30,16 @@ const localizedEditorSchema = z.object({
     .refine((val) => val && !val.isEmpty, { message: "validation.required" }),
 });
 
+const imageAltSchema = z.object({
+  ar: z.string(),
+  en: z.string(),
+});
+
 const imageTextSchema = z.object({
   title: localizedSchema,
   description: localizedEditorSchema,
   image: z.any().refine((file) => !!file, { message: "validation.required" }),
+  image_alt: imageAltSchema,
 });
 
 type ImageTextValues = z.infer<typeof imageTextSchema>;
@@ -48,10 +58,18 @@ export default function ImageTextSection({
 }: ImageTextSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
 
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    initialData?.image || null,
+  const [imagePreview, setImagePreview] = useState<string | null>(() =>
+    resolveImagePreviewFromUnknown(initialData?.image),
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const resolved = resolveImagePreviewFromUnknown(initialData?.image);
+    setImagePreview((prev) => {
+      if (prev?.startsWith("blob:") || prev?.startsWith("data:")) return prev;
+      return resolved;
+    });
+  }, [initialData?.image]);
 
   const {
     control,
@@ -65,6 +83,7 @@ export default function ImageTextSection({
       title: initialData?.title || { ar: "", en: "" },
       description: initialData?.description || { ar: null, en: null },
       image: initialData?.image || null,
+      image_alt: bilingualImageAltFromApi(initialData?.image_alt),
       items: initialData?.items || [],
     },
   });
@@ -97,29 +116,17 @@ export default function ImageTextSection({
           <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-widest">
             {t("arabic")}
           </div>
-          <Controller
-            name="title.ar"
+          <LocalizedRichTextField
             control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>{t("sections.fields.title")}</FieldLabel>
-                <Input
-                  {...field}
-                  dir="rtl"
-                  placeholder={t("placeholders.title")}
-                  className="h-12 rounded-xl bg-background border-border/50"
-                />
-                <FieldError
-                  errors={[
-                    {
-                      message: errors.title?.ar?.message
-                        ? t(errors.title.ar.message as any)
-                        : undefined,
-                    },
-                  ]}
-                />
-              </Field>
-            )}
+            name="title.ar"
+            label={t("sections.fields.title")}
+            dir="rtl"
+            placeholder={t("placeholders.title")}
+            errorMessage={
+              errors.title?.ar?.message
+                ? t(errors.title.ar.message as any)
+                : undefined
+            }
           />
           <Controller
             name="description.ar"
@@ -130,7 +137,7 @@ export default function ImageTextSection({
                 <div className="min-h-[200px]">
                   <RichTextEditor
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                     dir="rtl"
                     placeholder={t("placeholders.description")}
                   />
@@ -154,29 +161,17 @@ export default function ImageTextSection({
           <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-widest">
             {t("english")}
           </div>
-          <Controller
-            name="title.en"
+          <LocalizedRichTextField
             control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>{t("sections.fields.title")}</FieldLabel>
-                <Input
-                  {...field}
-                  dir="ltr"
-                  placeholder={t("placeholders.title")}
-                  className="h-12 rounded-xl bg-background border-border/50"
-                />
-                <FieldError
-                  errors={[
-                    {
-                      message: errors.title?.en?.message
-                        ? t(errors.title.en.message as any)
-                        : undefined,
-                    },
-                  ]}
-                />
-              </Field>
-            )}
+            name="title.en"
+            label={t("sections.fields.title")}
+            dir="ltr"
+            placeholder={t("placeholders.title")}
+            errorMessage={
+              errors.title?.en?.message
+                ? t(errors.title.en.message as any)
+                : undefined
+            }
           />
           <Controller
             name="description.en"
@@ -187,7 +182,7 @@ export default function ImageTextSection({
                 <div className="min-h-[200px]">
                   <RichTextEditor
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                     dir="ltr"
                     placeholder={t("placeholders.description")}
                   />
@@ -228,6 +223,7 @@ export default function ImageTextSection({
                 src={imagePreview}
                 alt="Preview"
                 className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-4">
                 <Button
@@ -284,6 +280,17 @@ export default function ImageTextSection({
                 : undefined,
             },
           ]}
+        />
+        <Controller
+          name="image_alt"
+          control={control}
+          render={({ field }) => (
+            <BilingualImageAltFields
+              value={field.value}
+              onChange={field.onChange}
+              keyPrefix="services.form"
+            />
+          )}
         />
       </div>
 

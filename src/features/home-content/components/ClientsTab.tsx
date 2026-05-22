@@ -8,7 +8,7 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { LocalizedDescriptionFields } from "@/features/shared/components/localized-description-fields";
 import {
   buildMediaGalleryFormData,
   mediaAltFromApi,
@@ -216,47 +216,16 @@ export default function ClientsTab() {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Controller
-              name="des_ar"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel className="text-base font-bold flex items-center gap-2">
-                    ({t("ar", { defaultValue: "AR" })}) {t("sec_des")}
-                    <AlignLeft className="w-4 h-4 text-primary" />
-                  </FieldLabel>
-                  <Textarea
-                    {...field}
-                    dir="rtl"
-                    placeholder="..."
-                    className="min-h-[140px] rounded-[24px] bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-5"
-                  />
-                  <FieldError errors={[{ message: errors.des_ar?.message }]} />
-                </Field>
-              )}
-            />
-            <Controller
-              name="des_en"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel className="text-base font-bold flex items-center gap-2">
-                    <AlignLeft className="w-4 h-4 text-primary" />
-                    {t("sec_des")} (EN)
-                  </FieldLabel>
-                  <Textarea
-                    {...field}
-                    placeholder="..."
-                    className="min-h-[140px] rounded-[24px] bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-5"
-                  />
-                  <FieldError errors={[{ message: errors.des_en?.message }]} />
-                </Field>
-              )}
-            />
-          </div>
-        </div>
+        <LocalizedDescriptionFields
+          control={control}
+          nameAr="des_ar"
+          nameEn="des_en"
+          labelAr={`(${t("ar", { defaultValue: "AR" })}) ${t("sec_des")}`}
+          labelEn={`${t("sec_des")} (EN)`}
+          placeholder="..."
+          errorAr={errors.des_ar?.message}
+          errorEn={errors.des_en?.message}
+        />
       </div>
 
       <div className="lg:col-span-5 space-y-6">

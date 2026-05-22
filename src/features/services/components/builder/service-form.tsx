@@ -1,11 +1,18 @@
 import { useTranslation } from "react-i18next";
-import SectionBuilder, { type SectionBuilderHandle } from "./section-builder";
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
-import BasicInfoForm, { type BasicInfoFormHandle } from "./basic-info-form";
+import SectionBuilder, {
+  type SectionBuilderHandle,
+  type SectionType,
+} from "./section-builder";
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from "react";
+import BasicInfoForm, {
+  type BasicInfoFormHandle,
+  type BasicInfoValues,
+} from "./basic-info-form";
 import { Loader2, Save } from "lucide-react";
 import { useAdminService } from "../../hooks/useAdminService";
 import { Button } from "@/components/ui/button";
 import { useServicePageSave } from "../../hooks/useServicePageSave";
+import { useServiceFormDraft } from "../../hooks/useServiceFormDraft";
 
 interface ServiceFormProps {
   initialId?: number;
@@ -25,6 +32,52 @@ const ServiceForm = forwardRef<ServiceFormHandle, ServiceFormProps>(function Ser
   const basicFormRef = useRef<BasicInfoFormHandle>(null);
   const sectionBuilderRef = useRef<SectionBuilderHandle>(null);
   const { saveServicePage, isPending } = useServicePageSave();
+  const { queueSave, clearServiceDraft } = useServiceFormDraft(serviceId);
+  const basicDraftRef = useRef<{
+    basic: BasicInfoValues;
+    coverPreviewAr: string | null;
+    coverPreviewEn: string | null;
+  } | null>(null);
+  const sectionsDraftRef = useRef<{
+    sections: Array<{ id: string; type: SectionType; data?: Record<string, unknown> }>;
+    sectionDataById: Record<string, Record<string, unknown>>;
+  } | null>(null);
+
+  const flushDraftSave = useCallback(() => {
+    const basic = basicDraftRef.current;
+    if (!basic) return;
+    const sections = sectionsDraftRef.current;
+    queueSave({
+      basic: basic.basic,
+      coverPreviewAr: basic.coverPreviewAr,
+      coverPreviewEn: basic.coverPreviewEn,
+      sections: sections?.sections ?? [],
+      sectionDataById: sections?.sectionDataById ?? {},
+    });
+  }, [queueSave]);
+
+  const handleBasicDraftChange = useCallback(
+    (payload: {
+      basic: BasicInfoValues;
+      coverPreviewAr: string | null;
+      coverPreviewEn: string | null;
+    }) => {
+      basicDraftRef.current = payload;
+      flushDraftSave();
+    },
+    [flushDraftSave],
+  );
+
+  const handleSectionsDraftChange = useCallback(
+    (payload: {
+      sections: Array<{ id: string; type: SectionType; data?: Record<string, unknown> }>;
+      sectionDataById: Record<string, Record<string, unknown>>;
+    }) => {
+      sectionsDraftRef.current = payload;
+      flushDraftSave();
+    },
+    [flushDraftSave],
+  );
 
   useImperativeHandle(ref, () => ({
     openSocialMetaDialog: () => basicFormRef.current?.openSocialMetaDialog(),
@@ -46,6 +99,7 @@ const ServiceForm = forwardRef<ServiceFormHandle, ServiceFormProps>(function Ser
     if (newId && !serviceId) {
       setServiceId(newId);
     }
+    clearServiceDraft();
   };
 
   return (
@@ -55,6 +109,7 @@ const ServiceForm = forwardRef<ServiceFormHandle, ServiceFormProps>(function Ser
           ref={basicFormRef}
           embedded
           initialId={serviceId ?? undefined}
+          onBasicDraftChange={handleBasicDraftChange}
         />
       </section>
 
@@ -63,6 +118,7 @@ const ServiceForm = forwardRef<ServiceFormHandle, ServiceFormProps>(function Ser
         serviceId={serviceId ?? undefined}
         initialService={service}
         isLoading={isLoading}
+        onSectionsDraftChange={handleSectionsDraftChange}
       />
 
       <div className="flex justify-end sticky bottom-6 z-10">

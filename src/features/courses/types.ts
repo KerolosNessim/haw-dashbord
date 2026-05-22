@@ -19,6 +19,7 @@ export type CourseFormValues = {
   currency: string;
   /** One learning outcome per line; AR/EN rows pair by index for the public API JSON. */
   objectives: LocalizedString;
+  image_alt: LocalizedString;
 };
 
 export type CourseRow = {

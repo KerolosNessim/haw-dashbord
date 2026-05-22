@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Plus,
@@ -8,10 +8,8 @@ import {
   AlignLeft,
   HelpCircle,
   PhoneCall,
-  Trash2,
-  ChevronUp,
-  ChevronDown,
 } from "lucide-react";
+import { SectionBuilderList } from "./section-builder-list";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,13 +28,14 @@ import DualDescSection from "./sections/dual-desc-section";
 import FAQSection from "./sections/faq-section";
 import ContactSection from "./sections/contact-section";
 import { useEffect } from "react";
-import { offeringsDataFromService } from "../../utils/service-api-mappers";
+import { builderSectionsFromService } from "../../lib/section-order";
 import type { Service } from "../../type";
 import type { ServiceSectionsPayload } from "../../service-section-types";
 import {
   buildSectionsPayloadFromInstances,
   type SectionInstanceInput,
 } from "../../utils/section-form-mappers";
+import { useServiceFormDraft } from "../../hooks/useServiceFormDraft";
 
 export type SectionType =
   | "image_text"
@@ -60,49 +59,60 @@ interface SectionBuilderProps {
   serviceId?: number;
   initialService?: Service;
   isLoading?: boolean;
+  onSectionsDraftChange?: (payload: {
+    sections: SectionInstance[];
+    sectionDataById: Record<string, Record<string, unknown>>;
+  }) => void;
 }
 
 const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
-  function SectionBuilder({ serviceId, initialService, isLoading }, ref) {
+  function SectionBuilder(
+    { serviceId, initialService, isLoading, onSectionsDraftChange },
+    ref,
+  ) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [sections, setSections] = useState<SectionInstance[]>([]);
   const [sectionDataById, setSectionDataById] = useState<
     Record<string, Record<string, unknown>>
   >({});
+  const { draft, hydrated } = useServiceFormDraft(serviceId);
+  const restoredDraftRef = useRef(false);
+  const onSectionsDraftChangeRef = useRef(onSectionsDraftChange);
+  onSectionsDraftChangeRef.current = onSectionsDraftChange;
 
   useEffect(() => {
-    if (initialService && sections.length === 0) {
-      const raw = initialService as Record<string, unknown>;
-      const mappedSections: SectionInstance[] = [];
+    if (!hydrated || restoredDraftRef.current) return;
 
-      // Mapping keys to SectionInstance
-      if (initialService.benefits) {
-        mappedSections.push({ id: "benefits", type: "image_text", data: initialService.benefits });
-      }
-      if (initialService.steps) {
-        mappedSections.push({ id: "steps", type: "full_section", data: initialService.steps });
-      }
-      if (initialService.faqs) {
-        mappedSections.push({ id: "faqs", type: "faq", data: initialService.faqs });
-      }
-      if (initialService.tools) {
-        mappedSections.push({ id: "tools", type: "dual_desc", data: initialService.tools });
-      }
-      if (initialService.ctas) {
-        mappedSections.push({ id: "ctas", type: "contact", data: initialService.ctas });
-      }
-      if (initialService.offerings || raw.offerings_title) {
-        mappedSections.push({
-          id: "offerings",
-          type: "cards",
-          data: offeringsDataFromService(initialService),
-        });
-      }
+    if (serviceId == null && draft?.sections?.length) {
+      restoredDraftRef.current = true;
+      const restoredSections = draft.sections.map((section) => ({
+        id: section.id,
+        type: section.type,
+        data: draft.sectionDataById[section.id] ?? section.data,
+      }));
+      setSections(restoredSections);
+      setSectionDataById(draft.sectionDataById ?? {});
+      return;
+    }
+
+    if (initialService && sections.length === 0) {
+      const mappedSections: SectionInstance[] = builderSectionsFromService(
+        initialService,
+      ).map((def) => ({
+        id: def.id,
+        type: def.type,
+        data: def.data,
+      }));
 
       setSections(mappedSections);
     }
-  }, [initialService]);
+  }, [serviceId, hydrated, draft, initialService, sections.length, t]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    onSectionsDraftChangeRef.current?.({ sections, sectionDataById });
+  }, [hydrated, sections, sectionDataById]);
 
   useImperativeHandle(
     ref,
@@ -168,12 +178,10 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
     }
   };
 
-  const moveSection = (from: number, to: number) => {
-    const newSections = [...sections];
-    const [movedItem] = newSections.splice(from, 1);
-    newSections.splice(to, 0, movedItem);
-    setSections(newSections);
-  };
+  const sectionTypeLabel = (section: SectionInstance) =>
+    section.type === "cards"
+      ? t("sections.types.offerings")
+      : t(`sections.types.${section.type}`);
 
   const renderSectionContent = (section: SectionInstance, index: number) => {
     const props = {
@@ -232,58 +240,13 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
             </Button>
           </div>
         ) : (
-          sections.map((section, index) => (
-            <div
-              key={section.id}
-              className="group relative p-6 rounded-[24px] border bg-card shadow-sm hover:shadow-md transition-all space-y-6"
-            >
-              {/* Section Header/Actions */}
-              <div className="flex items-center justify-between border-b pb-4">
-                <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-bold">
-                    {index + 1}
-                  </span>
-                  <h4 className="font-bold text-sm uppercase tracking-wider opacity-60">
-                    {section.type === "cards"
-                      ? t("sections.types.offerings")
-                      : t(`sections.types.${section.type}`)}
-                  </h4>
-                </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => index > 0 && moveSection(index, index - 1)}
-                  >
-                    <ChevronUp className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() =>
-                      index < sections.length - 1 &&
-                      moveSection(index, index + 1)
-                    }
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                    onClick={() => removeSection(index)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Section Content */}
-              <div className="pt-2">{renderSectionContent(section, index)}</div>
-            </div>
-          ))
+          <SectionBuilderList
+            items={sections}
+            onReorder={setSections}
+            onRemove={removeSection}
+            renderHeaderLabel={(section) => sectionTypeLabel(section)}
+            renderContent={(section, index) => renderSectionContent(section, index)}
+          />
         )}
 
         <Button

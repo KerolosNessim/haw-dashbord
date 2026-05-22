@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import { api } from "@/lib/api";
 import { axiosResponseErrorSummary } from "@/lib/api-error-message";
 import { resolveApiToastMessage } from "@/lib/api-toast-message";
@@ -19,21 +20,11 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import * as z from "zod";
 
-const slugLatinPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const slugArabicPattern =
-  /^(?:[\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:-[\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)$/u;
-
 const categorySchema = z.object({
   title_ar: z.string().min(1, { message: "validation.required" }),
   title_en: z.string().min(1, { message: "validation.required" }),
-  slug_ar: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugArabicPattern.test(s), { message: "validation.slug_format" }),
-  slug_en: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugLatinPattern.test(s), { message: "validation.slug_format" }),
+  slug_ar: z.string().min(1, { message: "validation.required" }),
+  slug_en: z.string().min(1, { message: "validation.required" }),
   desc_ar: z.string().optional(),
   desc_en: z.string().optional(),
   meta_title_ar: z.string().optional(),
@@ -93,8 +84,7 @@ export default function CreateCategoryForm() {
     fd.append("name[en]", data.title_en.trim());
     fd.append("slug[ar]", data.slug_ar.trim());
     fd.append("slug[en]", data.slug_en.trim());
-    fd.append("description[ar]", data.desc_ar?.trim() ?? "");
-    fd.append("description[en]", data.desc_en?.trim() ?? "");
+    appendLocalizedDescriptionHtml(fd, "description", data.desc_ar, data.desc_en);
     fd.append("meta_title[ar]", data.meta_title_ar?.trim() ?? "");
     fd.append("meta_title[en]", data.meta_title_en?.trim() ?? "");
     fd.append("meta_description[ar]", data.meta_desc_ar?.trim() ?? "");
@@ -222,9 +212,9 @@ export default function CreateCategoryForm() {
                       dir="rtl"
                       value={field.value}
                       placeholder={t("desc_ar")}
-                      onChange={(value: unknown) => {
-                        const html = (value as { html?: string })?.html ?? "";
-                        field.onChange(typeof html === "string" ? html : "");
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        field.onChange(html);
                       }}
                     />
                   </Field>
@@ -240,9 +230,9 @@ export default function CreateCategoryForm() {
                       dir="ltr"
                       value={field.value}
                       placeholder={t("desc_en")}
-                      onChange={(value: unknown) => {
-                        const html = (value as { html?: string })?.html ?? "";
-                        field.onChange(typeof html === "string" ? html : "");
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        field.onChange(html);
                       }}
                     />
                   </Field>

@@ -14,47 +14,77 @@ function editorHtml(value: unknown): string {
   return htmlFromUnknown(editorOnChangeToHtml(value));
 }
 
+function localizedEditorHtml(
+  value: { ar?: unknown; en?: unknown } | undefined,
+): { ar: string; en: string } | undefined {
+  if (!value) return undefined;
+  return { ar: editorHtml(value.ar), en: editorHtml(value.en) };
+}
+
 export function mapImageTextToBenefits(data: Record<string, unknown>): BenefitsSectionData {
   const description = data.description as { ar?: unknown; en?: unknown } | undefined;
+  const title = data.title as { ar?: unknown; en?: unknown } | undefined;
   return {
-    title: data.title as BenefitsSectionData["title"],
+    title: localizedEditorHtml(title) ?? (data.title as BenefitsSectionData["title"]),
     description: description
       ? { ar: editorHtml(description.ar), en: editorHtml(description.en) }
       : undefined,
     image: data.image as File | string | null,
+    image_alt: data.image_alt as BenefitsSectionData["image_alt"],
   };
 }
 
 export function mapFullSectionToSteps(data: Record<string, unknown>): ListSectionData {
   const items = (data.items as Array<Record<string, unknown>> | undefined)?.map(
-    (item, index) => ({
-      title: item.title as ListSectionData["items"][0]["title"],
-      description: {
-        ar: editorHtml((item.description as { ar?: unknown })?.ar ?? item.description),
-        en: editorHtml((item.description as { en?: unknown })?.en ?? item.description),
-      },
-      sort_order: index,
-    }),
+    (item, index) => {
+      const itemTitle = item.title as { ar?: unknown; en?: unknown } | undefined;
+      return {
+        title: localizedEditorHtml(itemTitle) ?? (item.title as ListSectionData["items"][0]["title"]),
+        description: {
+          ar: editorHtml((item.description as { ar?: unknown })?.ar ?? item.description),
+          en: editorHtml((item.description as { en?: unknown })?.en ?? item.description),
+        },
+        sort_order: Number(item.sort_order ?? index),
+      };
+    },
   );
+  const description = data.description as { ar?: unknown; en?: unknown } | undefined;
+  const title = data.title as { ar?: unknown; en?: unknown } | undefined;
   return {
-    title: data.title as ListSectionData["title"],
-    description: data.description as ListSectionData["description"],
+    title: localizedEditorHtml(title) ?? (data.title as ListSectionData["title"]),
+    description: description
+      ? { ar: editorHtml(description.ar), en: editorHtml(description.en) }
+      : undefined,
     image: data.image as File | string | null,
+    image_alt: data.image_alt as ListSectionData["image_alt"],
     items,
+    sort_order: Number(data.sort_order ?? 0) || undefined,
   };
 }
 
 export function mapFaqToPayload(data: Record<string, unknown>): FaqSectionData {
   const items = (data.items as Array<Record<string, unknown>> | undefined)?.map(
-    (item, index) => ({
-      question: item.question as FaqSectionData["items"][0]["question"],
-      answer: item.answer as FaqSectionData["items"][0]["answer"],
-      sort_order: index,
-    }),
+    (item, index) => {
+      const answer = item.answer as { ar?: unknown; en?: unknown } | undefined;
+      const question = item.question as { ar?: unknown; en?: unknown } | undefined;
+      return {
+        question: question
+          ? { ar: editorHtml(question.ar), en: editorHtml(question.en) }
+          : undefined,
+        answer: answer
+          ? { ar: editorHtml(answer.ar), en: editorHtml(answer.en) }
+          : undefined,
+        sort_order: index,
+      };
+    },
   );
+  const description = data.description as { ar?: unknown; en?: unknown } | undefined;
+  const title = data.title as { ar?: unknown; en?: unknown } | undefined;
   return {
-    title: data.title as FaqSectionData["title"],
-    description: data.description as FaqSectionData["description"],
+    title: localizedEditorHtml(title) ?? (data.title as FaqSectionData["title"]),
+    description: description
+      ? { ar: editorHtml(description.ar), en: editorHtml(description.en) }
+      : undefined,
     items,
   };
 }
@@ -63,8 +93,9 @@ export function mapCardsToOfferings(data: Record<string, unknown>): ListSectionD
   const items = (data.items as Array<Record<string, unknown>> | undefined)?.map(
     (item, index) => {
       const desc = item.description as { ar?: unknown; en?: unknown } | undefined;
+      const itemTitle = item.title as { ar?: unknown; en?: unknown } | undefined;
       return {
-        title: item.title as ListSectionData["items"][0]["title"],
+        title: localizedEditorHtml(itemTitle) ?? (item.title as ListSectionData["items"][0]["title"]),
         description: desc
           ? { ar: editorHtml(desc.ar), en: editorHtml(desc.en) }
           : undefined,
@@ -72,9 +103,16 @@ export function mapCardsToOfferings(data: Record<string, unknown>): ListSectionD
       };
     },
   );
+  const sectionDescription = data.description as { ar?: unknown; en?: unknown } | undefined;
+  const title = data.title as { ar?: unknown; en?: unknown } | undefined;
   return {
-    title: data.title as ListSectionData["title"],
-    description: data.description as ListSectionData["description"],
+    title: localizedEditorHtml(title) ?? (data.title as ListSectionData["title"]),
+    description: sectionDescription
+      ? {
+          ar: editorHtml(sectionDescription.ar),
+          en: editorHtml(sectionDescription.en),
+        }
+      : undefined,
     items,
   };
 }
@@ -82,12 +120,14 @@ export function mapCardsToOfferings(data: Record<string, unknown>): ListSectionD
 export function mapDualDescToTools(data: Record<string, unknown>): ToolsSectionData {
   const description = data.description as { ar?: unknown; en?: unknown } | undefined;
   const subDescription = data.sub_description as { ar?: unknown; en?: unknown } | undefined;
+  const title = data.title as { ar?: unknown; en?: unknown } | undefined;
+  const subTitle = data.sub_title as { ar?: unknown; en?: unknown } | undefined;
   return {
-    title: data.title as ToolsSectionData["title"],
+    title: localizedEditorHtml(title) ?? (data.title as ToolsSectionData["title"]),
     description: description
       ? { ar: editorHtml(description.ar), en: editorHtml(description.en) }
       : undefined,
-    sub_title: data.sub_title as ToolsSectionData["sub_title"],
+    sub_title: localizedEditorHtml(subTitle) ?? (data.sub_title as ToolsSectionData["sub_title"]),
     sub_description: subDescription
       ? {
           ar: editorHtml(subDescription.ar),
@@ -99,8 +139,9 @@ export function mapDualDescToTools(data: Record<string, unknown>): ToolsSectionD
 
 export function mapContactToCtas(data: Record<string, unknown>): Record<string, unknown> {
   const description = data.description as { ar?: unknown; en?: unknown } | undefined;
+  const title = data.title as { ar?: unknown; en?: unknown } | undefined;
   return {
-    title: data.title,
+    title: localizedEditorHtml(title) ?? data.title,
     phone_number: data.phone_number ?? data.phone,
     description: description
       ? { ar: editorHtml(description.ar), en: editorHtml(description.en) }
@@ -112,8 +153,9 @@ export function mapPackagesToPayload(data: Record<string, unknown>): PackagesSec
   const items = (data.items as Array<Record<string, unknown>> | undefined)?.map(
     (item, index) => {
       const desc = item.description as { ar?: unknown; en?: unknown } | undefined;
+      const itemTitle = item.title as { ar?: unknown; en?: unknown } | undefined;
       return {
-        title: item.title as PackagesSectionData["items"][0]["title"],
+        title: localizedEditorHtml(itemTitle) ?? (item.title as PackagesSectionData["items"][0]["title"]),
         description: desc
           ? { ar: editorHtml(desc.ar), en: editorHtml(desc.en) }
           : { ar: "", en: "" },
@@ -126,28 +168,38 @@ export function mapPackagesToPayload(data: Record<string, unknown>): PackagesSec
       };
     },
   );
+  const title = data.title as { ar?: unknown; en?: unknown } | undefined;
+  const sectionDescription = data.description as { ar?: unknown; en?: unknown } | undefined;
   return {
-    title: data.title as PackagesSectionData["title"],
-    description: data.description as PackagesSectionData["description"],
+    title: localizedEditorHtml(title) ?? (data.title as PackagesSectionData["title"]),
+    description: localizedEditorHtml(sectionDescription) ?? (data.description as PackagesSectionData["description"]),
     items,
   };
 }
 
 export function mapAuditsToPayload(data: Record<string, unknown>): ListSectionData {
   const items = (data.items as Array<Record<string, unknown>> | undefined)?.map(
-    (item, index) => ({
-      title: item.title as ListSectionData["items"][0]["title"],
-      description: {
-        ar: editorHtml((item.description as { ar?: unknown })?.ar ?? item.description),
-        en: editorHtml((item.description as { en?: unknown })?.en ?? item.description),
-      },
-      button_text: item.button_text as ListSectionData["items"][0]["button_text"],
-      sort_order: index + 1,
-    }),
+    (item, index) => {
+      const itemTitle = item.title as { ar?: unknown; en?: unknown } | undefined;
+      const buttonText = item.button_text as { ar?: unknown; en?: unknown } | undefined;
+      return {
+        title: localizedEditorHtml(itemTitle) ?? (item.title as ListSectionData["items"][0]["title"]),
+        description: {
+          ar: editorHtml((item.description as { ar?: unknown })?.ar ?? item.description),
+          en: editorHtml((item.description as { en?: unknown })?.en ?? item.description),
+        },
+        button_text: localizedEditorHtml(buttonText) ?? (item.button_text as ListSectionData["items"][0]["button_text"]),
+        sort_order: index + 1,
+      };
+    },
   );
+  const description = data.description as { ar?: unknown; en?: unknown } | undefined;
+  const title = data.title as { ar?: unknown; en?: unknown } | undefined;
   return {
-    title: data.title as ListSectionData["title"],
-    description: data.description as ListSectionData["description"],
+    title: localizedEditorHtml(title) ?? (data.title as ListSectionData["title"]),
+    description: description
+      ? { ar: editorHtml(description.ar), en: editorHtml(description.en) }
+      : undefined,
     items,
   };
 }
@@ -185,15 +237,14 @@ export function buildSectionsPayloadFromInstances(
 ): ServiceSectionsPayload {
   const payload: ServiceSectionsPayload = {};
 
-  for (const instance of instances) {
+  instances.forEach((instance, index) => {
     const raw = dataByInstanceId[instance.id];
-    if (!raw) continue;
+    if (!raw) return;
     const apiKey = SECTION_TYPE_TO_API_KEY[instance.type];
-    (payload as Record<string, unknown>)[apiKey] = mapSectionFormToPayload(
-      instance.type,
-      raw,
-    );
-  }
+    const mapped = mapSectionFormToPayload(instance.type, raw) as Record<string, unknown>;
+    mapped.sort_order = index + 1;
+    (payload as Record<string, unknown>)[apiKey] = mapped;
+  });
 
   return payload;
 }

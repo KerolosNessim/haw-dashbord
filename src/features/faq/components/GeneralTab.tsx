@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { LocalizedDescriptionFields } from "@/features/shared/components/localized-description-fields";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { useFaqGeneral } from "../hooks/useFaqGeneral";
 import { slugify, slugifyAr } from "@/lib/slugify";
 
@@ -64,7 +66,10 @@ export default function GeneralTab() {
   const onSubmit = (values: GeneralFormValues) => {
     const payload = {
       title: { ar: values.title_ar, en: values.title_en },
-      description: { ar: values.description_ar, en: values.description_en },
+      description: {
+        ar: localizedHtmlForApi(values.description_ar),
+        en: localizedHtmlForApi(values.description_en),
+      },
       meta_title: { ar: values.meta_title_ar, en: values.meta_title_en },
       meta_description: {
         ar: values.meta_description_ar,
@@ -139,39 +144,13 @@ export default function GeneralTab() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Controller
-            name="description_ar"
-            control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel className="text-base font-bold flex items-center gap-2 justify-start">
-                  ({t("ar")}) {t("sec_des")}
-                </FieldLabel>
-                <Textarea
-                  {...field}
-                  className="min-h-[120px] rounded-2xl bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-4"
-                  dir="rtl"
-                />
-              </Field>
-            )}
-          />
-          <Controller
-            name="description_en"
-            control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel className="text-base font-bold flex items-center gap-2">
-                  {t("sec_des")} ({t("en")})
-                </FieldLabel>
-                <Textarea
-                  {...field}
-                  className="min-h-[120px] rounded-2xl bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-4"
-                />
-              </Field>
-            )}
-          />
-        </div>
+        <LocalizedDescriptionFields
+          control={control}
+          nameAr="description_ar"
+          nameEn="description_en"
+          labelAr={`(${t("ar")}) ${t("sec_des")}`}
+          labelEn={`${t("sec_des")} (${t("en")})`}
+        />
 
         {/* SEO Section */}
         <div className="pt-10 border-t space-y-8">

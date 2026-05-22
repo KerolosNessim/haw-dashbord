@@ -7,7 +7,8 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { useSolutions } from "../hooks/useSolutions";
 
 const generalSchema = z.object({
@@ -49,8 +50,10 @@ export default function SolutionsSectionForm({ onSaved, submitLabel, className }
     const formData = new FormData();
     formData.append("title[ar]", data.title_ar);
     formData.append("title[en]", data.title_en);
-    formData.append("subtitle[ar]", data.des_ar);
-    formData.append("subtitle[en]", data.des_en);
+    const subAr = localizedHtmlForApi(data.des_ar);
+    const subEn = localizedHtmlForApi(data.des_en);
+    if (subAr) formData.append("subtitle[ar]", subAr);
+    if (subEn) formData.append("subtitle[en]", subEn);
     updateSolutions(formData, { onSuccess: () => onSaved?.() });
   };
 
@@ -97,12 +100,17 @@ export default function SolutionsSectionForm({ onSaved, submitLabel, className }
                 (AR) {t("sec_des")}
                 <AlignLeft className="w-4 h-4 text-primary" />
               </FieldLabel>
-              <Textarea
-                {...field}
-                dir="rtl"
-                placeholder="..."
-                className="min-h-[120px] rounded-2xl resize-none"
-              />
+              <div className="min-h-[160px]">
+                <RichTextEditor
+                  value={field.value}
+                  onChange={(val) => {
+                    const html = editorOnChangeToHtml(val);
+                    field.onChange(html);
+                  }}
+                  dir="rtl"
+                  placeholder="..."
+                />
+              </div>
               <FieldError errors={[{ message: errors.des_ar?.message }]} />
             </Field>
           )}
@@ -116,7 +124,17 @@ export default function SolutionsSectionForm({ onSaved, submitLabel, className }
                 <AlignLeft className="w-4 h-4 text-primary" />
                 {t("sec_des")} (EN)
               </FieldLabel>
-              <Textarea {...field} placeholder="..." className="min-h-[120px] rounded-2xl resize-none" />
+              <div className="min-h-[160px]">
+                <RichTextEditor
+                  value={field.value}
+                  onChange={(val) => {
+                    const html = editorOnChangeToHtml(val);
+                    field.onChange(html);
+                  }}
+                  dir="ltr"
+                  placeholder="..."
+                />
+              </div>
               <FieldError errors={[{ message: errors.des_en?.message }]} />
             </Field>
           )}

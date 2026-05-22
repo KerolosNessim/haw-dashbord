@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { LocalizedRichTextField } from "../localized-rich-text-field";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -91,29 +92,15 @@ export default function CardsSection({
           <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-widest">
             {t("arabic")}
           </div>
-          <Controller
-            name="title.ar"
+          <LocalizedRichTextField
             control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>{t("sections.fields.title")}</FieldLabel>
-                <Input
-                  {...field}
-                  dir="rtl"
-                  placeholder={t("placeholders.title")}
-                  className="h-12 rounded-xl bg-background border-border/50"
-                />
-                <FieldError
-                  errors={[
-                    {
-                      message: errors.title?.ar?.message
-                        ? t(errors.title.ar.message as any)
-                        : undefined,
-                    },
-                  ]}
-                />
-              </Field>
-            )}
+            name="title.ar"
+            label={t("sections.fields.title")}
+            dir="rtl"
+            placeholder={t("placeholders.title")}
+            errorMessage={
+              errors.title?.ar?.message ? t(errors.title.ar.message as any) : undefined
+            }
           />
           <Controller
             name="description.ar"
@@ -121,12 +108,14 @@ export default function CardsSection({
             render={({ field }) => (
               <Field>
                 <FieldLabel>{t("sections.fields.content")}</FieldLabel>
-                <Input
-                  {...field}
-                  dir="rtl"
-                  placeholder={t("placeholders.description")}
-                  className="h-12 rounded-xl bg-background border-border/50"
-                />
+                <div className="min-h-[160px]">
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                    dir="rtl"
+                    placeholder={t("placeholders.description")}
+                  />
+                </div>
                 <FieldError
                   errors={[
                     {
@@ -146,29 +135,15 @@ export default function CardsSection({
           <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-widest">
             {t("english")}
           </div>
-          <Controller
-            name="title.en"
+          <LocalizedRichTextField
             control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>{t("sections.fields.title")}</FieldLabel>
-                <Input
-                  {...field}
-                  dir="ltr"
-                  placeholder={t("placeholders.title")}
-                  className="h-12 rounded-xl bg-background border-border/50"
-                />
-                <FieldError
-                  errors={[
-                    {
-                      message: errors.title?.en?.message
-                        ? t(errors.title.en.message as any)
-                        : undefined,
-                    },
-                  ]}
-                />
-              </Field>
-            )}
+            name="title.en"
+            label={t("sections.fields.title")}
+            dir="ltr"
+            placeholder={t("placeholders.title")}
+            errorMessage={
+              errors.title?.en?.message ? t(errors.title.en.message as any) : undefined
+            }
           />
           <Controller
             name="description.en"
@@ -176,12 +151,14 @@ export default function CardsSection({
             render={({ field }) => (
               <Field>
                 <FieldLabel>{t("sections.fields.content")}</FieldLabel>
-                <Input
-                  {...field}
-                  dir="ltr"
-                  placeholder={t("placeholders.description")}
-                  className="h-12 rounded-xl bg-background border-border/50"
-                />
+                <div className="min-h-[160px]">
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                    dir="ltr"
+                    placeholder={t("placeholders.description")}
+                  />
+                </div>
                 <FieldError
                   errors={[
                     {
@@ -229,21 +206,13 @@ export default function CardsSection({
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div className="space-y-4">
-                      <Controller
-                        name={`items.${index}.title.ar`}
+                      <LocalizedRichTextField
                         control={control}
-                        render={({ field }) => (
-                          <Field>
-                            <FieldLabel className="text-[10px] uppercase opacity-40">
-                              {t("arabic")} - Title
-                            </FieldLabel>
-                            <Input
-                              {...field}
-                              dir="rtl"
-                              className="h-11 rounded-xl bg-muted/5"
-                            />
-                          </Field>
-                        )}
+                        name={`items.${index}.title.ar`}
+                        label={`${t("arabic")} - ${t("sections.fields.title")}`}
+                        dir="rtl"
+                        minHeightClass="min-h-[100px]"
+                        labelClassName="text-[10px] uppercase opacity-40"
                       />
                       <Controller
                         name={`items.${index}.description.ar`}
@@ -270,21 +239,13 @@ export default function CardsSection({
                     </div>
 
                     <div className="space-y-4">
-                      <Controller
-                        name={`items.${index}.title.en`}
+                      <LocalizedRichTextField
                         control={control}
-                        render={({ field }) => (
-                          <Field>
-                            <FieldLabel className="text-[10px] uppercase opacity-40">
-                              {t("english")} - Title
-                            </FieldLabel>
-                            <Input
-                              {...field}
-                              dir="ltr"
-                              className="h-11 rounded-xl bg-muted/5"
-                            />
-                          </Field>
-                        )}
+                        name={`items.${index}.title.en`}
+                        label={`${t("english")} - ${t("sections.fields.title")}`}
+                        dir="ltr"
+                        minHeightClass="min-h-[100px]"
+                        labelClassName="text-[10px] uppercase opacity-40"
                       />
                       <Controller
                         name={`items.${index}.description.en`}

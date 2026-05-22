@@ -1,4 +1,8 @@
 import type { BasicInfoValues } from "../components/builder/basic-info-form";
+import {
+  normalizeOgType,
+  normalizeTwitterCard,
+} from "../constants/social-meta-options";
 import type { Service } from "../type";
 import type { ServiceSectionsPayload } from "../service-section-types";
 import { mapPackagesToPayload } from "./section-form-mappers";
@@ -55,9 +59,9 @@ export function serviceToBasicInfoValues(service: Service): BasicInfoValues {
     },
     og_title: pickLocalized(raw.og_title) ?? { ar: "", en: "" },
     og_description: pickLocalized(raw.og_description) ?? { ar: "", en: "" },
-    og_type: (raw.og_type as string) ?? "website",
+    og_type: normalizeOgType(raw.og_type),
     og_image: (raw.og_image as string | null) ?? null,
-    twitter_card: (raw.twitter_card as string) ?? "summary_large_image",
+    twitter_card: normalizeTwitterCard(raw.twitter_card),
     twitter_title: pickLocalized(raw.twitter_title) ?? { ar: "", en: "" },
     twitter_description: pickLocalized(raw.twitter_description) ?? { ar: "", en: "" },
     twitter_image: (raw.twitter_image as string | null) ?? null,
@@ -177,40 +181,59 @@ export function serviceToSectionsPayload(service: Service): ServiceSectionsPaylo
   const payload: ServiceSectionsPayload = {};
 
   if (service.benefits) {
+    const benefits = service.benefits as Record<string, unknown>;
     payload.benefits = {
-      title: pickLocalized((service.benefits as { title?: unknown }).title),
-      description: (service.benefits as { description?: unknown }).description as
-        | { ar: unknown; en: unknown }
-        | undefined,
-      image: (service.benefits as { image?: string | null }).image ?? null,
+      title: pickLocalized(benefits.title),
+      description: benefits.description as { ar: unknown; en: unknown } | undefined,
+      image: (benefits.image as string | null) ?? null,
+      image_alt: pickServiceImageAlt(benefits.image_alt),
+      sort_order: Number(benefits.sort_order ?? 0) || undefined,
     };
   }
   if (service.steps) {
     const stepsItems = Array.isArray(service.steps)
       ? service.steps
       : (service.steps as { items?: unknown }).items;
+    const stepsObj =
+      service.steps && typeof service.steps === "object" && !Array.isArray(service.steps)
+        ? (service.steps as Record<string, unknown>)
+        : null;
     payload.steps = {
-      title: pickLocalized(raw.steps_title ?? (service.steps as { title?: unknown }).title),
-      description: pickLocalized(
-        raw.steps_description ?? (service.steps as { description?: unknown }).description,
-      ),
+      title: pickLocalized(raw.steps_title ?? stepsObj?.title),
+      description: pickLocalized(raw.steps_description ?? stepsObj?.description),
+      image: (stepsObj?.image as string | null) ?? (raw.steps_image as string | null) ?? null,
+      image_alt: pickServiceImageAlt(stepsObj?.image_alt ?? raw.steps_image_alt),
       items: stepsItems as ServiceSectionsPayload["steps"],
+      sort_order: Number(stepsObj?.sort_order ?? raw.steps_sort_order ?? 0) || undefined,
     };
   }
   if (service.faqs) {
+    const faqsObj =
+      service.faqs && typeof service.faqs === "object" && !Array.isArray(service.faqs)
+        ? (service.faqs as Record<string, unknown>)
+        : null;
     payload.faqs = {
-      title: pickLocalized(raw.faqs_title),
-      description: pickLocalized(raw.faqs_description),
+      title: pickLocalized(raw.faqs_title ?? faqsObj?.title),
+      description: pickLocalized(raw.faqs_description ?? faqsObj?.description),
       items: Array.isArray(service.faqs)
         ? service.faqs
         : (service.faqs as { items?: unknown }).items,
+      sort_order: Number(faqsObj?.sort_order ?? raw.faqs_sort_order ?? 0) || undefined,
     } as ServiceSectionsPayload["faqs"];
   }
   if (service.tools) {
-    payload.tools = service.tools as ServiceSectionsPayload["tools"];
+    const tools = service.tools as Record<string, unknown>;
+    payload.tools = {
+      ...(service.tools as ServiceSectionsPayload["tools"]),
+      sort_order: Number(tools.sort_order ?? raw.tools_sort_order ?? 0) || undefined,
+    };
   }
   if (service.ctas) {
-    payload.ctas = service.ctas as Record<string, unknown>;
+    const ctas = service.ctas as Record<string, unknown>;
+    payload.ctas = {
+      ...(service.ctas as Record<string, unknown>),
+      sort_order: Number(ctas.sort_order ?? raw.ctas_sort_order ?? 0) || undefined,
+    };
   }
   if (raw.audits || raw.audits_title) {
     payload.audits = {
@@ -225,12 +248,17 @@ export function serviceToSectionsPayload(service: Service): ServiceSectionsPaylo
     payload.packages = mapPackagesToPayload(packagesDataFromService(service));
   }
   if (raw.offerings || raw.offerings_title) {
+    const offeringsObj =
+      service.offerings && typeof service.offerings === "object" && !Array.isArray(service.offerings)
+        ? (service.offerings as Record<string, unknown>)
+        : null;
     payload.offerings = {
-      title: pickLocalized(raw.offerings_title),
-      description: pickLocalized(raw.offerings_description),
+      title: pickLocalized(raw.offerings_title ?? offeringsObj?.title),
+      description: pickLocalized(raw.offerings_description ?? offeringsObj?.description),
       items: (Array.isArray(raw.offerings)
         ? raw.offerings
-        : (raw.offerings as { items?: unknown }).items) as ServiceSectionsPayload["offerings"],
+        : (service.offerings as { items?: unknown }).items) as ServiceSectionsPayload["offerings"],
+      sort_order: Number(offeringsObj?.sort_order ?? raw.offerings_sort_order ?? 0) || undefined,
     };
   }
 

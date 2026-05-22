@@ -1,4 +1,5 @@
-import { Pencil, Trash2, Loader2 } from "lucide-react";
+import { useExportService } from "@/features/backup-export/hooks/use-export-service";
+import { Download, Pencil, Trash2, Loader2 } from "lucide-react";
 import type { Service } from "../type";
 import { serviceCoverUrl } from "../utils/service-mapper";
 import { useTranslation } from "react-i18next";
@@ -38,6 +39,8 @@ export default function ServiceCard({ service }: ServiceCardProps) {
       : alt?.ar || alt?.en) ||
     service.title.en ||
     service.title.ar;
+
+  const { mutate: exportService, isPending: isExporting } = useExportService();
 
   const { mutate: deleteService, isPending } = useMutation({
     mutationFn: () => deleteAdminServiceApi(service.id),
@@ -88,6 +91,16 @@ export default function ServiceCard({ service }: ServiceCardProps) {
           <Pencil size={16} />
           {t("edit_service")}
         </Link>
+
+        <button
+          type="button"
+          disabled={isExporting}
+          onClick={() => exportService(service.id)}
+          className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition hover:bg-gray-100 disabled:opacity-50"
+        >
+          {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+          {t("export_excel")}
+        </button>
 
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogTrigger asChild>

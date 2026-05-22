@@ -7,7 +7,8 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { useStats } from "../hooks/useStats";
 
 /**
@@ -75,7 +76,10 @@ export default function StatesTab() {
       ...(stat.id ? { id: stat.id } : {}), // send id for existing, omit for new
       title: { ar: stat.title_ar, en: stat.title_en },
       number: stat.number,
-      description: { ar: stat.des_ar, en: stat.des_en },
+      description: {
+        ar: localizedHtmlForApi(stat.des_ar),
+        en: localizedHtmlForApi(stat.des_en),
+      },
     }));
     updateStat(payload);
   };
@@ -203,12 +207,17 @@ export default function StatesTab() {
                           ({t("ar", { defaultValue: "AR" })}) {t("stat_description")}
                           <AlignLeft className="w-4 h-4 text-primary" />
                         </FieldLabel>
-                        <Textarea
-                          {...field}
-                          dir="rtl"
-                          placeholder="الوصف بالعربية..."
-                          className="min-h-[80px] rounded-xl bg-white border-border/60 resize-none"
-                        />
+                        <div className="min-h-[160px] rounded-xl border overflow-hidden">
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={(val) => {
+                              const html = editorOnChangeToHtml(val);
+                              field.onChange(html);
+                            }}
+                            dir="rtl"
+                            placeholder="الوصف بالعربية..."
+                          />
+                        </div>
                       </Field>
                     )}
                   />
@@ -221,11 +230,17 @@ export default function StatesTab() {
                           <AlignLeft className="w-4 h-4 text-primary" />
                           {t("stat_description")} (EN)
                         </FieldLabel>
-                        <Textarea
-                          {...field}
-                          placeholder="Description in English..."
-                          className="min-h-[80px] rounded-xl bg-white border-border/60 resize-none"
-                        />
+                        <div className="min-h-[160px] rounded-xl border overflow-hidden">
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={(val) => {
+                              const html = editorOnChangeToHtml(val);
+                              field.onChange(html);
+                            }}
+                            dir="ltr"
+                            placeholder="Description in English..."
+                          />
+                        </div>
                       </Field>
                     )}
                   />

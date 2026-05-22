@@ -1,7 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { BilingualImageAltFields } from "@/components/form/bilingual-image-alt-fields";
+import {
+  appendBilingualImageAlt,
+  bilingualImageAltFromApi,
+  emptyBilingualImageAlt,
+  type BilingualImageAlt,
+} from "@/lib/bilingual-image-alt";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import {
   Select,
   SelectContent,
@@ -41,6 +49,8 @@ export default function GeneralSettingsForm() {
   const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
+  const [logoAlt, setLogoAlt] = useState<BilingualImageAlt>(emptyBilingualImageAlt());
+  const [faviconAlt, setFaviconAlt] = useState<BilingualImageAlt>(emptyBilingualImageAlt());
 
   const {
     control,
@@ -73,6 +83,8 @@ export default function GeneralSettingsForm() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLogoPreview(g.logo);
       setFaviconPreview(g.favicon);
+      setLogoAlt(bilingualImageAltFromApi((g as { logo_alt?: unknown }).logo_alt));
+      setFaviconAlt(bilingualImageAltFromApi((g as { favicon_alt?: unknown }).favicon_alt));
     }
   }, [settingsData, reset]);
 
@@ -81,13 +93,17 @@ export default function GeneralSettingsForm() {
       const formData = new FormData();
       formData.append("site_name_ar", values.site_name_ar);
       formData.append("site_name_en", values.site_name_en);
-      formData.append("site_description_ar", values.site_description_ar);
-      formData.append("site_description_en", values.site_description_en);
+      const siteDescAr = localizedHtmlForApi(values.site_description_ar);
+      const siteDescEn = localizedHtmlForApi(values.site_description_en);
+      if (siteDescAr) formData.append("site_description_ar", siteDescAr);
+      if (siteDescEn) formData.append("site_description_en", siteDescEn);
       formData.append("timezone", values.timezone);
       formData.append("default_language", values.default_language);
       
       if (logoFile) formData.append("logo", logoFile);
       if (faviconFile) formData.append("favicon", faviconFile);
+      appendBilingualImageAlt(formData, "logo_alt", logoAlt);
+      appendBilingualImageAlt(formData, "favicon_alt", faviconAlt);
 
       await updateGeneral(formData);
       toast.success(commonT("success_message") || "Saved successfully");
@@ -144,7 +160,16 @@ export default function GeneralSettingsForm() {
                render={({ field }) => (
                   <Field >
                      <FieldLabel className="text-gray-600 font-bold mb-2">{t("site_description_ar")}</FieldLabel>
-                     <Textarea {...field} className="min-h-[120px] rounded-xl bg-muted/10 border-border/40 focus:bg-white transition-all resize-none" />
+                     <div className="min-h-[160px]">
+                       <RichTextEditor
+                         value={field.value}
+                         onChange={(val) => {
+                           const html = editorOnChangeToHtml(val);
+                           field.onChange(html);
+                         }}
+                         dir="rtl"
+                       />
+                     </div>
                      <FieldError errors={[{ message: errors.site_description_ar?.message ? commonT(errors.site_description_ar.message) : undefined }]} />
                   </Field>
                )}
@@ -155,7 +180,16 @@ export default function GeneralSettingsForm() {
                render={({ field }) => (
                   <Field >
                      <FieldLabel className="text-gray-600 font-bold mb-2">{t("site_description_en")}</FieldLabel>
-                     <Textarea {...field} className="min-h-[120px] rounded-xl bg-muted/10 border-border/40 focus:bg-white transition-all resize-none" />
+                     <div className="min-h-[160px]">
+                       <RichTextEditor
+                         value={field.value}
+                         onChange={(val) => {
+                           const html = editorOnChangeToHtml(val);
+                           field.onChange(html);
+                         }}
+                         dir="ltr"
+                       />
+                     </div>
                      <FieldError errors={[{ message: errors.site_description_en?.message ? commonT(errors.site_description_en.message) : undefined }]} />
                   </Field>
                )}
@@ -245,6 +279,13 @@ export default function GeneralSettingsForm() {
                      )}
                   </div>
                </div>
+               <BilingualImageAltFields
+                 value={logoAlt}
+                 onChange={setLogoAlt}
+                 keyPrefix="settings.general"
+                 arLabelKey="logo_alt_ar"
+                 enLabelKey="logo_alt_en"
+               />
             </div>
 
             <div className="space-y-4">
@@ -281,6 +322,13 @@ export default function GeneralSettingsForm() {
                      )}
                   </div>
                </div>
+               <BilingualImageAltFields
+                 value={faviconAlt}
+                 onChange={setFaviconAlt}
+                 keyPrefix="settings.general"
+                 arLabelKey="favicon_alt_ar"
+                 enLabelKey="favicon_alt_en"
+               />
             </div>
          </div>
 

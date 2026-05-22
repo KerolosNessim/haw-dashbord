@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlignLeft, Loader2, Save, Type } from "lucide-react";
+import { Loader2, Save, Type } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
@@ -7,7 +7,8 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { LocalizedDescriptionFields } from "@/features/shared/components/localized-description-fields";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { useWhyUs } from "../hooks/useWhyUs";
 
 const generalSchema = z.object({
@@ -44,8 +45,10 @@ export default function GeneralTab() {
     const formData = new FormData();
     formData.append("title[ar]", data.title_ar);
     formData.append("title[en]", data.title_en);
-    formData.append("description[ar]", data.des_ar);
-    formData.append("description[en]", data.des_en);
+    const descAr = localizedHtmlForApi(data.des_ar);
+    const descEn = localizedHtmlForApi(data.des_en);
+    if (descAr) formData.append("description[ar]", descAr);
+    if (descEn) formData.append("description[en]", descEn);
     
     updateWhyUs(formData);
   };
@@ -108,46 +111,13 @@ export default function GeneralTab() {
           />
         </div>
 
-        {/* Descriptions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Controller
-            name="des_ar"
-            control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel className="text-base font-bold flex items-center gap-2 ">
-                  (AR) {t("sec_des", { defaultValue: "Section Description" })}
-                  <AlignLeft className="w-4 h-4 text-primary" />
-                </FieldLabel>
-                <Textarea
-                  {...field}
-                  dir="rtl"
-                  placeholder="..."
-                  className="min-h-[140px] rounded-[24px] bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-5"
-                />
-                <FieldError errors={[{ message: errors.des_ar?.message }]} />
-              </Field>
-            )}
-          />
-          <Controller
-            name="des_en"
-            control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel className="text-base font-bold flex items-center gap-2">
-                  <AlignLeft className="w-4 h-4 text-primary" />
-                  {t("sec_des", { defaultValue: "Section Description" })} (EN)
-                </FieldLabel>
-                <Textarea
-                  {...field}
-                  placeholder="..."
-                  className="min-h-[140px] rounded-[24px] bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-5"
-                />
-                <FieldError errors={[{ message: errors.des_en?.message }]} />
-              </Field>
-            )}
-          />
-        </div>
+        <LocalizedDescriptionFields
+          control={control}
+          nameAr="des_ar"
+          nameEn="des_en"
+          labelAr={`(AR) ${t("sec_des", { defaultValue: "Section Description" })}`}
+          labelEn={`${t("sec_des", { defaultValue: "Section Description" })} (EN)`}
+        />
       </div>
 
       <Button

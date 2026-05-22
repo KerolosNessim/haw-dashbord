@@ -7,7 +7,8 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { cn } from "@/lib/utils";
 import { useWhyUsItems } from "../hooks/useWhyUsItems";
 import type { WhyUsFeature } from "../types";
@@ -67,8 +68,10 @@ export default function ContentTab() {
       }
       formData.append(`items[${index}][title][ar]`, feature.title_ar);
       formData.append(`items[${index}][title][en]`, feature.title_en);
-      formData.append(`items[${index}][description][ar]`, feature.des_ar);
-      formData.append(`items[${index}][description][en]`, feature.des_en);
+      const descAr = localizedHtmlForApi(feature.des_ar);
+      const descEn = localizedHtmlForApi(feature.des_en);
+      if (descAr) formData.append(`items[${index}][description][ar]`, descAr);
+      if (descEn) formData.append(`items[${index}][description][en]`, descEn);
       
       if (feature.image instanceof File) {
         formData.append(`items[${index}][image]`, feature.image);
@@ -255,12 +258,17 @@ export default function ContentTab() {
                           (AR) {t("feature_description")}
                           <AlignLeft className="w-4 h-4 text-primary" />
                         </FieldLabel>
-                        <Textarea
-                          {...field}
-                          dir="rtl"
-                          placeholder="..."
-                          className="min-h-[100px] rounded-xl bg-white border-border/60 resize-none"
-                        />
+                        <div className="min-h-[160px] rounded-xl border overflow-hidden">
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={(val) => {
+                              const html = editorOnChangeToHtml(val);
+                              field.onChange(html);
+                            }}
+                            dir="rtl"
+                            placeholder="..."
+                          />
+                        </div>
                         {errors.features?.[index]?.des_ar && (
                           <p className="text-xs text-destructive font-bold mt-1">
                             {errors.features[index].des_ar.message}
@@ -278,11 +286,17 @@ export default function ContentTab() {
                           <AlignLeft className="w-4 h-4 text-primary" />
                           {t("feature_description")} (EN)
                         </FieldLabel>
-                        <Textarea
-                          {...field}
-                          placeholder="..."
-                          className="min-h-[100px] rounded-xl bg-white border-border/60 resize-none"
-                        />
+                        <div className="min-h-[160px] rounded-xl border overflow-hidden">
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={(val) => {
+                              const html = editorOnChangeToHtml(val);
+                              field.onChange(html);
+                            }}
+                            dir="ltr"
+                            placeholder="..."
+                          />
+                        </div>
                         {errors.features?.[index]?.des_en && (
                           <p className="text-xs text-destructive font-bold mt-1">
                             {errors.features[index].des_en.message}

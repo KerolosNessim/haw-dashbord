@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 
 /**
  * Service to handle saving different types of service sections.
@@ -9,8 +10,7 @@ export const saveImageTextSection = async (serviceId: number, data: any) => {
   const formData = new FormData();
   formData.append("title[ar]", data.title.ar);
   formData.append("title[en]", data.title.en);
-  formData.append("description[ar]", data.description.ar);
-  formData.append("description[en]", data.description.en);
+  appendLocalizedDescriptionHtml(formData, "description", data.description.ar, data.description.en);
   
   if (data.image instanceof File) {
     formData.append("image", data.image);
@@ -33,8 +33,7 @@ export const saveFullSection = async (serviceId: number, data: any) => {
   const formData = new FormData();
   formData.append("title[ar]", data.title.ar);
   formData.append("title[en]", data.title.en);
-  formData.append("description[ar]", data.description.ar);
-  formData.append("description[en]", data.description.en);
+  appendLocalizedDescriptionHtml(formData, "description", data.description.ar, data.description.en);
   
   if (data.image instanceof File) {
     formData.append("image", data.image);

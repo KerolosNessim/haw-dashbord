@@ -11,7 +11,8 @@ import { Pencil, Save, X, Check, Search, Plus, Trash2, Loader2 } from "lucide-re
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { useSettings, useSaveSeo, useDeleteSeo } from "../hooks/useSettings";
 import { toast } from "sonner";
 import type { SeoSettings } from "../types";
@@ -26,6 +27,10 @@ export default function SeoSettingsRepeater() {
 
   const [pages, setPages] = useState<SeoSettings[]>([]);
   const [editingId, setEditingId] = useState<number | string | null>(null);
+  const [editDescriptions, setEditDescriptions] = useState<{
+    description_ar: string;
+    description_en: string;
+  }>({ description_ar: "", description_en: "" });
 
   useEffect(() => {
     if (settingsData?.data?.seo) {
@@ -41,8 +46,8 @@ export default function SeoSettingsRepeater() {
       name_en: formData.get("name_en") as string,
       metaTitle_ar: formData.get("metaTitle_ar") as string,
       metaTitle_en: formData.get("metaTitle_en") as string,
-      description_ar: formData.get("description_ar") as string,
-      description_en: formData.get("description_en") as string,
+      description_ar: localizedHtmlForApi(editDescriptions.description_ar),
+      description_en: localizedHtmlForApi(editDescriptions.description_en),
     };
 
     if (typeof id === "number") {
@@ -53,6 +58,7 @@ export default function SeoSettingsRepeater() {
       await saveSeo(data);
       toast.success(commonT("success_message") || "Saved successfully");
       setEditingId(null);
+      setEditDescriptions({ description_ar: "", description_en: "" });
     } catch (error) {
       toast.error(commonT("error_message") || "Something went wrong");
     }
@@ -85,6 +91,7 @@ export default function SeoSettingsRepeater() {
     };
     setPages([newPage, ...pages]);
     setEditingId(tempId);
+    setEditDescriptions({ description_ar: "", description_en: "" });
   };
 
   if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -150,7 +157,16 @@ export default function SeoSettingsRepeater() {
                               <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">AR</span>
                               <span className="text-sm font-bold text-gray-600">{t("description_ar")}</span>
                            </div>
-                           <Textarea name="description_ar" defaultValue={p.description_ar} className="min-h-[100px] rounded-xl bg-white border-border/40 focus:ring-primary/20 transition-all resize-none" required />
+                           <div className="min-h-[160px] rounded-xl border overflow-hidden bg-white">
+                             <RichTextEditor
+                               value={editDescriptions.description_ar}
+                               onChange={(val) => {
+                                 const html = editorOnChangeToHtml(val);
+                                 setEditDescriptions((d) => ({ ...d, description_ar: html }));
+                               }}
+                               dir="rtl"
+                             />
+                           </div>
                         </div>
 
                         <div className="space-y-4">
@@ -170,7 +186,16 @@ export default function SeoSettingsRepeater() {
                               <span className="text-[10px] font-black bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full uppercase tracking-wider">EN</span>
                               <span className="text-sm font-bold text-gray-600">{t("description_en")}</span>
                            </div>
-                           <Textarea name="description_en" defaultValue={p.description_en} className="min-h-[100px] rounded-xl bg-white border-border/40 focus:ring-primary/20 transition-all resize-none" required />
+                           <div className="min-h-[160px] rounded-xl border overflow-hidden bg-white">
+                             <RichTextEditor
+                               value={editDescriptions.description_en}
+                               onChange={(val) => {
+                                 const html = editorOnChangeToHtml(val);
+                                 setEditDescriptions((d) => ({ ...d, description_en: html }));
+                               }}
+                               dir="ltr"
+                             />
+                           </div>
                         </div>
                       </div>
                       <div className="flex justify-end gap-3 pt-4 border-t">
@@ -179,6 +204,7 @@ export default function SeoSettingsRepeater() {
                             setPages(pages.filter(page => page.id !== p.id));
                           }
                           setEditingId(null);
+                          setEditDescriptions({ description_ar: "", description_en: "" });
                         }} className="h-11 px-6 rounded-xl font-bold text-gray-500">
                           <X className="w-4 h-4 mr-2" />
                           {t("cancel")}
@@ -253,7 +279,13 @@ export default function SeoSettingsRepeater() {
                           size="icon"
                           disabled={isSaving || isDeleting}
                           className="w-11 h-11 rounded-2xl text-muted-foreground hover:text-primary hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all shadow-sm bg-white"
-                          onClick={() => setEditingId(p.id)}
+                          onClick={() => {
+                            setEditingId(p.id);
+                            setEditDescriptions({
+                              description_ar: p.description_ar ?? "",
+                              description_en: p.description_en ?? "",
+                            });
+                          }}
                         >
                           <Pencil className="w-5 h-5" />
                         </Button>

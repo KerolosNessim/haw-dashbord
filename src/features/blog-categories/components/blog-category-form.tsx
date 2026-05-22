@@ -27,6 +27,7 @@ import {
 import { useEffect } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { localizedSlugRequired } from "@/lib/zod-localized-slug";
 import * as z from "zod";
 
 const localizedRequired = z.object({
@@ -39,26 +40,10 @@ const localizedSoft = z.object({
   en: z.string().default(""),
 });
 
-const slugLatinPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-/** Mirrors blog-form schema: the AR slug field accepts Arabic OR Latin lowercase letters + digits. */
-const slugArabicPattern =
-  /^(?:[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:-[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)$/u;
-
-const localizedCategorySlug = z.object({
-  ar: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugArabicPattern.test(s), { message: "validation.slug_format" }),
-  en: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugLatinPattern.test(s), { message: "validation.slug_format" }),
-});
-
 const blogCategorySchema = z.object({
   name: localizedRequired,
   description: localizedSoft,
-  slug: localizedCategorySlug,
+  slug: localizedSlugRequired,
   parent_id: z.string().default(""),
   order_priority: z.coerce.number().int().default(0),
   is_active: z.boolean().default(true),

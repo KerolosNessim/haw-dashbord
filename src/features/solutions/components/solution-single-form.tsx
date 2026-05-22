@@ -5,43 +5,30 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { useCreateSolutionSingle } from "@/features/solutions/hooks/useCreateSolutionSingle";
 import { useUpdateSolutionSingle } from "@/features/solutions/hooks/useUpdateSolutionSingle";
 import type { SolutionFeature } from "@/features/solutions/types";
+import { solutionImageAltFromApi } from "@/features/solutions/services/solution-singles-api";
+import { emptyBilingualImageAlt, type BilingualImageAlt } from "@/lib/bilingual-image-alt";
 import { AlignLeft, Link as LinkIcon, Loader2, Save } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
-
-const slugLatinPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const slugArabicPattern =
-  /^(?:[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:-[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)$/u;
 
 const schema = z.object({
   title_ar: z.string().min(1, { message: "validation.required" }),
   title_en: z.string().min(1, { message: "validation.required" }),
   des_ar: z.string().min(1, { message: "validation.required" }),
   des_en: z.string().min(1, { message: "validation.required" }),
-  slug_ar: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugArabicPattern.test(s), { message: "validation.slug_format" }),
-  slug_en: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugLatinPattern.test(s), { message: "validation.slug_format" }),
+  slug_ar: z.string().min(1, { message: "validation.required" }),
+  slug_en: z.string().min(1, { message: "validation.required" }),
   is_active: z.boolean(),
   image: z.any().optional(),
 });
 
 export type SolutionSingleFormValues = z.infer<typeof schema>;
-
-function richEditorHtml(value: unknown): string {
-  const html = (value as { html?: unknown })?.html;
-  return typeof html === "string" ? html : "";
-}
 
 function normalizeSlug(feature: SolutionFeature | null): { ar: string; en: string } {
   if (!feature?.slug) return { ar: "", en: "" };
@@ -68,6 +55,7 @@ export default function SolutionSingleForm({ mode, initial = null, onSaved }: So
   const { createMutation, isPending: isCreating } = useCreateSolutionSingle();
   const { updateMutation, isPending: isUpdating } = useUpdateSolutionSingle();
   const isPending = isCreating || isUpdating;
+  const [imageAlt, setImageAlt] = useState<BilingualImageAlt>(emptyBilingualImageAlt);
 
   const {
     control,
@@ -106,10 +94,12 @@ export default function SolutionSingleForm({ mode, initial = null, onSaved }: So
         is_active: initial.is_active !== false,
         image: initial.image ?? null,
       });
+      setImageAlt(solutionImageAltFromApi((initial as { image_alt?: unknown }).image_alt));
       return;
     }
 
     if (mode === "create") {
+      setImageAlt(emptyBilingualImageAlt());
       reset({
         title_ar: "",
         title_en: "",
@@ -131,6 +121,7 @@ export default function SolutionSingleForm({ mode, initial = null, onSaved }: So
       description: { ar: data.des_ar, en: data.des_en },
       slug: { ar: data.slug_ar, en: data.slug_en },
       is_active: data.is_active,
+      image_alt: imageAlt,
     };
     const imageFile = data.image instanceof File ? data.image : null;
 
@@ -162,6 +153,9 @@ export default function SolutionSingleForm({ mode, initial = null, onSaved }: So
                 emptyHint={contentT("upload_image")}
                 aspectClassName="aspect-square"
                 disabled={isPending}
+                imageAlt={imageAlt}
+                onImageAltChange={setImageAlt}
+                altKeyPrefix="solutions.content"
               />
             )}
           />
@@ -242,7 +236,10 @@ export default function SolutionSingleForm({ mode, initial = null, onSaved }: So
                     dir="rtl"
                     value={field.value}
                     placeholder={contentT("feature_description")}
-                    onChange={(value: unknown) => field.onChange(richEditorHtml(value))}
+                    onChange={(val) => {
+                      const html = editorOnChangeToHtml(val);
+                      field.onChange(html);
+                    }}
                   />
                   <FieldError errors={[{ message: translateError(errors.des_ar?.message) }]} />
                 </Field>
@@ -261,7 +258,10 @@ export default function SolutionSingleForm({ mode, initial = null, onSaved }: So
                     dir="ltr"
                     value={field.value}
                     placeholder={contentT("feature_description")}
-                    onChange={(value: unknown) => field.onChange(richEditorHtml(value))}
+                    onChange={(val) => {
+                      const html = editorOnChangeToHtml(val);
+                      field.onChange(html);
+                    }}
                   />
                   <FieldError errors={[{ message: translateError(errors.des_en?.message) }]} />
                 </Field>

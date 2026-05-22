@@ -132,27 +132,33 @@
 
 .editor-heading-h1 {
   margin-block: 1em 0.5em;
+  color: var(--editor-heading-h1-color, #111827);
 }
 
 .editor-heading-h2 {
   margin-block: 0.875em 0.4375em;
+  color: var(--editor-heading-h2-color, #a3cd39);
 }
 
 .editor-heading-h3 {
   margin-block: 0.75em 0.375em;
+  color: var(--editor-heading-h3-color, #2563eb);
 }
 
 .editor-heading-h4 {
   margin-block: 0.625em 0.3125em;
+  color: var(--editor-heading-h4-color, #0891b2);
 }
 
 .editor-heading-h5 {
   margin-block: 0.5em 0.25em;
+  color: var(--editor-heading-h5-color, #4b5563);
 }
 
 .editor-heading-h6 {
   font-weight: 600;
   margin-block: 0.5em 0.25em;
+  color: var(--editor-heading-h6-color, #6b7280);
 }
 
 /* Inline font-size from the toolbar must win over heading element styles */
@@ -211,6 +217,36 @@
   color: var(--primary);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+[contenteditable] .editor-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-block: 1rem;
+}
+
+[contenteditable] .editor-table-cell,
+[contenteditable] .editor-table-cell-header,
+[contenteditable] td,
+[contenteditable] th {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+  min-width: 80px;
+}
+
+[contenteditable] .editor-table-cell-header,
+[contenteditable] th {
+  background: color-mix(in oklch, var(--muted) 40%, transparent);
+  font-weight: 700;
+}
+
+[contenteditable] .editor-image,
+[contenteditable] img.editor-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin-block: 0.75rem;
 }
 
 @layer base {

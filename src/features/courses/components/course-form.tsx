@@ -1,4 +1,5 @@
 import { FormImageField } from "@/components/form/form-image-field";
+import { emptyBilingualImageAlt } from "@/lib/bilingual-image-alt";
 import { SmartSlugField } from "@/components/form/smart-slug-field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,36 +23,13 @@ import { useEffect, useId, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { useTranslation } from "react-i18next";
+import { localizedSlugRequired } from "@/lib/zod-localized-slug";
 
 import * as z from "zod";
 
-
-
 const localizedRequired = z.object({
-
   ar: z.string().min(1, { message: "validation.required" }),
-
   en: z.string().min(1, { message: "validation.required" }),
-
-});
-
-
-
-// Matches the bilingual slug regexes used on blog categories: AR slug allows
-// Arabic letters + digits + hyphens; EN slug stays lowercase ASCII.
-const slugLatinPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const slugArabicPattern =
-  /^(?:[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:-[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)$/u;
-
-const localizedCourseSlug = z.object({
-  ar: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugArabicPattern.test(s), { message: "validation.slug_format" }),
-  en: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugLatinPattern.test(s), { message: "validation.slug_format" }),
 });
 
 const courseSchema = z.object({
@@ -60,7 +38,7 @@ const courseSchema = z.object({
 
   description: localizedRequired,
 
-  slug: localizedCourseSlug,
+  slug: localizedSlugRequired,
 
   is_active: z.boolean(),
 
@@ -77,6 +55,8 @@ const courseSchema = z.object({
     en: z.string(),
 
   }),
+
+  image_alt: z.object({ ar: z.string(), en: z.string() }),
 
 });
 
@@ -110,6 +90,8 @@ function defaultValues(): CourseFormValues {
     currency: "",
 
     objectives: { ar: "", en: "" },
+
+    image_alt: emptyBilingualImageAlt(),
 
   };
 
@@ -205,6 +187,8 @@ export default function CourseForm({
 
         objectives: initialValues.objectives ?? { ar: "", en: "" },
 
+        image_alt: initialValues.image_alt ?? emptyBilingualImageAlt(),
+
       });
 
       setCoverFile(null);
@@ -248,6 +232,8 @@ export default function CourseForm({
       currency: data.currency?.trim() ?? "",
 
       objectives: data.objectives,
+
+      image_alt: data.image_alt,
 
     };
 
@@ -621,14 +607,23 @@ export default function CourseForm({
 
         <div className="w-full space-y-2">
 
-          <FormImageField
-            inputId={coverInputId}
-            className="w-full"
-            aspectClassName="aspect-video w-full"
-            label={t("cover_image")}
-            emptyHint={t("choose_image")}
-            value={coverPreviewValue}
-            onChange={(file) => setCoverFile(file)}
+          <Controller
+            name="image_alt"
+            control={control}
+            render={({ field: altField }) => (
+              <FormImageField
+                inputId={coverInputId}
+                className="w-full"
+                aspectClassName="aspect-video w-full"
+                label={t("cover_image")}
+                emptyHint={t("choose_image")}
+                value={coverPreviewValue}
+                onChange={(file) => setCoverFile(file)}
+                imageAlt={altField.value}
+                onImageAltChange={altField.onChange}
+                altKeyPrefix="courses.form"
+              />
+            )}
           />
 
           {mode === "create" && !coverFile && (

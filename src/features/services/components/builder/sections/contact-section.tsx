@@ -2,7 +2,8 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { LocalizedRichTextField } from "../localized-rich-text-field";
 import { Button } from "@/components/ui/button";
 import { PhoneCall, Contact } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,29 +57,17 @@ export default function ContactSection({
           <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-widest">
             {t("arabic")}
           </div>
-          <Controller
-            name="title.ar"
+          <LocalizedRichTextField
             control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>{t("sections.fields.title")}</FieldLabel>
-                <Input
-                  {...field}
-                  dir="rtl"
-                  placeholder={t("placeholders.title")}
-                  className="h-12 rounded-xl bg-background border-border/50 font-bold"
-                />
-                <FieldError
-                  errors={[
-                    {
-                      message: errors.title?.ar?.message
-                        ? t(errors.title.ar.message as any)
-                        : undefined,
-                    },
-                  ]}
-                />
-              </Field>
-            )}
+            name="title.ar"
+            label={t("sections.fields.title")}
+            dir="rtl"
+            placeholder={t("placeholders.title")}
+            errorMessage={
+              errors.title?.ar?.message
+                ? t(errors.title.ar.message as any)
+                : undefined
+            }
           />
           <Controller
             name="description.ar"
@@ -89,7 +78,7 @@ export default function ContactSection({
                 <div className="min-h-[200px] border rounded-2xl overflow-hidden shadow-inner bg-background">
                   <RichTextEditor
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                     dir="rtl"
                     placeholder={t("placeholders.description")}
                   />
@@ -104,29 +93,17 @@ export default function ContactSection({
           <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-widest">
             {t("english")}
           </div>
-          <Controller
-            name="title.en"
+          <LocalizedRichTextField
             control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>{t("sections.fields.title")}</FieldLabel>
-                <Input
-                  {...field}
-                  dir="ltr"
-                  placeholder={t("placeholders.title")}
-                  className="h-12 rounded-xl bg-background border-border/50 font-bold"
-                />
-                <FieldError
-                  errors={[
-                    {
-                      message: errors.title?.en?.message
-                        ? t(errors.title.en.message as any)
-                        : undefined,
-                    },
-                  ]}
-                />
-              </Field>
-            )}
+            name="title.en"
+            label={t("sections.fields.title")}
+            dir="ltr"
+            placeholder={t("placeholders.title")}
+            errorMessage={
+              errors.title?.en?.message
+                ? t(errors.title.en.message as any)
+                : undefined
+            }
           />
           <Controller
             name="description.en"
@@ -137,7 +114,7 @@ export default function ContactSection({
                 <div className="min-h-[200px] border rounded-2xl overflow-hidden shadow-inner bg-background">
                   <RichTextEditor
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
                     dir="ltr"
                     placeholder={t("placeholders.description")}
                   />

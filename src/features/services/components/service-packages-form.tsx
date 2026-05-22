@@ -5,8 +5,8 @@ import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Package, ListChecks, ImagePlus, X } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
 import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { LocalizedDescriptionFields } from "@/features/shared/components/localized-description-fields";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -173,28 +173,14 @@ const ServicePackagesForm = forwardRef<
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Controller
-          name="description.ar"
-          control={control}
-          render={({ field }) => (
-            <Field>
-              <FieldLabel>{t("packages_description")} (AR)</FieldLabel>
-              <Textarea {...field} dir="rtl" className="min-h-[80px] rounded-xl" />
-            </Field>
-          )}
-        />
-        <Controller
-          name="description.en"
-          control={control}
-          render={({ field }) => (
-            <Field>
-              <FieldLabel>{t("packages_description")} (EN)</FieldLabel>
-              <Textarea {...field} dir="ltr" className="min-h-[80px] rounded-xl" />
-            </Field>
-          )}
-        />
-      </div>
+      <LocalizedDescriptionFields
+        control={control}
+        nameAr="description.ar"
+        nameEn="description.en"
+        labelAr={`${t("packages_description")} (AR)`}
+        labelEn={`${t("packages_description")} (EN)`}
+        minHeightClass="min-h-[160px]"
+      />
 
       <div className="space-y-6">
         <h3 className="flex items-center gap-2 px-2 text-xl font-bold">

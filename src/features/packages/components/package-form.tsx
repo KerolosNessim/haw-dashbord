@@ -2,7 +2,7 @@ import { SmartSlugField } from "@/components/form/smart-slug-field";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { LocalizedDescriptionFields } from "@/features/shared/components/localized-description-fields";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -11,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BilingualImageAltFields } from "@/components/form/bilingual-image-alt-fields";
+import { emptyBilingualImageAlt } from "@/lib/bilingual-image-alt";
 import { usePackageCategories } from "@/features/package-categories/hooks/usePackageCategories";
 import { useSavePackage } from "@/features/packages/hooks/useSavePackage";
 import type { PackageFormValues } from "@/features/packages/types";
@@ -20,6 +22,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { localizedSlugRequired } from "@/lib/zod-localized-slug";
+import { localizedRichTextRequired, richTextValueToString } from "@/lib/zod-rich-text";
 import * as z from "zod";
 
 function normalizeSelectLabel(value: string | undefined) {
@@ -31,37 +35,28 @@ const localizedRequired = z.object({
   en: z.string().min(1, { message: "validation.required" }),
 });
 
-const slugLatinPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const slugArabicPattern =
-  /^(?:[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:-[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)$/u;
-
-const localizedPackageSlug = z.object({
-  ar: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugArabicPattern.test(s), { message: "validation.slug_format" }),
-  en: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugLatinPattern.test(s), { message: "validation.slug_format" }),
-});
-
 const featureRowSchema = z.object({
   title: localizedRequired,
   is_included: z.boolean(),
   sort_order: z.coerce.number().int().min(0),
 });
 
+const imageAltSchema = z.object({
+  ar: z.string(),
+  en: z.string(),
+});
+
 const packageFormSchema = z.object({
   package_category_id: z.string().min(1, { message: "validation.required" }),
   title: localizedRequired,
-  description: localizedRequired,
+  description: localizedRichTextRequired,
   button_text: localizedRequired,
-  slug: localizedPackageSlug,
+  slug: localizedSlugRequired,
   is_featured: z.boolean(),
   is_active: z.boolean(),
   price: z.string().optional(),
   currency: z.string().optional(),
+  icon_alt: imageAltSchema,
   features: z.array(featureRowSchema),
 });
 
@@ -78,6 +73,7 @@ function defaultFormValues(): PackageFormValues {
     is_active: true,
     price: "",
     currency: "",
+    icon_alt: emptyBilingualImageAlt(),
     features: [],
   };
 }
@@ -112,10 +108,13 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
     setValue,
     watch,
     trigger,
+    clearErrors,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(packageFormSchema),
     defaultValues: defaultFormValues(),
+    mode: "onTouched",
+    reValidateMode: "onChange",
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -220,12 +219,18 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
   };
 
   const onSubmit = (data: FormValues) => {
+    const slugAr = data.slug.ar.trim() || data.title.ar.trim();
+    const slugEn = data.slug.en.trim() || data.title.en.trim();
+
     const payload: PackageFormValues = {
       package_category_id: data.package_category_id,
       title: data.title,
-      description: data.description,
+      description: {
+        ar: richTextValueToString(data.description.ar),
+        en: richTextValueToString(data.description.en),
+      },
       button_text: data.button_text,
-      slug: { ar: data.slug.ar.trim(), en: data.slug.en.trim() },
+      slug: { ar: slugAr, en: slugEn },
       is_featured: data.is_featured,
       is_active: data.is_active,
       price: data.price ?? "",
@@ -308,30 +313,16 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <Controller
-            name="description.ar"
-            control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>{t("short_desc_ar")}</FieldLabel>
-                <Textarea {...field} dir="rtl" className="min-h-[100px] resize-none rounded-xl bg-muted/10" />
-                <FieldError errors={[{ message: translateError(errors.description?.ar?.message) }]} />
-              </Field>
-            )}
-          />
-          <Controller
-            name="description.en"
-            control={control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>{t("short_desc_en")}</FieldLabel>
-                <Textarea {...field} dir="ltr" className="min-h-[100px] resize-none rounded-xl bg-muted/10" />
-                <FieldError errors={[{ message: translateError(errors.description?.en?.message) }]} />
-              </Field>
-            )}
-          />
-        </div>
+        <LocalizedDescriptionFields
+          control={control}
+          nameAr="description.ar"
+          nameEn="description.en"
+          labelAr={t("short_desc_ar")}
+          labelEn={t("short_desc_en")}
+          translateError={translateError}
+          clearErrors={clearErrors}
+          trigger={trigger}
+        />
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Controller
@@ -393,13 +384,13 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
           />
         </div>
 
-        <Field>
-          <FieldLabel>{t("icon_upload")}</FieldLabel>
+        <Field className="space-y-4">
+          <FieldLabel>{t("package_image")}</FieldLabel>
           <div className="flex flex-wrap items-center gap-3">
             <Button type="button" variant="outline" className="rounded-xl" asChild>
               <label className="cursor-pointer">
                 <Upload className="mr-2 inline h-4 w-4" />
-                {t("choose_icon")}
+                {t("choose_package_image")}
                 <input type="file" accept="image/*,.svg" className="hidden" onChange={onFile} />
               </label>
             </Button>
@@ -410,8 +401,26 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
             )}
           </div>
           {iconPreview && (
-            <img src={iconPreview} alt="" className="mt-3 h-16 w-16 rounded-full border object-cover" />
+            <img
+              src={iconPreview}
+              alt={watch("icon_alt.ar") || watch("icon_alt.en") || t("package_image")}
+              className="mt-1 max-h-32 max-w-full rounded-xl border object-contain"
+            />
           )}
+          <Controller
+            name="icon_alt"
+            control={control}
+            render={({ field }) => (
+              <BilingualImageAltFields
+                value={field.value}
+                onChange={field.onChange}
+                keyPrefix="packages.form"
+                arLabelKey="image_alt_ar"
+                enLabelKey="image_alt_en"
+                placeholderKey="image_alt_placeholder"
+              />
+            )}
+          />
         </Field>
 
         <div className="flex flex-wrap items-center gap-8">

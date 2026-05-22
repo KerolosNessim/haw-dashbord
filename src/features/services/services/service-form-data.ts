@@ -7,6 +7,7 @@ import type {
   ServiceSectionsPayload,
   ToolsSectionData,
 } from "../service-section-types";
+import { htmlForMultipartApi } from "@/lib/html-for-multipart-api";
 import {
   appendIndexedField,
   appendIndexedLocalized,
@@ -17,8 +18,28 @@ import {
   htmlFromUnknown,
 } from "../utils/form-data-helpers";
 
+function appendSectionBlockSortOrder(
+  fd: FormData,
+  prefix: string,
+  sortOrder?: number,
+) {
+  if (sortOrder == null) return;
+  fd.append(`${prefix}_sort_order`, String(sortOrder));
+}
+
+function appendLocalizedContentTitle(
+  fd: FormData,
+  prefix: string,
+  title: { ar?: string; en?: string } | undefined,
+) {
+  if (!title) return;
+  appendLocalizedHtml(fd, prefix, title.ar, "ar");
+  appendLocalizedHtml(fd, prefix, title.en, "en");
+}
+
 function appendBenefits(fd: FormData, data: BenefitsSectionData) {
-  appendLocalized(fd, "benefits_title", data.title);
+  appendSectionBlockSortOrder(fd, "benefits", data.sort_order);
+  appendLocalizedContentTitle(fd, "benefits_title", data.title);
   if (data.description) {
     appendLocalizedHtml(fd, "benefits_description", data.description.ar, "ar");
     appendLocalizedHtml(fd, "benefits_description", data.description.en, "en");
@@ -26,39 +47,42 @@ function appendBenefits(fd: FormData, data: BenefitsSectionData) {
   if (data.image instanceof File) {
     fd.append("benefits_image", data.image);
   }
+  if (data.image_alt) {
+    appendLocalized(fd, "benefits_image_alt", data.image_alt);
+  }
 }
 
 function appendListSection(
   fd: FormData,
   prefix: string,
   data: ListSectionData,
-  options?: { itemLocalizedFields?: string[] },
+  options?: { itemHtmlFields?: string[] },
 ) {
-  appendLocalized(fd, `${prefix}_title`, data.title);
-  appendLocalized(fd, `${prefix}_description`, data.description);
+  appendSectionBlockSortOrder(fd, prefix, data.sort_order);
+  appendLocalizedContentTitle(fd, `${prefix}_title`, data.title);
+  if (data.description) {
+    appendLocalizedHtml(fd, `${prefix}_description`, data.description.ar, "ar");
+    appendLocalizedHtml(fd, `${prefix}_description`, data.description.en, "en");
+  }
   if (data.image instanceof File) {
     fd.append(`${prefix}_image`, data.image);
   }
-  const extraFields = options?.itemLocalizedFields ?? [];
+  if (data.image_alt) {
+    appendLocalized(fd, `${prefix}_image_alt`, data.image_alt);
+  }
+  const itemHtmlFields = options?.itemHtmlFields ?? [];
   data.items?.forEach((item, index) => {
-    appendIndexedLocalized(fd, prefix, index, "title", item.title);
-    appendIndexedLocalized(fd, prefix, index, "description", {
-      ar: htmlFromUnknown(
-        typeof item.description === "object" && item.description !== null
-          ? (item.description as { ar?: unknown }).ar
-          : item.description,
-      ),
-      en: htmlFromUnknown(
-        typeof item.description === "object" && item.description !== null
-          ? (item.description as { en?: unknown }).en
-          : item.description,
-      ),
-    });
-    for (const field of extraFields) {
+    appendIndexedLocalizedHtml(fd, prefix, index, "title", item.title);
+    const itemDesc =
+      item.description && typeof item.description === "object"
+        ? (item.description as { ar?: unknown; en?: unknown })
+        : undefined;
+    appendIndexedLocalizedHtml(fd, prefix, index, "description", itemDesc);
+    for (const field of itemHtmlFields) {
       const value = item[field as keyof typeof item] as
         | { ar?: string; en?: string }
         | undefined;
-      appendIndexedLocalized(fd, prefix, index, field, value);
+      appendIndexedLocalizedHtml(fd, prefix, index, field, value);
     }
     appendIndexedField(fd, prefix, index, "sort_order", item.sort_order ?? index + 1);
     if (item.image instanceof File) {
@@ -72,31 +96,35 @@ function appendSteps(fd: FormData, data: ListSectionData) {
 }
 
 function appendAudits(fd: FormData, data: ListSectionData) {
-  appendListSection(fd, "audits", data, { itemLocalizedFields: ["button_text"] });
+  appendListSection(fd, "audits", data, { itemHtmlFields: ["button_text"] });
 }
 
 function appendFaqs(fd: FormData, data: FaqSectionData) {
-  appendLocalized(fd, "faqs_title", data.title);
-  appendLocalized(fd, "faqs_description", data.description);
+  appendSectionBlockSortOrder(fd, "faqs", data.sort_order);
+  if (data.title) {
+    appendLocalizedHtml(fd, "faqs_title", data.title.ar, "ar");
+    appendLocalizedHtml(fd, "faqs_title", data.title.en, "en");
+  }
+  if (data.description) {
+    appendLocalizedHtml(fd, "faqs_description", data.description.ar, "ar");
+    appendLocalizedHtml(fd, "faqs_description", data.description.en, "en");
+  }
   data.items?.forEach((item, index) => {
-    appendIndexedLocalized(fd, "faqs", index, "question", item.question ?? item.title);
-    const answerAr = item.answer
-      ? htmlFromUnknown(item.answer.ar)
-      : htmlFromUnknown(item.description?.ar);
-    const answerEn = item.answer
-      ? htmlFromUnknown(item.answer.en)
-      : htmlFromUnknown(item.description?.en);
-    if (answerAr) fd.append(`faqs[${index}][answer][ar]`, answerAr);
-    if (answerEn) fd.append(`faqs[${index}][answer][en]`, answerEn);
+    appendIndexedLocalizedHtml(fd, "faqs", index, "question", item.question);
+    appendIndexedLocalizedHtml(fd, "faqs", index, "answer", item.answer);
     appendIndexedField(fd, "faqs", index, "sort_order", item.sort_order ?? index + 1);
   });
 }
 
 function appendOfferings(fd: FormData, data: ListSectionData) {
-  appendLocalized(fd, "offerings_title", data.title);
-  appendLocalized(fd, "offerings_description", data.description);
+  appendSectionBlockSortOrder(fd, "offerings", data.sort_order);
+  appendLocalizedContentTitle(fd, "offerings_title", data.title);
+  if (data.description) {
+    appendLocalizedHtml(fd, "offerings_description", data.description.ar, "ar");
+    appendLocalizedHtml(fd, "offerings_description", data.description.en, "en");
+  }
   data.items?.forEach((item, index) => {
-    appendIndexedLocalized(fd, "offerings", index, "title", item.title);
+    appendIndexedLocalizedHtml(fd, "offerings", index, "title", item.title);
     const desc =
       item.description && typeof item.description === "object"
         ? (item.description as { ar?: unknown; en?: unknown })
@@ -107,17 +135,25 @@ function appendOfferings(fd: FormData, data: ListSectionData) {
 }
 
 function appendTools(fd: FormData, data: ToolsSectionData) {
-  appendLocalized(fd, "tools_title", data.title);
+  appendSectionBlockSortOrder(fd, "tools", data.sort_order);
+  appendLocalizedContentTitle(fd, "tools_title", data.title);
   appendLocalizedHtml(fd, "tools_description", data.description?.ar, "ar");
   appendLocalizedHtml(fd, "tools_description", data.description?.en, "en");
-  if (data.sub_title) appendLocalized(fd, "tools_sub_title", data.sub_title);
+  if (data.sub_title) {
+    appendLocalizedHtml(fd, "tools_sub_title", data.sub_title.ar, "ar");
+    appendLocalizedHtml(fd, "tools_sub_title", data.sub_title.en, "en");
+  }
   appendLocalizedHtml(fd, "tools_sub_description", data.sub_description?.ar, "ar");
   appendLocalizedHtml(fd, "tools_sub_description", data.sub_description?.en, "en");
 }
 
 function appendCtas(fd: FormData, data: Record<string, unknown>) {
+  const sortOrder = data.sort_order;
+  if (sortOrder != null) {
+    appendSectionBlockSortOrder(fd, "ctas", Number(sortOrder));
+  }
   const title = data.title as { ar?: string; en?: string } | undefined;
-  if (title) appendLocalized(fd, "ctas_title", { ar: title.ar ?? "", en: title.en ?? "" });
+  if (title) appendLocalizedContentTitle(fd, "ctas_title", title);
   if (data.phone_number) fd.append("ctas_phone_number", String(data.phone_number));
   if (data.phone) fd.append("ctas_phone_number", String(data.phone));
   appendLocalizedHtml(fd, "ctas_description", (data.description as { ar?: unknown })?.ar, "ar");
@@ -125,10 +161,14 @@ function appendCtas(fd: FormData, data: Record<string, unknown>) {
 }
 
 function appendPackages(fd: FormData, data: PackagesSectionData) {
-  appendLocalized(fd, "packages_title", data.title);
-  appendLocalized(fd, "packages_description", data.description);
+  appendSectionBlockSortOrder(fd, "packages", data.sort_order);
+  appendLocalizedContentTitle(fd, "packages_title", data.title);
+  if (data.description) {
+    appendLocalizedHtml(fd, "packages_description", data.description.ar, "ar");
+    appendLocalizedHtml(fd, "packages_description", data.description.en, "en");
+  }
   data.items?.forEach((item, index) => {
-    appendIndexedLocalized(fd, "packages", index, "title", item.title);
+    appendIndexedLocalizedHtml(fd, "packages", index, "title", item.title);
     appendIndexedLocalizedHtml(fd, "packages", index, "description", item.description);
     appendIndexedLocalized(fd, "packages", index, "image_alt", item.image_alt);
     if (item.image instanceof File) {
@@ -157,8 +197,14 @@ function appendPackages(fd: FormData, data: PackagesSectionData) {
 function appendBasicSocialAndMedia(fd: FormData, basic: BasicInfoValues) {
   basic.package_ids?.forEach((id) => fd.append("package_ids[]", id));
 
-  appendLocalized(fd, "og_title", basic.og_title);
-  appendLocalized(fd, "og_description", basic.og_description);
+  if (basic.og_title) {
+    appendLocalizedHtml(fd, "og_title", basic.og_title.ar, "ar");
+    appendLocalizedHtml(fd, "og_title", basic.og_title.en, "en");
+  }
+  if (basic.og_description) {
+    appendLocalizedHtml(fd, "og_description", basic.og_description.ar, "ar");
+    appendLocalizedHtml(fd, "og_description", basic.og_description.en, "en");
+  }
   appendScalar(fd, "og_type", basic.og_type);
   if (basic.og_image instanceof File) {
     fd.append("og_image", basic.og_image);
@@ -167,8 +213,14 @@ function appendBasicSocialAndMedia(fd: FormData, basic: BasicInfoValues) {
   }
 
   appendScalar(fd, "twitter_card", basic.twitter_card);
-  appendLocalized(fd, "twitter_title", basic.twitter_title);
-  appendLocalized(fd, "twitter_description", basic.twitter_description);
+  if (basic.twitter_title) {
+    appendLocalizedHtml(fd, "twitter_title", basic.twitter_title.ar, "ar");
+    appendLocalizedHtml(fd, "twitter_title", basic.twitter_title.en, "en");
+  }
+  if (basic.twitter_description) {
+    appendLocalizedHtml(fd, "twitter_description", basic.twitter_description.ar, "ar");
+    appendLocalizedHtml(fd, "twitter_description", basic.twitter_description.en, "en");
+  }
   if (basic.twitter_image instanceof File) {
     fd.append("twitter_image", basic.twitter_image);
   } else if (basic.twitter_image) {
@@ -183,10 +235,16 @@ export function buildServicePageFormData(
   const fd = new FormData();
 
   appendLocalized(fd, "slug", basic.slug);
-  appendLocalized(fd, "title", basic.title);
-  appendLocalized(fd, "description", basic.description);
+  appendLocalizedHtml(fd, "title", basic.title?.ar, "ar");
+  appendLocalizedHtml(fd, "title", basic.title?.en, "en");
+  if (basic.description) {
+    appendLocalizedHtml(fd, "description", basic.description.ar, "ar");
+    appendLocalizedHtml(fd, "description", basic.description.en, "en");
+  }
 
-  basic.country_ids.forEach((id) => fd.append("country_ids[]", id));
+  basic.country_ids.forEach((id, index) =>
+    fd.append(`country_ids[${index}]`, id),
+  );
 
   fd.append("is_active", basic.is_active ? "1" : "0");
   fd.append("show_footer", basic.show_footer ? "1" : "0");
@@ -194,21 +252,23 @@ export function buildServicePageFormData(
   if (basic.highlight_description?.ar) {
     fd.append(
       "highlight_description[ar]",
-      htmlFromUnknown(basic.highlight_description.ar),
+      htmlForMultipartApi(htmlFromUnknown(basic.highlight_description.ar)),
     );
   }
   if (basic.highlight_description?.en) {
     fd.append(
       "highlight_description[en]",
-      htmlFromUnknown(basic.highlight_description.en),
+      htmlForMultipartApi(htmlFromUnknown(basic.highlight_description.en)),
     );
   }
 
   appendLocalizedHtml(fd, "inside_desc", basic.inside_desc?.ar, "ar");
   appendLocalizedHtml(fd, "inside_desc", basic.inside_desc?.en, "en");
 
-  appendLocalized(fd, "meta_title", basic.meta_title);
-  appendLocalized(fd, "meta_description", basic.meta_description);
+  appendLocalizedHtml(fd, "meta_title", basic.meta_title?.ar, "ar");
+  appendLocalizedHtml(fd, "meta_title", basic.meta_title?.en, "en");
+  appendLocalizedHtml(fd, "meta_description", basic.meta_description?.ar, "ar");
+  appendLocalizedHtml(fd, "meta_description", basic.meta_description?.en, "en");
   appendLocalized(fd, "image_alt", basic.image_alt);
 
   if (basic.image.ar instanceof File) fd.append("image[ar]", basic.image.ar);

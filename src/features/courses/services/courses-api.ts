@@ -10,6 +10,8 @@
  * `slug[ar]` / `slug[en]` (matching blog-categories).
  */
 import { api } from "@/lib/api";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
+import { appendBilingualImageAlt, bilingualImageAltFromApi } from "@/lib/bilingual-image-alt";
 import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
 import type {
   CourseDetailForForm,
@@ -86,10 +88,17 @@ function objectivesFormFromApi(raw: unknown): { ar: string; en: string } {
 
 /** JSON array `{ title: { ar, en } }[]` for course create/update multipart field `objectives`. */
 function objectivesPayloadFromForm(obj: { ar: string; en: string }): string {
-  const ar = obj.ar.trim();
-  const en = obj.en.trim();
+  const ar = localizedHtmlForApi(obj.ar);
+  const en = localizedHtmlForApi(obj.en);
   const arr = ar || en ? [{ title: { ar, en } }] : [];
   return JSON.stringify(arr);
+}
+
+function descriptionPayloadFromForm(desc: { ar: string; en: string }): string {
+  return JSON.stringify({
+    ar: localizedHtmlForApi(desc.ar),
+    en: localizedHtmlForApi(desc.en),
+  });
 }
 
 function readComparePriceFromRecord(r: Record<string, unknown>): string {
@@ -303,6 +312,7 @@ export function recordToCourseFormValues(raw: Record<string, unknown>): CourseDe
       compare_price: readComparePriceFromRecord(raw),
       currency: stringField(raw, ["currency"]),
       objectives: objectivesFormFromApi(objectivesRaw),
+      image_alt: bilingualImageAltFromApi(raw.image_alt),
     },
     coverUrl: coverFromRecord(raw),
   };
@@ -410,7 +420,7 @@ export function courseValuesToFormData(values: CourseFormValues, imageFile: File
   fd.append("slug[ar]", slug.ar);
   fd.append("slug[en]", slug.en);
   fd.append("is_active", values.is_active ? "1" : "0");
-  fd.append("description", JSON.stringify(values.description));
+  fd.append("description", descriptionPayloadFromForm(values.description));
   if (values.price.trim()) fd.append("price", values.price.trim());
   if (values.compare_price.trim()) fd.append("compare_at_price", values.compare_price.trim());
   if (values.currency.trim()) fd.append("currency", values.currency.trim());
@@ -425,6 +435,7 @@ export function courseValuesToFormData(values: CourseFormValues, imageFile: File
   if (imageFile instanceof File) {
     fd.append("image", imageFile);
   }
+  appendBilingualImageAlt(fd, "image_alt", values.image_alt);
   return fd;
 }
 
@@ -434,11 +445,15 @@ function courseUpdateJsonBody(values: CourseFormValues): Record<string, unknown>
     title: values.title,
     slug,
     is_active: values.is_active ? 1 : 0,
-    description: values.description,
+    description: {
+      ar: localizedHtmlForApi(values.description.ar),
+      en: localizedHtmlForApi(values.description.en),
+    },
   };
   if (values.price.trim()) body.price = values.price.trim();
   if (values.compare_price.trim()) body.compare_at_price = values.compare_price.trim();
   if (values.currency.trim()) body.currency = values.currency.trim();
+  body.image_alt = values.image_alt;
 
   const objJson = objectivesPayloadFromForm(values.objectives);
   if (objJson !== "[]") {

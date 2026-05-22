@@ -1,7 +1,10 @@
 "use client";
 
+import { BilingualImageAltFields } from "@/components/form/bilingual-image-alt-fields";
 import { Button } from "@/components/ui/button";
 import { FieldLabel } from "@/components/ui/field";
+import type { BilingualImageAlt } from "@/lib/bilingual-image-alt";
+import { resolveMediaUrl } from "@/lib/resolve-media-url";
 import { cn } from "@/lib/utils";
 import { ImageIcon, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -12,6 +15,11 @@ export type FormImageFieldProps = {
   label: React.ReactNode;
   value: string | File | null;
   onChange: (file: File | null) => void;
+  /** Bilingual alt (AR/EN). When set with `onImageAltChange`, alt inputs render below the picker. */
+  imageAlt?: BilingualImageAlt;
+  onImageAltChange?: (alt: BilingualImageAlt) => void;
+  /** i18n key prefix for alt labels (default `common.form`). */
+  altKeyPrefix?: string;
   emptyHint?: React.ReactNode;
   /** Tailwind aspect class, e.g. aspect-square or aspect-video */
   aspectClassName?: string;
@@ -28,6 +36,9 @@ export function FormImageField({
   label,
   value,
   onChange,
+  imageAlt,
+  onImageAltChange,
+  altKeyPrefix = "common.form",
   emptyHint,
   aspectClassName = "aspect-square",
   className,
@@ -45,7 +56,11 @@ export function FormImageField({
   }, [value]);
 
   const previewSrc =
-    value instanceof File ? objectUrl : typeof value === "string" && value.trim() ? value.trim() : null;
+    value instanceof File
+      ? objectUrl
+      : typeof value === "string" && value.trim()
+        ? resolveMediaUrl(value.trim())
+        : null;
 
   const openPicker = () => {
     if (disabled) return;
@@ -79,7 +94,12 @@ export function FormImageField({
       >
         {previewSrc ? (
           <>
-            <img src={previewSrc} className="h-full w-full object-cover" alt="" />
+            <img
+              src={previewSrc}
+              className="h-full w-full object-cover"
+              alt=""
+              referrerPolicy="no-referrer"
+            />
             <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover/img:opacity-100">
               <Button
                 type="button"
@@ -116,6 +136,15 @@ export function FormImageField({
           }}
         />
       </div>
+
+      {imageAlt && onImageAltChange ? (
+        <BilingualImageAltFields
+          value={imageAlt}
+          onChange={onImageAltChange}
+          keyPrefix={altKeyPrefix}
+          disabled={disabled}
+        />
+      ) : null}
     </div>
   );
 }

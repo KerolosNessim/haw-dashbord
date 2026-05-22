@@ -20,6 +20,7 @@ import CategoriesPage from "./pages/categories/CategoriesPage"
 import CreateCategoryPage from "./pages/categories/CreateCategoryPage"
 
 import SettingsPage from "./pages/Settings"
+import BackupExportPage from "./pages/backup-export/BackupExportPage"
 import HomeContentPage from "./pages/home-content/HomeContentPage"
 import WhyChooseUsPage from "./pages/why-choose-us/WhyChooseUsPage"
 import SolutionCategoriesPage from "./pages/solutions/SolutionCategoriesPage"
@@ -132,6 +133,10 @@ const router = createBrowserRouter([
       {
         path: "/settings",
         element: <SettingsPage />,
+      },
+      {
+        path: "/backup-export",
+        element: <BackupExportPage />,
       },
       {
         path: "/faq",

@@ -1,3 +1,4 @@
+import { pickLocalizedImageUrls } from "@/lib/resolve-media-url";
 import type { LocalizedField, LocalizedString, Service, ServiceImageAlt, ServiceImageUrls } from "../type";
 
 export function pickLocalizedField(field: LocalizedField | null | undefined): LocalizedString {
@@ -6,14 +7,11 @@ export function pickLocalizedField(field: LocalizedField | null | undefined): Lo
   return { ar: field.ar ?? "", en: field.en ?? "" };
 }
 
-export function pickServiceImage(field: unknown): ServiceImageUrls {
-  if (!field) return { ar: null, en: null };
-  if (typeof field === "string") return { ar: field, en: null };
-  if (typeof field === "object" && field !== null) {
-    const o = field as { ar?: string | null; en?: string | null };
-    return { ar: o.ar ?? null, en: o.en ?? null };
-  }
-  return { ar: null, en: null };
+export function pickServiceImage(
+  field: unknown,
+  imagesFallback?: unknown,
+): ServiceImageUrls {
+  return pickLocalizedImageUrls(field, imagesFallback);
 }
 
 export function pickServiceImageAlt(field: unknown): ServiceImageAlt {
@@ -48,7 +46,7 @@ export function normalizeService(raw: Record<string, unknown>): Service {
   return {
     id: Number(raw.id),
     slug: pickLocalizedField(raw.slug as LocalizedField),
-    image: pickServiceImage(raw.image),
+    image: pickServiceImage(raw.image, raw.images),
     image_alt: pickServiceImageAlt(raw.image_alt ?? null),
     title: pickLocalizedField(raw.title as LocalizedField),
     description: pickLocalizedField(raw.description as LocalizedField),

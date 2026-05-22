@@ -14,7 +14,8 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useAboutUs } from "../hooks/useAboutUs";
 import { useEffect } from "react";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 
 interface WhyUsFormValues {
   title_ar: string;
@@ -72,21 +73,16 @@ export default function WhyUsTab() {
   }, [aboutUsData, reset]);
 
   const onSubmit = (values: WhyUsFormValues) => {
-    const extractHtml = (val: unknown) =>
-      typeof val === "object" && val !== null && "html" in val
-        ? (val as { html: string }).html
-        : (val as string);
-
     updateWhyUsSection({
       why_us_title: { ar: values.title_ar, en: values.title_en },
       why_us_description: { 
-        ar: extractHtml(values.description_ar), 
-        en: extractHtml(values.description_en) 
+        ar: localizedHtmlForApi(values.description_ar), 
+        en: localizedHtmlForApi(values.description_en) 
       },
       why_us_values_title: { ar: values.values_title_ar, en: values.values_title_en },
       why_us_values_description: { 
-        ar: extractHtml(values.values_description_ar), 
-        en: extractHtml(values.values_description_en) 
+        ar: localizedHtmlForApi(values.values_description_ar), 
+        en: localizedHtmlForApi(values.values_description_en) 
       },
       why_us_image: values.image instanceof File ? values.image : undefined,
     });
@@ -171,7 +167,10 @@ export default function WhyUsTab() {
                     </FieldLabel>
                     <RichTextEditor
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        field.onChange(html);
+                      }}
                       dir="rtl"
                       placeholder={t("sec_des")}
                     />
@@ -188,7 +187,10 @@ export default function WhyUsTab() {
                     </FieldLabel>
                     <RichTextEditor
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        field.onChange(html);
+                      }}
                       dir="ltr"
                       placeholder={t("sec_des")}
                     />
@@ -251,7 +253,10 @@ export default function WhyUsTab() {
                     </FieldLabel>
                     <RichTextEditor
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        field.onChange(html);
+                      }}
                       dir="rtl"
                       placeholder={t("sec_des")}
                     />
@@ -268,7 +273,10 @@ export default function WhyUsTab() {
                     </FieldLabel>
                     <RichTextEditor
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        field.onChange(html);
+                      }}
                       dir="ltr"
                       placeholder={t("sec_des")}
                     />

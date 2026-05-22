@@ -12,10 +12,25 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { LinkNode } from "@lexical/link";
 import { ListNode, ListItemNode } from "@lexical/list";
+import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
+import { ImageNode } from "./editor-image-node";
+import { DivNode } from "./editor-div-node";
+import { SpanNode } from "./editor-span-node";
+import { EditorImagePlugin, EditorTablePlugin } from "./editor-plugins";
 import { $generateHtmlFromNodes, $generateNodesFromDOM } from "@lexical/html";
-import { useEffect, useRef, type MutableRefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MutableRefObject,
+} from "react";
 import Toolbar from "./tool-bar";
 import { cn } from "@/lib/utils";
+import { headingColorCssVariables } from "../lib/editor-colors";
+import { editorHtmlImportMap } from "../lib/editor-html-import";
 
 export type EditorChangeValue = {
   html: string;
@@ -52,6 +67,7 @@ const editorTheme = {
   rtl: "rtl text-right",
   placeholder: "editor-placeholder",
   paragraph: "editor-paragraph leading-normal min-h-[1.5em]",
+  div: "editor-div block leading-normal min-h-[1.5em]",
   quote: "editor-quote border-s-4 border-gray-300 ps-4 italic my-2",
   heading: {
     h1: "editor-heading-h1",
@@ -78,6 +94,10 @@ const editorTheme = {
     code: "bg-gray-100 p-1 rounded font-mono text-sm",
   },
   link: "text-primary underline underline-offset-2 cursor-pointer",
+  image: "editor-image-wrapper block my-3",
+  table: "editor-table w-full border-collapse my-4",
+  tableCell: "editor-table-cell border border-border px-3 py-2 align-top min-w-[80px]",
+  tableCellHeader: "editor-table-cell-header border border-border px-3 py-2 bg-muted/40 font-bold",
 };
 
 type Props = {
@@ -85,6 +105,9 @@ type Props = {
   onChange?: (val: unknown) => void;
   placeholder?: string;
   dir?: "ltr" | "rtl";
+  /** Unique per mount — avoids Lexical state clashes when two editors are on one page. */
+  editorNamespace?: string;
+  autoFocus?: boolean;
 };
 
 export default function RichTextEditor({
@@ -92,14 +115,36 @@ export default function RichTextEditor({
   onChange,
   placeholder = "Write...",
   dir = "ltr",
+  editorNamespace = "editor",
+  autoFocus = false,
 }: Props) {
   const skipNextLoadRef = useRef(false);
+  const [headingColorVars, setHeadingColorVars] = useState(() => headingColorCssVariables());
+  const editorSurfaceStyle = useMemo(
+    () => headingColorVars as CSSProperties,
+    [headingColorVars],
+  );
 
   const config = {
-    namespace: "editor",
+    namespace: editorNamespace,
     theme: editorTheme,
-    nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode],
+    nodes: [
+      HeadingNode,
+      QuoteNode,
+      ListNode,
+      ListItemNode,
+      LinkNode,
+      TableNode,
+      TableRowNode,
+      TableCellNode,
+      ImageNode,
+      DivNode,
+      SpanNode,
+    ],
     onError: console.error,
+    html: {
+      import: editorHtmlImportMap,
+    },
     editorState: () => {
       if (!value) return;
       // If it's the object structure we return in onChange
@@ -118,11 +163,12 @@ export default function RichTextEditor({
 
   return (
     <div
-      className="group border rounded-xl bg-white shadow-sm overflow-hidden flex flex-col  transition-all"
+      className="group border rounded-xl bg-white shadow-sm overflow-hidden flex flex-col transition-all"
       dir={dir}
+      style={editorSurfaceStyle}
     >
       <LexicalComposer initialConfig={config}>
-        <Toolbar />
+        <Toolbar onHeadingColorsChange={() => setHeadingColorVars(headingColorCssVariables())} />
 
         <div className="relative flex-1">
           <RichTextPlugin
@@ -153,30 +199,72 @@ export default function RichTextEditor({
         <HistoryPlugin />
         <ListPlugin />
         <LinkPlugin />
-        <AutoFocusPlugin />
+        <EditorTablePlugin />
+        <EditorImagePlugin />
+        {autoFocus ? <AutoFocusPlugin /> : null}
 
         <LoadContentPlugin value={value} skipNextLoadRef={skipNextLoadRef} />
-        <HtmlPlugin onChange={onChange} skipNextLoadRef={skipNextLoadRef} />
+        <RhfSyncPlugin onChange={onChange} skipNextLoadRef={skipNextLoadRef} />
       </LexicalComposer>
     </div>
   );
 }
 
-function HtmlPlugin({
+/** Pushes HTML into react-hook-form on real edits and on blur (OnChangePlugin alone can miss updates). */
+function RhfSyncPlugin({
   onChange,
   skipNextLoadRef,
 }: {
   onChange?: (val: unknown) => void;
   skipNextLoadRef: MutableRefObject<boolean>;
 }) {
-  return (
-    <OnChangePlugin
-      onChange={(editorState, editor) => {
+  const [editor] = useLexicalComposerContext();
+
+  const emitChange = useCallback(() => {
+    const editorState = editor.getEditorState();
+    editorState.read(() => {
+      const root = $getRoot();
+      const text = root.getTextContent();
+      const json = editorState.toJSON();
+      const html = $generateHtmlFromNodes(editor, null);
+      skipNextLoadRef.current = true;
+      onChange?.({ json, text, html, isEmpty: text.trim().length === 0 });
+    });
+  }, [editor, onChange, skipNextLoadRef]);
+
+  useEffect(() => {
+    return editor.registerUpdateListener(
+      ({ editorState, dirtyElements, dirtyLeaves }) => {
+        if (dirtyElements.size === 0 && dirtyLeaves.size === 0) return;
         editorState.read(() => {
           const root = $getRoot();
           const text = root.getTextContent();
           const json = editorState.toJSON();
           const html = $generateHtmlFromNodes(editor, null);
+          skipNextLoadRef.current = true;
+          onChange?.({ json, text, html, isEmpty: text.trim().length === 0 });
+        });
+      },
+    );
+  }, [editor, onChange, skipNextLoadRef]);
+
+  useEffect(() => {
+    return editor.registerRootListener((rootElement) => {
+      if (!rootElement) return;
+      const onBlur = () => emitChange();
+      rootElement.addEventListener("blur", onBlur, true);
+      return () => rootElement.removeEventListener("blur", onBlur, true);
+    });
+  }, [editor, emitChange]);
+
+  return (
+    <OnChangePlugin
+      onChange={(editorState, ed) => {
+        editorState.read(() => {
+          const root = $getRoot();
+          const text = root.getTextContent();
+          const json = editorState.toJSON();
+          const html = $generateHtmlFromNodes(ed, null);
           skipNextLoadRef.current = true;
           onChange?.({ json, text, html, isEmpty: text.trim().length === 0 });
         });

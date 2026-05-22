@@ -1,4 +1,8 @@
 import { api } from "@/lib/api";
+import {
+  appendLocalizedDescriptionHtml,
+  localizedHtmlForApi,
+} from "@/lib/localized-html-form";
 import type { BlogFormValues } from "@/features/blogs/blog-form-schema";
 import { pickBilingualSlug, pickLocalized } from "@/lib/api-payload";
 import { isAxiosError } from "axios";
@@ -77,11 +81,10 @@ export function blogValuesToFormData(
   fd.append("subtitle[ar]", values.subtitle.ar ?? "");
   fd.append("subtitle[en]", values.subtitle.en ?? "");
 
-  fd.append("description[ar]", values.description.ar ?? "");
-  fd.append("description[en]", values.description.en ?? "");
+  appendLocalizedDescriptionHtml(fd, "description", values.description.ar, values.description.en);
 
-  fd.append("content[ar]", values.content.ar ?? "");
-  fd.append("content[en]", values.content.en ?? "");
+  fd.append("content[ar]", localizedHtmlForApi(values.content.ar));
+  fd.append("content[en]", localizedHtmlForApi(values.content.en));
 
   fd.append("slug[ar]", (values.slug.ar ?? "").trim());
   fd.append("slug[en]", (values.slug.en ?? "").trim());

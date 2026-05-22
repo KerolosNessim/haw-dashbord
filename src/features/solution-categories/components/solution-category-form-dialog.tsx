@@ -11,6 +11,7 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { useUpsertSolutionCategory } from "@/features/solution-categories/hooks/useUpsertSolutionCategory";
 import type { SolutionCategoryRow } from "@/features/solution-categories/types";
 import { rowToFormValues } from "@/features/solution-categories/services/taxonomy-categories-api";
@@ -21,21 +22,11 @@ import { Controller, useForm, type Resolver } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
 
-const slugLatinPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const slugArabicPattern =
-  /^(?:[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:-[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)$/u;
-
 const schema = z.object({
   name_ar: z.string().min(1, { message: "validation.required" }),
   name_en: z.string().min(1, { message: "validation.required" }),
-  slug_ar: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugArabicPattern.test(s), { message: "validation.slug_format" }),
-  slug_en: z
-    .string()
-    .min(1, { message: "validation.required" })
-    .refine((s) => slugLatinPattern.test(s), { message: "validation.slug_format" }),
+  slug_ar: z.string().min(1, { message: "validation.required" }),
+  slug_en: z.string().min(1, { message: "validation.required" }),
   des_ar: z.string(),
   des_en: z.string(),
   meta_title_ar: z.string(),
@@ -224,7 +215,16 @@ export default function SolutionCategoryFormDialog({
               render={({ field }) => (
                 <Field>
                   <FieldLabel className="text-sm font-bold">(AR) {t("description")}</FieldLabel>
-                  <Textarea {...field} dir="rtl" className="min-h-[72px] rounded-xl resize-none" />
+                  <div className="min-h-[160px] rounded-xl border overflow-hidden">
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        field.onChange(html);
+                      }}
+                      dir="rtl"
+                    />
+                  </div>
                 </Field>
               )}
             />
@@ -234,7 +234,16 @@ export default function SolutionCategoryFormDialog({
               render={({ field }) => (
                 <Field>
                   <FieldLabel className="text-sm font-bold">{t("description")} (EN)</FieldLabel>
-                  <Textarea {...field} className="min-h-[72px] rounded-xl resize-none" />
+                  <div className="min-h-[160px] rounded-xl border overflow-hidden">
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        field.onChange(html);
+                      }}
+                      dir="ltr"
+                    />
+                  </div>
                 </Field>
               )}
             />

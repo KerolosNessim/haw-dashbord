@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import {
   pickBilingualSlug,
   pickLocalized,
@@ -124,8 +125,7 @@ export function valuesToUpsertFormData(values: SolutionCategoryFormValues, categ
   fd.append("name[en]", values.name.en.trim());
   fd.append("slug[ar]", (values.slug.ar ?? "").trim());
   fd.append("slug[en]", (values.slug.en ?? "").trim());
-  fd.append("description[ar]", values.description.ar ?? "");
-  fd.append("description[en]", values.description.en ?? "");
+  appendLocalizedDescriptionHtml(fd, "description", values.description.ar, values.description.en);
   fd.append("meta_title[ar]", values.meta_title.ar ?? "");
   fd.append("meta_title[en]", values.meta_title.en ?? "");
   fd.append("meta_description[ar]", values.meta_description.ar ?? "");

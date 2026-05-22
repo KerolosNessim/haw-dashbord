@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import type { AboutUsData, AboutUsResponse, UpdateAboutUsInput } from "../types";
 
 export const getAboutUs = (): Promise<AboutUsResponse<AboutUsData>> => {
@@ -17,8 +18,7 @@ export const updateAboutUs = (data: UpdateAboutUsInput): Promise<AboutUsResponse
   }
   
   if (data.description) {
-    formData.append("description[ar]", data.description.ar);
-    formData.append("description[en]", data.description.en);
+    appendLocalizedDescriptionHtml(formData, "description", data.description.ar, data.description.en);
   }
   
   if (data.image) {
@@ -62,8 +62,7 @@ export const updateIntroSection = (data: UpdateAboutUsInput): Promise<AboutUsRes
   }
   
   if (data.description) {
-    formData.append("description[ar]", data.description.ar);
-    formData.append("description[en]", data.description.en);
+    appendLocalizedDescriptionHtml(formData, "description", data.description.ar, data.description.en);
   }
   
   if (data.image) {
@@ -88,8 +87,12 @@ export const updateVisionSection = (data: UpdateAboutUsInput): Promise<AboutUsRe
     formData.append("vision_title[en]", data.vision_title.en);
   }
   if (data.vision_description) {
-    formData.append("vision_description[ar]", data.vision_description.ar);
-    formData.append("vision_description[en]", data.vision_description.en);
+    appendLocalizedDescriptionHtml(
+      formData,
+      "vision_description",
+      data.vision_description.ar,
+      data.vision_description.en,
+    );
   }
   if (data.vision_image) {
     formData.append("vision_image", data.vision_image);
@@ -100,8 +103,12 @@ export const updateVisionSection = (data: UpdateAboutUsInput): Promise<AboutUsRe
     formData.append("message_title[en]", data.message_title.en);
   }
   if (data.message_description) {
-    formData.append("message_description[ar]", data.message_description.ar);
-    formData.append("message_description[en]", data.message_description.en);
+    appendLocalizedDescriptionHtml(
+      formData,
+      "message_description",
+      data.message_description.ar,
+      data.message_description.en,
+    );
   }
   if (data.message_image) {
     formData.append("message_image", data.message_image);
@@ -124,16 +131,19 @@ export const updateWhyUsSection = (data: UpdateAboutUsInput): Promise<AboutUsRes
     formData.append("title[en]", data.why_us_title.en);
   }
   if (data.why_us_description) {
-    formData.append("description[ar]", data.why_us_description.ar);
-    formData.append("description[en]", data.why_us_description.en);
+    appendLocalizedDescriptionHtml(formData, "description", data.why_us_description.ar, data.why_us_description.en);
   }
   if (data.why_us_values_title) {
     formData.append("values_title[ar]", data.why_us_values_title.ar);
     formData.append("values_title[en]", data.why_us_values_title.en);
   }
   if (data.why_us_values_description) {
-    formData.append("values_description[ar]", data.why_us_values_description.ar);
-    formData.append("values_description[en]", data.why_us_values_description.en);
+    appendLocalizedDescriptionHtml(
+      formData,
+      "values_description",
+      data.why_us_values_description.ar,
+      data.why_us_values_description.en,
+    );
   }
   if (data.why_us_image) {
     formData.append("image", data.why_us_image);
@@ -158,8 +168,7 @@ export const updateContactSection = (data: UpdateAboutUsInput): Promise<AboutUsR
     formData.append("title[en]", data.contact_title.en);
   }
   if (data.contact_description) {
-    formData.append("description[ar]", data.contact_description.ar);
-    formData.append("description[en]", data.contact_description.en);
+    appendLocalizedDescriptionHtml(formData, "description", data.contact_description.ar, data.contact_description.en);
   }
   if (data.contact_phone) {
     formData.append("phone", data.contact_phone);

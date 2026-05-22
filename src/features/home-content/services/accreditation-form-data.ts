@@ -1,4 +1,5 @@
 import type { AccreditationImageAlt, LocaleString } from "../types";
+import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 
 export type BilingualAlt = LocaleString;
 
@@ -24,8 +25,7 @@ export function buildMediaGalleryFormData(input: AccreditationFormInput): FormDa
 
   fd.append("title[ar]", input.title.ar);
   fd.append("title[en]", input.title.en);
-  fd.append("description[ar]", input.description.ar);
-  fd.append("description[en]", input.description.en);
+  appendLocalizedDescriptionHtml(fd, "description", input.description.ar, input.description.en);
 
   if (input.sort_order != null && !Number.isNaN(input.sort_order)) {
     fd.append("sort_order", String(input.sort_order));

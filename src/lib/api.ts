@@ -27,6 +27,11 @@ api.interceptors.request.use(
       config.headers["Accept-Language"] = acceptLanguageFromDashboard()
     }
 
+    // Let the browser set multipart boundary (manual Content-Type breaks file uploads).
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers["Content-Type"]
+    }
+
     return config
   },
   (error: AxiosError) => Promise.reject(error)

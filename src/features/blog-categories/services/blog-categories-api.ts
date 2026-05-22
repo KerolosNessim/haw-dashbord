@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
 import type { BlogCategoryFormValues, BlogCategoryRow } from "../types";
 
@@ -170,8 +171,7 @@ function appendBlogCategoryFormFields(fd: FormData, values: BlogCategoryFormValu
   fd.append("parent_id", parentTrim);
   fd.append("name[ar]", values.name.ar.trim());
   fd.append("name[en]", values.name.en.trim());
-  fd.append("description[ar]", values.description.ar.trim());
-  fd.append("description[en]", values.description.en.trim());
+  appendLocalizedDescriptionHtml(fd, "description", values.description.ar, values.description.en);
   fd.append("slug[ar]", values.slug.ar.trim());
   fd.append("slug[en]", values.slug.en.trim());
   fd.append("is_active", values.is_active ? "1" : "0");

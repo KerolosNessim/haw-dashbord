@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { LocalizedDescriptionFields } from "@/features/shared/components/localized-description-fields";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import {
-  AlignLeft,
   Languages,
   MessageCircle,
   Phone,
@@ -61,7 +61,10 @@ export default function ContactTab() {
   const onSubmit = (values: ContactFormValues) => {
     updateContactSection({
       contact_title: { ar: values.title_ar, en: values.title_en },
-      contact_description: { ar: values.description_ar, en: values.description_en },
+      contact_description: {
+        ar: localizedHtmlForApi(values.description_ar),
+        en: localizedHtmlForApi(values.description_en),
+      },
       contact_phone: values.phone,
     });
   };
@@ -135,44 +138,15 @@ export default function ContactTab() {
             />
           </div>
 
-          {/* Descriptions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Controller
-              name="description_ar"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel className="text-base font-bold flex items-center gap-2 justify-start">
-                    ({t("ar")}) {t("sec_des")}
-                    <AlignLeft className="w-4 h-4 text-primary" />
-                  </FieldLabel>
-                  <Textarea
-                    {...field}
-                    placeholder="..."
-                    className="min-h-[150px] rounded-2xl bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-4"
-                    dir="rtl"
-                  />
-                </Field>
-              )}
-            />
-            <Controller
-              name="description_en"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel className="text-base font-bold flex items-center gap-2">
-                    <AlignLeft className="w-4 h-4 text-primary" />
-                    {t("sec_des")} ({t("en")})
-                  </FieldLabel>
-                  <Textarea
-                    {...field}
-                    placeholder="..."
-                    className="min-h-[150px] rounded-2xl bg-muted/5 border-border/60 focus:bg-white transition-all resize-none p-4"
-                  />
-                </Field>
-              )}
-            />
-          </div>
+          <LocalizedDescriptionFields
+            control={control}
+            nameAr="description_ar"
+            nameEn="description_en"
+            labelAr={`(${t("ar")}) ${t("sec_des")}`}
+            labelEn={`${t("sec_des")} (${t("en")})`}
+            placeholder="..."
+            minHeightClass="min-h-[200px]"
+          />
         </div>
 
         <div className="lg:col-span-4 space-y-6">

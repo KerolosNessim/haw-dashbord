@@ -1,9 +1,8 @@
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { Plus, Trash2, HelpCircle } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -73,12 +72,14 @@ export default function FAQSection({
             render={({ field }) => (
               <Field>
                 <FieldLabel>{t("sections.fields.title")}</FieldLabel>
-                <Input
-                  {...field}
-                  dir="rtl"
-                  placeholder={t("placeholders.title")}
-                  className="h-12 rounded-xl bg-background border-border/50"
-                />
+                <div className="min-h-[120px]">
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                    dir="rtl"
+                    placeholder={t("placeholders.title")}
+                  />
+                </div>
                 <FieldError
                   errors={[
                     {
@@ -97,12 +98,14 @@ export default function FAQSection({
             render={({ field }) => (
               <Field>
                 <FieldLabel>{t("sections.fields.content")}</FieldLabel>
-                <Input
-                  {...field}
-                  dir="rtl"
-                  placeholder={t("placeholders.description")}
-                  className="h-12 rounded-xl bg-background border-border/50"
-                />
+                <div className="min-h-[160px]">
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                    dir="rtl"
+                    placeholder={t("placeholders.description")}
+                  />
+                </div>
               </Field>
             )}
           />
@@ -119,12 +122,14 @@ export default function FAQSection({
             render={({ field }) => (
               <Field>
                 <FieldLabel>{t("sections.fields.title")}</FieldLabel>
-                <Input
-                  {...field}
-                  dir="ltr"
-                  placeholder={t("placeholders.title")}
-                  className="h-12 rounded-xl bg-background border-border/50"
-                />
+                <div className="min-h-[120px]">
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                    dir="ltr"
+                    placeholder={t("placeholders.title")}
+                  />
+                </div>
                 <FieldError
                   errors={[
                     {
@@ -143,12 +148,14 @@ export default function FAQSection({
             render={({ field }) => (
               <Field>
                 <FieldLabel>{t("sections.fields.content")}</FieldLabel>
-                <Input
-                  {...field}
-                  dir="ltr"
-                  placeholder={t("placeholders.description")}
-                  className="h-12 rounded-xl bg-background border-border/50"
-                />
+                <div className="min-h-[160px]">
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                    dir="ltr"
+                    placeholder={t("placeholders.description")}
+                  />
+                </div>
               </Field>
             )}
           />
@@ -200,11 +207,16 @@ export default function FAQSection({
                         <FieldLabel className="text-xs">
                           {t("sections.fields.question")}
                         </FieldLabel>
-                        <Input
-                          {...field}
-                          dir="rtl"
-                          className="h-11 rounded-xl bg-muted/5 font-bold"
-                        />
+                        <div className="min-h-[100px]">
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={(val) =>
+                              field.onChange(editorOnChangeToHtml(val))
+                            }
+                            dir="rtl"
+                            placeholder={t("placeholders.title")}
+                          />
+                        </div>
                         <FieldError
                           errors={[
                             {
@@ -229,12 +241,14 @@ export default function FAQSection({
                         <FieldLabel className="text-xs">
                           {t("sections.fields.answer")}
                         </FieldLabel>
-                        <Textarea
-                          {...field}
-                          dir="rtl"
-                          className="rounded-xl bg-muted/5 border-border/40 min-h-[100px]"
-                          placeholder={t("placeholders.description")}
-                        />
+                        <div className="min-h-[120px]">
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                            dir="rtl"
+                            placeholder={t("placeholders.description")}
+                          />
+                        </div>
                         <FieldError
                           errors={[
                             {
@@ -266,11 +280,16 @@ export default function FAQSection({
                         <FieldLabel className="text-xs">
                           {t("sections.fields.question")}
                         </FieldLabel>
-                        <Input
-                          {...field}
-                          dir="ltr"
-                          className="h-11 rounded-xl bg-muted/5 font-bold"
-                        />
+                        <div className="min-h-[100px]">
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={(val) =>
+                              field.onChange(editorOnChangeToHtml(val))
+                            }
+                            dir="ltr"
+                            placeholder={t("placeholders.title")}
+                          />
+                        </div>
                         <FieldError
                           errors={[
                             {
@@ -295,12 +314,14 @@ export default function FAQSection({
                         <FieldLabel className="text-xs">
                           {t("sections.fields.answer")}
                         </FieldLabel>
-                        <Textarea
-                          {...field}
-                          dir="ltr"
-                          className="rounded-xl bg-muted/5 border-border/40 min-h-[100px]"
-                          placeholder={t("placeholders.description")}
-                        />
+                        <div className="min-h-[120px]">
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                            dir="ltr"
+                            placeholder={t("placeholders.description")}
+                          />
+                        </div>
                         <FieldError
                           errors={[
                             {

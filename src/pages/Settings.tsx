@@ -1,6 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings as SettingsIcon, Globe, MapPin, Clock, Share2, Search, Phone, Code2 } from "lucide-react";
+import { Settings as SettingsIcon, Globe, MapPin, Clock, Share2, Search, Phone, Code2, Database } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import GeneralSettingsForm from "@/features/settings/components/general-settings-form";
 import OfficesRepeater from "@/features/settings/components/offices-repeater";
 import ContactSettingsForm from "@/features/settings/components/contact-settings-form";
@@ -25,6 +27,12 @@ export default function SettingsPage() {
             <p className="text-muted-foreground font-medium">{t("description")}</p>
           </div>
         </div>
+        <Link to="/backup-export">
+          <Button type="button" variant="outline" size="lg" className="rounded-xl font-bold">
+            <Database className="mr-2 size-5" />
+            {t("backup_export_link")}
+          </Button>
+        </Link>
       </div>
 
       {/* Tabs */}

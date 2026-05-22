@@ -19,6 +19,7 @@ export type PackageFormValues = {
   price: string;
   currency: string;
   features: PackageFeatureRow[];
+  icon_alt: LocalizedString;
   /** Hydration-only: existing icon URL for edit preview — not sent on save */
   existing_icon_url?: string;
   /** Hydration-only: selected category label for edit fallback — not sent on save */

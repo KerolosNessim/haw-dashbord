@@ -1,5 +1,6 @@
 import type { GetServiceResponse } from "../type";
 import { resolveApiToastMessage } from "@/lib/api-toast-message";
+import { getHttpErrorMessage } from "@/lib/http-error-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
@@ -34,11 +35,12 @@ export function useServicePageSave() {
       return data;
     },
     onError: (error: AxiosError<GetServiceResponse>) => {
-      const fromApi =
-        typeof error?.response?.data?.message === "string"
-          ? error.response.data.message.trim()
-          : "";
-      toast.error(fromApi || t("toasts.service_save_error"));
+      toast.error(
+        getHttpErrorMessage(error, {
+          403: t("toasts.forbidden"),
+          default: t("toasts.service_save_error"),
+        }),
+      );
     },
   });
 

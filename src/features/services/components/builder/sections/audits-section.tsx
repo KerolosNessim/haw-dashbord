@@ -2,7 +2,8 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { LocalizedRichTextField } from "../localized-rich-text-field";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -76,15 +77,12 @@ export default function AuditsSection({
             <div className="text-xs font-bold uppercase tracking-widest opacity-40">
               {locale === "ar" ? t("arabic") : t("english")}
             </div>
-            <Controller
-              name={`title.${locale}`}
+            <LocalizedRichTextField
               control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>audits_title ({locale})</FieldLabel>
-                  <Input {...field} dir={locale === "ar" ? "rtl" : "ltr"} className="h-12 rounded-xl" />
-                </Field>
-              )}
+              name={`title.${locale}`}
+              label={`${t("sections.fields.title")} (${locale})`}
+              dir={locale === "ar" ? "rtl" : "ltr"}
+              placeholder={t("placeholders.title")}
             />
             <Controller
               name={`description.${locale}`}
@@ -92,7 +90,16 @@ export default function AuditsSection({
               render={({ field }) => (
                 <Field>
                   <FieldLabel>audits_description ({locale})</FieldLabel>
-                  <Textarea {...field} dir={locale === "ar" ? "rtl" : "ltr"} className="min-h-[80px] rounded-xl" />
+                  <div className="min-h-[160px] rounded-xl border overflow-hidden">
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        field.onChange(html);
+                      }}
+                      dir={locale === "ar" ? "rtl" : "ltr"}
+                    />
+                  </div>
                 </Field>
               )}
             />
@@ -114,15 +121,12 @@ export default function AuditsSection({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {(["ar", "en"] as const).map((locale) => (
                 <div key={locale} className="space-y-4">
-                  <Controller
-                    name={`items.${index}.title.${locale}`}
+                  <LocalizedRichTextField
                     control={control}
-                    render={({ field: f }) => (
-                      <Field>
-                        <FieldLabel>title ({locale})</FieldLabel>
-                        <Input {...f} dir={locale === "ar" ? "rtl" : "ltr"} className="h-11 rounded-xl" />
-                      </Field>
-                    )}
+                    name={`items.${index}.title.${locale}`}
+                    label={`${t("sections.fields.title")} (${locale})`}
+                    dir={locale === "ar" ? "rtl" : "ltr"}
+                    minHeightClass="min-h-[100px]"
                   />
                   <Controller
                     name={`items.${index}.description.${locale}`}
@@ -130,19 +134,25 @@ export default function AuditsSection({
                     render={({ field: f }) => (
                       <Field>
                         <FieldLabel>description ({locale})</FieldLabel>
-                        <Textarea {...f} dir={locale === "ar" ? "rtl" : "ltr"} className="rounded-xl min-h-[80px]" />
+                        <div className="min-h-[160px] rounded-xl border overflow-hidden">
+                          <RichTextEditor
+                            value={f.value}
+                            onChange={(val) => {
+                              const html = editorOnChangeToHtml(val);
+                              f.onChange(html);
+                            }}
+                            dir={locale === "ar" ? "rtl" : "ltr"}
+                          />
+                        </div>
                       </Field>
                     )}
                   />
-                  <Controller
-                    name={`items.${index}.button_text.${locale}`}
+                  <LocalizedRichTextField
                     control={control}
-                    render={({ field: f }) => (
-                      <Field>
-                        <FieldLabel>button_text ({locale})</FieldLabel>
-                        <Input {...f} dir={locale === "ar" ? "rtl" : "ltr"} className="h-11 rounded-xl" />
-                      </Field>
-                    )}
+                    name={`items.${index}.button_text.${locale}`}
+                    label={`Button (${locale})`}
+                    dir={locale === "ar" ? "rtl" : "ltr"}
+                    minHeightClass="min-h-[80px]"
                   />
                 </div>
               ))}

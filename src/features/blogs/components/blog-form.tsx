@@ -400,7 +400,14 @@ export default function BlogForm({
                     control={control}
                     render={({ field }) => (
                       <Field>
-                        <FieldLabel>{lang === "ar" ? t("title_ar") : t("title_en")}</FieldLabel>
+                        <FieldLabel>
+                          {lang === "ar" ? t("title_ar") : t("title_en")}
+                          {lang === "en" ? (
+                            <span className="ms-1 font-normal text-muted-foreground">
+                              {t("optional_suffix")}
+                            </span>
+                          ) : null}
+                        </FieldLabel>
                         <Input
                           {...field}
                           dir={lang === "ar" ? "rtl" : "ltr"}
@@ -428,7 +435,14 @@ export default function BlogForm({
                     control={control}
                     render={({ field }) => (
                       <Field>
-                        <FieldLabel>{lang === "ar" ? t("description_ar") : t("description_en")}</FieldLabel>
+                        <FieldLabel>
+                          {lang === "ar" ? t("description_ar") : t("description_en")}
+                          {lang === "en" ? (
+                            <span className="ms-1 font-normal text-muted-foreground">
+                              {t("optional_suffix")}
+                            </span>
+                          ) : null}
+                        </FieldLabel>
                         <RichTextEditor
                           dir={lang === "ar" ? "rtl" : "ltr"}
                           value={field.value}
@@ -460,7 +474,14 @@ export default function BlogForm({
                     control={control}
                     render={({ field }) => (
                       <Field>
-                        <FieldLabel>{lang === "ar" ? t("content_ar") : t("content_en")}</FieldLabel>
+                        <FieldLabel>
+                          {lang === "ar" ? t("content_ar") : t("content_en")}
+                          {lang === "en" ? (
+                            <span className="ms-1 font-normal text-muted-foreground">
+                              {t("optional_suffix")}
+                            </span>
+                          ) : null}
+                        </FieldLabel>
                         <RichTextEditor
                           dir={lang === "ar" ? "rtl" : "ltr"}
                           value={field.value}

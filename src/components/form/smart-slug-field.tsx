@@ -37,8 +37,13 @@ export type SmartSlugFieldProps<T extends FieldValues> = {
   syncFromTitleWhenLocked?: boolean;
   /** After blur, re-runs the resolver for this field (pass `trigger` from `useForm`). */
   trigger?: UseFormTrigger<T>;
-  /** Which slug rules / normalization to use (syncs from the matching `titleEn` source string). */
+  /** Which slug rules / normalization to use when `normalizeSlug` is true. */
   slugLocale?: SlugLocale;
+  /**
+   * When true, linked title sync and blur run `slugifyForLocale` (legacy URL-safe slugs).
+   * When false (default), the user can type any text; linked mode copies the title as-is.
+   */
+  normalizeSlug?: boolean;
   className?: string;
   inputClassName?: string;
 };
@@ -49,6 +54,7 @@ function SmartSlugFieldBody<T extends FieldValues>({
   isSlugLocked,
   syncFromTitleWhenLocked,
   slugLocale,
+  normalizeSlug,
   trigger,
   placeholder,
   inputClassName,
@@ -58,6 +64,7 @@ function SmartSlugFieldBody<T extends FieldValues>({
   isSlugLocked: boolean;
   syncFromTitleWhenLocked: boolean;
   slugLocale: SlugLocale;
+  normalizeSlug: boolean;
   trigger?: UseFormTrigger<T>;
   placeholder?: string;
   inputClassName?: string;
@@ -66,14 +73,26 @@ function SmartSlugFieldBody<T extends FieldValues>({
 
   useEffect(() => {
     if (!isSlugLocked || !syncFromTitleWhenLocked) return;
-    const next = slugifyForLocale(slugLocale, titleEn ?? "");
+    const next = normalizeSlug
+      ? slugifyForLocale(slugLocale, titleEn ?? "")
+      : String(titleEn ?? "").trim();
     if (value !== next) onChange(next);
-  }, [titleEn, isSlugLocked, syncFromTitleWhenLocked, slugLocale, value, onChange]);
+  }, [
+    titleEn,
+    isSlugLocked,
+    syncFromTitleWhenLocked,
+    slugLocale,
+    normalizeSlug,
+    value,
+    onChange,
+  ]);
 
   const handleBlur = () => {
-    const raw = String(value ?? "");
-    const fixed = slugifyForLocale(slugLocale, raw);
-    if (fixed !== raw) onChange(fixed);
+    if (normalizeSlug) {
+      const raw = String(value ?? "");
+      const fixed = slugifyForLocale(slugLocale, raw);
+      if (fixed !== raw) onChange(fixed);
+    }
     onBlur();
     void trigger?.(name);
   };
@@ -109,11 +128,12 @@ export function SmartSlugField<T extends FieldValues>({
   syncFromTitleWhenLocked = true,
   trigger,
   slugLocale = "en",
+  normalizeSlug = false,
   className,
   inputClassName,
 }: SmartSlugFieldProps<T>) {
   const { t } = useTranslation("translation", { keyPrefix: "forms.smart_slug" });
-  const [isSlugLocked, setIsSlugLocked] = useState(false);
+  const [isSlugLocked, setIsSlugLocked] = useState(() => syncFromTitleWhenLocked);
 
   return (
     <Controller
@@ -166,6 +186,7 @@ export function SmartSlugField<T extends FieldValues>({
                 isSlugLocked={isSlugLocked}
                 syncFromTitleWhenLocked={syncFromTitleWhenLocked}
                 slugLocale={slugLocale}
+                normalizeSlug={normalizeSlug}
                 trigger={trigger}
                 placeholder={placeholder}
                 inputClassName={inputClassName}

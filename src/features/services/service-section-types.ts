@@ -4,6 +4,8 @@ export type BenefitsSectionData = {
   title?: { ar: string; en: string };
   description?: { ar: unknown; en: unknown };
   image?: File | string | null;
+  image_alt?: { ar: string; en: string };
+  sort_order?: number;
 };
 
 export type ListSectionItem = {
@@ -20,7 +22,9 @@ export type ListSectionData = {
   title?: { ar: string; en: string };
   description?: { ar: string; en: string };
   image?: File | string | null;
+  image_alt?: { ar: string; en: string };
   items?: ListSectionItem[];
+  sort_order?: number;
 };
 
 export type FaqSectionData = ListSectionData;
@@ -30,6 +34,7 @@ export type ToolsSectionData = {
   description?: { ar: unknown; en: unknown };
   sub_title?: { ar: string; en: string };
   sub_description?: { ar: unknown; en: unknown };
+  sort_order?: number;
 };
 
 export type PackagesSectionItem = {
@@ -47,6 +52,7 @@ export type PackagesSectionData = {
   title?: { ar: string; en: string };
   description?: { ar: string; en: string };
   items?: PackagesSectionItem[];
+  sort_order?: number;
 };
 
 export interface ServiceSectionsPayload {

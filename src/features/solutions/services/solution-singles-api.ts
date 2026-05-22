@@ -1,4 +1,6 @@
 import { api } from "@/lib/api";
+import { appendBilingualImageAlt, bilingualImageAltFromApi, type BilingualImageAlt } from "@/lib/bilingual-image-alt";
+import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import type { LocaleString, SolutionFeature, SolutionItemsResponse } from "../types";
 
 const BASE = "/v1/admin/solutions/singles";
@@ -19,6 +21,7 @@ export type SolutionSingleFormPayload = {
   description: LocaleString;
   slug: LocaleString;
   is_active?: boolean;
+  image_alt?: BilingualImageAlt;
 };
 
 function payloadToFormData(p: SolutionSingleFormPayload, imageFile: File | null, mode: "create" | "update"): FormData {
@@ -28,8 +31,7 @@ function payloadToFormData(p: SolutionSingleFormPayload, imageFile: File | null,
   }
   fd.append("title[ar]", p.title.ar.trim());
   fd.append("title[en]", p.title.en.trim());
-  fd.append("description[ar]", p.description.ar ?? "");
-  fd.append("description[en]", p.description.en ?? "");
+  appendLocalizedDescriptionHtml(fd, "description", p.description.ar, p.description.en);
   fd.append("slug[ar]", (p.slug.ar ?? "").trim());
   fd.append("slug[en]", (p.slug.en ?? "").trim());
   if (typeof p.is_active === "boolean") {
@@ -38,7 +40,14 @@ function payloadToFormData(p: SolutionSingleFormPayload, imageFile: File | null,
   if (imageFile instanceof File) {
     fd.append("image", imageFile);
   }
+  if (p.image_alt) {
+    appendBilingualImageAlt(fd, "image_alt", p.image_alt);
+  }
   return fd;
+}
+
+export function solutionImageAltFromApi(raw: unknown): BilingualImageAlt {
+  return bilingualImageAltFromApi(raw);
 }
 
 function normalizeSinglesListEnvelope(raw: unknown): SolutionItemsResponse {

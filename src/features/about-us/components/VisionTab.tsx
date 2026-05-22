@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import RichTextEditor from "@/features/shared/components/editor";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { cn } from "@/lib/utils";
 import {
   Eye,
@@ -76,22 +77,17 @@ export default function VisionTab() {
   }, [aboutUsData, reset]);
 
   const onSubmit = (values: VisionFormValues) => {
-    const extractHtml = (val: unknown) =>
-      typeof val === "object" && val !== null && "html" in val
-        ? (val as { html: string }).html
-        : (val as string);
-
     updateVisionSection({
       vision_title: { ar: values.vision_title_ar, en: values.vision_title_en },
       vision_description: { 
-        ar: extractHtml(values.vision_description_ar), 
-        en: extractHtml(values.vision_description_en) 
+        ar: localizedHtmlForApi(values.vision_description_ar), 
+        en: localizedHtmlForApi(values.vision_description_en) 
       },
       vision_image: values.vision_image instanceof File ? values.vision_image : undefined,
       message_title: { ar: values.message_title_ar, en: values.message_title_en },
       message_description: { 
-        ar: extractHtml(values.message_description_ar), 
-        en: extractHtml(values.message_description_en) 
+        ar: localizedHtmlForApi(values.message_description_ar), 
+        en: localizedHtmlForApi(values.message_description_en) 
       },
       message_image: values.message_image instanceof File ? values.message_image : undefined,
     });
@@ -180,7 +176,10 @@ export default function VisionTab() {
                     <RichTextEditor
                       key={aboutUsData ? "vision-ar-ready" : "vision-ar-loading"}
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        field.onChange(html);
+                      }}
                       dir="rtl"
                       placeholder={t("vision_des")}
                     />
@@ -198,7 +197,10 @@ export default function VisionTab() {
                     <RichTextEditor
                       key={aboutUsData ? "vision-en-ready" : "vision-en-loading"}
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        field.onChange(html);
+                      }}
                       dir="ltr"
                       placeholder={t("vision_des")}
                     />
@@ -332,7 +334,10 @@ export default function VisionTab() {
                     <RichTextEditor
                       key={aboutUsData ? "mission-ar-ready" : "mission-ar-loading"}
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        field.onChange(html);
+                      }}
                       dir="rtl"
                       placeholder={t("message_des")}
                     />
@@ -350,7 +355,10 @@ export default function VisionTab() {
                     <RichTextEditor
                       key={aboutUsData ? "mission-en-ready" : "mission-en-loading"}
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => {
+                        const html = editorOnChangeToHtml(val);
+                        field.onChange(html);
+                      }}
                       dir="ltr"
                       placeholder={t("message_des")}
                     />

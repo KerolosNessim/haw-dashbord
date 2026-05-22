@@ -1,8 +1,10 @@
+import { localizedSlugOptional } from "@/lib/zod-localized-slug";
 import * as z from "zod";
 
-const localizedRequired = z.object({
+/** Arabic required; English optional (blog create/edit). */
+const localizedArRequiredEnOptional = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
-  en: z.string().min(1, { message: "validation.required" }),
+  en: z.string().optional().default(""),
 });
 
 const localizedOptional = z.object({
@@ -10,37 +12,12 @@ const localizedOptional = z.object({
   en: z.string().optional().default(""),
 });
 
-const slugLatinPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-/**
- * Slug for the Arabic locale. The backend stores either Arabic letters or
- * Latin transliterations (e.g. id 14 returns `"ar": "vitae-dolor-cumque-v"`),
- * so this pattern accepts Arabic presentation forms + lowercase Latin + digits,
- * separated by single hyphens between segments.
- */
-const slugArabicPattern =
-  /^(?:[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:-[a-z\d\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)$/u;
-
-const localizedBlogSlug = z.object({
-  ar: z
-    .string()
-    .default("")
-    .refine((s) => s === "" || slugArabicPattern.test(s), {
-      message: "validation.slug_format",
-    }),
-  en: z
-    .string()
-    .default("")
-    .refine((s) => s === "" || slugLatinPattern.test(s), {
-      message: "validation.slug_format",
-    }),
-});
-
 export const blogSchema = z.object({
-  title: localizedRequired,
+  title: localizedArRequiredEnOptional,
   /** Postman allows empty subtitle. */
   subtitle: localizedOptional,
-  description: localizedRequired,
-  content: localizedRequired,
+  description: localizedArRequiredEnOptional,
+  content: localizedArRequiredEnOptional,
   publisher_name: z.string().min(1, { message: "validation.required" }),
   tags: z.string().default(""),
   category_id: z.string().min(1, { message: "validation.required" }),
@@ -49,7 +26,7 @@ export const blogSchema = z.object({
   /** When false, sends `is_searchable=0` in multipart. */
   is_searchable: z.boolean().default(true),
   status: z.enum(["draft", "published", "scheduled"]).default("draft"),
-  slug: localizedBlogSlug,
+  slug: localizedSlugOptional,
   /** Browser `datetime-local`; serialized as `Y-m-d H:i:s` for API. */
   published_at: z.string().default(""),
   canonical_url: z

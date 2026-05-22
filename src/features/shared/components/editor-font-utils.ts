@@ -8,6 +8,7 @@ import {
   type HeadingTagType,
 } from "@lexical/rich-text";
 import type { RangeSelection } from "lexical";
+import { getHeadingColor } from "../lib/editor-colors";
 
 export const DEFAULT_FONT_SIZE = "16px";
 
@@ -93,5 +94,24 @@ export function applyHeadingLevel(
   selection: RangeSelection,
   level: HeadingTagType,
 ) {
-  $patchStyleText(selection, { "font-size": HEADING_FONT_SIZES[level] });
+  $patchStyleText(selection, {
+    "font-size": HEADING_FONT_SIZES[level],
+    color: getHeadingColor(level),
+  });
+}
+
+export function resolveTextColorFromSelection(selection: RangeSelection): string {
+  const raw = $getSelectionStyleValueForProperty(selection, "color", "");
+  return raw?.trim() || "";
+}
+
+export function applyTextColorToSelection(
+  selection: RangeSelection,
+  color: string | null,
+) {
+  if (!color) {
+    $patchStyleText(selection, { color: null });
+    return;
+  }
+  $patchStyleText(selection, { color });
 }

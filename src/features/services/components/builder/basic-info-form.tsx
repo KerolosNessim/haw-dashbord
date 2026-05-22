@@ -33,8 +33,20 @@ import ServiceSocialMetaDialog from "./service-social-meta-dialog";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
+import { resolveImagePreviewFromUnknown } from "@/lib/resolve-media-url";
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import { useAdminService } from "../../hooks/useAdminService";
 import { useEffect } from "react";
+import { toast } from "sonner";
+import {
+  deserializeBasicInfoFromDraft,
+} from "../../utils/service-draft-serializer";
+import { useServiceFormDraft } from "../../hooks/useServiceFormDraft";
+import {
+  normalizeOgType,
+  normalizeTwitterCard,
+} from "../../constants/social-meta-options";
+import { LocalizedRichTextField } from "./localized-rich-text-field";
 
 // --- Static Schema Definition (Outside) ---
 const localizedSchema = z.object({
@@ -82,9 +94,11 @@ const basicInfoSchema = z.object({
   show_footer: z.boolean(),
   og_title: optionalLocalizedSchema.optional(),
   og_description: optionalLocalizedSchema.optional(),
-  og_type: z.string().optional(),
+  og_type: z.enum(["website", "article", "product"]).default("website"),
   og_image: z.any().optional(),
-  twitter_card: z.string().optional(),
+  twitter_card: z
+    .enum(["summary", "summary_large_image"])
+    .default("summary_large_image"),
   twitter_title: optionalLocalizedSchema.optional(),
   twitter_description: optionalLocalizedSchema.optional(),
   twitter_image: z.any().optional(),
@@ -111,15 +125,24 @@ interface BasicInfoFormProps {
   initialId?: number;
   /** When true, parent owns submit (unified page save). */
   embedded?: boolean;
+  onBasicDraftChange?: (payload: {
+    basic: BasicInfoValues;
+    coverPreviewAr: string | null;
+    coverPreviewEn: string | null;
+  }) => void;
 }
 
 const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
-  function BasicInfoForm({ initialId, embedded }, ref) {
+  function BasicInfoForm({ initialId, embedded, onBasicDraftChange }, ref) {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "services.form" });
   const [socialMetaOpen, setSocialMetaOpen] = useState(false);
   const { data: countriesData } = useAdminCountries();
   const countries = countriesData?.data ?? [];
-  
+  const { draft, hydrated } = useServiceFormDraft(initialId);
+  const restoredDraftRef = useRef(false);
+  const onBasicDraftChangeRef = useRef(onBasicDraftChange);
+  onBasicDraftChangeRef.current = onBasicDraftChange;
+
   const { service, isLoading: isFetching } = useAdminService(initialId);
 
   const [coverPreviewAr, setCoverPreviewAr] = useState<string | null>(null);
@@ -162,8 +185,19 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
     },
   });
 
-  // Populate form when service data is loaded (edit mode)
+  // Restore local draft on create only (not when editing an existing service)
   useEffect(() => {
+    if (initialId != null || !hydrated || restoredDraftRef.current || !draft?.basic) return;
+    restoredDraftRef.current = true;
+    reset(deserializeBasicInfoFromDraft(draft.basic));
+    setCoverPreviewAr(draft.coverPreviewAr ?? null);
+    setCoverPreviewEn(draft.coverPreviewEn ?? null);
+    toast.info(t("draft_restored"));
+  }, [initialId, hydrated, draft, reset, t]);
+
+  // Populate form when service data is loaded (edit mode), unless a draft was restored
+  useEffect(() => {
+    if (!hydrated || restoredDraftRef.current) return;
     if (service) {
       reset({
         slug: {
@@ -212,10 +246,11 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
           service as Record<string, unknown>,
           "og_description",
         ),
-        og_type: (service as { og_type?: string }).og_type ?? "website",
+        og_type: normalizeOgType((service as { og_type?: string }).og_type),
         og_image: (service as { og_image?: string | null }).og_image ?? null,
-        twitter_card:
-          (service as { twitter_card?: string }).twitter_card ?? "summary_large_image",
+        twitter_card: normalizeTwitterCard(
+          (service as { twitter_card?: string }).twitter_card,
+        ),
         twitter_title: pickLocalizedFromService(
           service as Record<string, unknown>,
           "twitter_title",
@@ -228,10 +263,28 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
           (service as { twitter_image?: string | null }).twitter_image ?? null,
       });
 
-      setCoverPreviewAr(service.image?.ar ?? null);
-      setCoverPreviewEn(service.image?.en ?? null);
+      setCoverPreviewAr(resolveImagePreviewFromUnknown(service.image?.ar) ?? null);
+      setCoverPreviewEn(resolveImagePreviewFromUnknown(service.image?.en) ?? null);
     }
-  }, [service, reset]);
+  }, [service, reset, hydrated]);
+
+  // Persist basic info to local storage while editing
+  useEffect(() => {
+    if (!hydrated) return;
+    onBasicDraftChangeRef.current?.({
+      basic: getValues(),
+      coverPreviewAr,
+      coverPreviewEn,
+    });
+    const subscription = watch(() => {
+      onBasicDraftChangeRef.current?.({
+        basic: getValues(),
+        coverPreviewAr,
+        coverPreviewEn,
+      });
+    });
+    return () => subscription.unsubscribe();
+  }, [hydrated, watch, getValues, coverPreviewAr, coverPreviewEn]);
 
   const handleImageChange = (
     locale: "ar" | "en",
@@ -274,6 +327,10 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
 
   const normalizeValues = (data: BasicInfoValues): BasicInfoValues => ({
     ...data,
+    title: {
+      ar: editorOnChangeToHtml(data.title?.ar),
+      en: editorOnChangeToHtml(data.title?.en),
+    },
     highlight_description: {
       ar: editorOnChangeToHtml(data.highlight_description?.ar),
       en: editorOnChangeToHtml(data.highlight_description?.en),
@@ -282,6 +339,38 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
       ar: editorOnChangeToHtml(data.inside_desc?.ar),
       en: editorOnChangeToHtml(data.inside_desc?.en),
     },
+    meta_title: {
+      ar: editorOnChangeToHtml(data.meta_title?.ar),
+      en: editorOnChangeToHtml(data.meta_title?.en),
+    },
+    meta_description: {
+      ar: editorOnChangeToHtml(data.meta_description?.ar),
+      en: editorOnChangeToHtml(data.meta_description?.en),
+    },
+    og_title: data.og_title
+      ? {
+          ar: editorOnChangeToHtml(data.og_title.ar),
+          en: editorOnChangeToHtml(data.og_title.en),
+        }
+      : data.og_title,
+    og_description: data.og_description
+      ? {
+          ar: editorOnChangeToHtml(data.og_description.ar),
+          en: editorOnChangeToHtml(data.og_description.en),
+        }
+      : data.og_description,
+    twitter_title: data.twitter_title
+      ? {
+          ar: editorOnChangeToHtml(data.twitter_title.ar),
+          en: editorOnChangeToHtml(data.twitter_title.en),
+        }
+      : data.twitter_title,
+    twitter_description: data.twitter_description
+      ? {
+          ar: editorOnChangeToHtml(data.twitter_description.ar),
+          en: editorOnChangeToHtml(data.twitter_description.en),
+        }
+      : data.twitter_description,
   });
 
   useImperativeHandle(ref, () => ({
@@ -308,8 +397,8 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
     return message.includes("validation.") ? t(message) : message;
   };
 
-  const watchTitleAr = watch("title.ar");
-  const watchTitleEn = watch("title.en");
+  const watchTitleAr = plainTextFromHtml(watch("title.ar") ?? "");
+  const watchTitleEn = plainTextFromHtml(watch("title.en") ?? "");
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -463,12 +552,17 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                 render={({ field }) => (
                   <Field>
                     <FieldLabel>{t("title_ar")}</FieldLabel>
-                    <Input
-                      {...field}
-                      dir="rtl"
-                      placeholder={t("placeholders.title")}
-                      className="h-12 rounded-2xl bg-background border-border/50"
-                    />
+                    <div className="min-h-[120px]">
+                      <RichTextEditor
+                        value={field.value}
+                        onChange={(val) => {
+                          const html = editorOnChangeToHtml(val);
+                          field.onChange(html);
+                        }}
+                        dir="rtl"
+                        placeholder={t("placeholders.title")}
+                      />
+                    </div>
                     <FieldError
                       errors={[{ message: translateError(errors.title?.ar) }]}
                     />
@@ -481,12 +575,17 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                 render={({ field }) => (
                   <Field>
                     <FieldLabel>{t("description_ar")}</FieldLabel>
-                    <Textarea
-                      {...field}
-                      dir="rtl"
-                      placeholder={t("placeholders.description")}
-                      className="min-h-[100px] rounded-2xl bg-background border-border/50 resize-none"
-                    />
+                    <div className="min-h-[160px]">
+                      <RichTextEditor
+                        value={field.value}
+                        onChange={(val) => {
+                          const html = editorOnChangeToHtml(val);
+                          field.onChange(html);
+                        }}
+                        dir="rtl"
+                        placeholder={t("placeholders.description")}
+                      />
+                    </div>
                     <FieldError
                       errors={[
                         { message: translateError(errors.description?.ar) },
@@ -508,12 +607,17 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                 render={({ field }) => (
                   <Field>
                     <FieldLabel>{t("title_en")}</FieldLabel>
-                    <Input
-                      {...field}
-                      dir="ltr"
-                      placeholder={t("placeholders.title")}
-                      className="h-12 rounded-2xl bg-background border-border/50"
-                    />
+                    <div className="min-h-[120px]">
+                      <RichTextEditor
+                        value={field.value}
+                        onChange={(val) => {
+                          const html = editorOnChangeToHtml(val);
+                          field.onChange(html);
+                        }}
+                        dir="ltr"
+                        placeholder={t("placeholders.title")}
+                      />
+                    </div>
                     <FieldError
                       errors={[{ message: translateError(errors.title?.en) }]}
                     />
@@ -526,12 +630,17 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                 render={({ field }) => (
                   <Field>
                     <FieldLabel>{t("description_en")}</FieldLabel>
-                    <Textarea
-                      {...field}
-                      dir="ltr"
-                      placeholder={t("placeholders.description")}
-                      className="min-h-[100px] rounded-2xl bg-background border-border/50 resize-none"
-                    />
+                    <div className="min-h-[160px]">
+                      <RichTextEditor
+                        value={field.value}
+                        onChange={(val) => {
+                          const html = editorOnChangeToHtml(val);
+                          field.onChange(html);
+                        }}
+                        dir="ltr"
+                        placeholder={t("placeholders.description")}
+                      />
+                    </div>
                     <FieldError
                       errors={[
                         { message: translateError(errors.description?.en) },
@@ -707,6 +816,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                           src={preview}
                           alt=""
                           className="h-full w-full object-cover"
+                          referrerPolicy="no-referrer"
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-all flex items-center justify-center">
                           <Button
@@ -785,91 +895,41 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
-              <Controller
+              <LocalizedRichTextField
+                control={control}
                 name="meta_title.ar"
-                control={control}
-                render={({ field }) => (
-                  <Field>
-                    <FieldLabel>{t("meta_title")} (AR)</FieldLabel>
-                    <Input
-                      {...field}
-                      dir="rtl"
-                      placeholder={t("placeholders.meta_title")}
-                      className="h-12 rounded-2xl bg-background border-border/50"
-                    />
-                    <FieldError
-                      errors={[
-                        { message: translateError(errors.meta_title?.ar) },
-                      ]}
-                    />
-                  </Field>
-                )}
+                label={`${t("meta_title")} (AR)`}
+                dir="rtl"
+                placeholder={t("placeholders.meta_title")}
+                minHeightClass="min-h-[100px]"
+                errorMessage={translateError(errors.meta_title?.ar)}
               />
-              <Controller
-                name="meta_description.ar"
+              <LocalizedRichTextField
                 control={control}
-                render={({ field }) => (
-                  <Field>
-                    <FieldLabel>{t("meta_description")} (AR)</FieldLabel>
-                    <Textarea
-                      {...field}
-                      dir="rtl"
-                      placeholder={t("placeholders.meta_description")}
-                      className="h-28 rounded-2xl bg-muted/5 border-border/50 resize-none"
-                    />
-                    <FieldError
-                      errors={[
-                        {
-                          message: translateError(errors.meta_description?.ar),
-                        },
-                      ]}
-                    />
-                  </Field>
-                )}
+                name="meta_description.ar"
+                label={`${t("meta_description")} (AR)`}
+                dir="rtl"
+                placeholder={t("placeholders.meta_description")}
+                errorMessage={translateError(errors.meta_description?.ar)}
               />
             </div>
             <div className="space-y-6">
-              <Controller
+              <LocalizedRichTextField
+                control={control}
                 name="meta_title.en"
-                control={control}
-                render={({ field }) => (
-                  <Field>
-                    <FieldLabel>{t("meta_title")} (EN)</FieldLabel>
-                    <Input
-                      {...field}
-                      dir="ltr"
-                      placeholder={t("placeholders.meta_title")}
-                      className="h-12 rounded-2xl bg-background border-border/50"
-                    />
-                    <FieldError
-                      errors={[
-                        { message: translateError(errors.meta_title?.en) },
-                      ]}
-                    />
-                  </Field>
-                )}
+                label={`${t("meta_title")} (EN)`}
+                dir="ltr"
+                placeholder={t("placeholders.meta_title")}
+                minHeightClass="min-h-[100px]"
+                errorMessage={translateError(errors.meta_title?.en)}
               />
-              <Controller
-                name="meta_description.en"
+              <LocalizedRichTextField
                 control={control}
-                render={({ field }) => (
-                  <Field>
-                    <FieldLabel>{t("meta_description")} (EN)</FieldLabel>
-                    <Textarea
-                      {...field}
-                      dir="ltr"
-                      placeholder={t("placeholders.meta_description")}
-                      className="h-28 rounded-2xl bg-muted/5 border-border/50 resize-none"
-                    />
-                    <FieldError
-                      errors={[
-                        {
-                          message: translateError(errors.meta_description?.en),
-                        },
-                      ]}
-                    />
-                  </Field>
-                )}
+                name="meta_description.en"
+                label={`${t("meta_description")} (EN)`}
+                dir="ltr"
+                placeholder={t("placeholders.meta_description")}
+                errorMessage={translateError(errors.meta_description?.en)}
               />
             </div>
           </div>
