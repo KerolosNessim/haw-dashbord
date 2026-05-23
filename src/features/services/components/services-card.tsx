@@ -40,6 +40,17 @@ export default function ServiceCard({ service }: ServiceCardProps) {
     service.title.en ||
     service.title.ar;
 
+  const isEn = i18n.language?.startsWith("en");
+  const titleHtml = (isEn
+    ? service.title?.en || service.title?.ar
+    : service.title?.ar || service.title?.en) ?? "";
+  const descriptionHtml = (isEn
+    ? service.description?.en || service.description?.ar
+    : service.description?.ar || service.description?.en) ?? "";
+
+  const richHtmlClassName =
+    "cms-html-preview [&_a]:text-primary [&_a]:underline [&_img]:my-2 [&_img]:max-h-24 [&_img]:max-w-full [&_img]:rounded-md [&_p:last-child]:mb-0 [&_p]:mb-1";
+
   const { mutate: exportService, isPending: isExporting } = useExportService();
 
   const { mutate: deleteService, isPending } = useMutation({
@@ -73,13 +84,19 @@ export default function ServiceCard({ service }: ServiceCardProps) {
 
       {/* Content */}
       <div className="space-y-2 p-5">
-        <h3 className="text-lg font-semibold text-gray-900">
-          {service?.title?.ar || service?.title?.en}
-        </h3>
+        {titleHtml.trim() ? (
+          <h3
+            className={`line-clamp-2 text-lg font-semibold text-gray-900 ${richHtmlClassName} [&_p]:inline`}
+            dangerouslySetInnerHTML={{ __html: titleHtml }}
+          />
+        ) : null}
 
-        <p className="text-sm text-gray-600 line-clamp-3">
-          {service?.description?.ar || service?.description?.en}
-        </p>
+        {descriptionHtml.trim() ? (
+          <div
+            className={`line-clamp-3 text-sm text-gray-600 ${richHtmlClassName}`}
+            dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+          />
+        ) : null}
       </div>
 
       {/* Actions */}
