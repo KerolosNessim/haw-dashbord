@@ -31,6 +31,7 @@ api.interceptors.request.use(
     // Let the browser set multipart boundary (manual Content-Type breaks file uploads).
     if (config.data instanceof FormData && config.headers) {
       delete config.headers["Content-Type"]
+      delete config.headers["content-type"]
     }
 
     return config

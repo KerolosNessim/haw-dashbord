@@ -1,7 +1,21 @@
 const DEFAULT_STORAGE_ORIGIN = "https://howeyah.subcodeco.com";
 
+/** Vercel dashboard uses same-origin `/api` rewrite — avoids Hostinger CDN blocking cross-site multipart. */
+function shouldUseVercelApiProxy(): boolean {
+  if (typeof window === "undefined") return false;
+  const { protocol, hostname } = window.location;
+  return (
+    protocol === "https:" &&
+    (hostname === "haw-dashbord.vercel.app" || hostname.endsWith(".vercel.app"))
+  );
+}
+
 /** Laravel API base URL used by axios (`/api` on Vercel, full URL locally). */
 export function apiBaseUrl(): string {
+  if (shouldUseVercelApiProxy()) {
+    return "/api";
+  }
+
   const fromEnv = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
   if (fromEnv) return fromEnv.replace(/\/$/, "");
   if (import.meta.env.PROD) return "/api";

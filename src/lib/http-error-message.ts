@@ -24,7 +24,19 @@ export function getHttpErrorMessage(
     return options?.network ?? defaultMsg;
   }
 
-  const { status, data } = error.response;
+  const { status, data, headers } = error.response;
+
+  const server = String(headers?.server ?? headers?.Server ?? "").toLowerCase();
+  const contentType = String(headers?.["content-type"] ?? "").toLowerCase();
+  if (
+    status === 403 &&
+    (server.includes("hcdn") || (contentType.includes("text/plain") && typeof data === "string"))
+  ) {
+    return (
+      options?.[403] ??
+      "Request blocked by the hosting firewall (CDN). Redeploy the dashboard on Vercel so API calls use the /api proxy, then try again."
+    );
+  }
 
   if (typeof data === "string" && data.trim()) {
     return data.trim();

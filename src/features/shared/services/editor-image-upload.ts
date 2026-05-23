@@ -1,28 +1,8 @@
 import { api } from "@/lib/api";
+import { apiOriginFromEnv } from "@/lib/api-origin";
+import { resolveMediaUrl } from "@/lib/resolve-media-url";
 
-const UPLOAD_PATHS = [
-  { path: "/v1/admin/uploads", field: "file" },
-  { path: "/v1/admin/uploads", field: "image" },
-  { path: "/v1/admin/media", field: "file" },
-  { path: "/v1/admin/media", field: "image" },
-  { path: "/v1/admin/upload", field: "file" },
-  { path: "/v1/admin/upload", field: "image" },
-] as const;
-
-function apiOriginFromEnv(): string {
-  const raw = (import.meta.env.VITE_API_URL ?? "").trim().replace(/\/$/, "");
-  if (!raw) return "";
-  return raw.replace(/\/?api$/i, "");
-}
-
-function resolveMediaUrl(raw: string): string {
-  const path = raw.trim();
-  if (!path) return "";
-  if (/^https?:\/\//i.test(path) || path.startsWith("data:")) return path;
-  const origin = apiOriginFromEnv();
-  if (!origin) return path;
-  return path.startsWith("/") ? `${origin}${path}` : `${origin}/${path}`;
-}
+const EDITOR_UPLOAD_PATH = "/v1/admin/uploads";
 
 function pickUrlFromPayload(data: unknown, depth = 0): string | null {
   if (data == null || depth > 4) return null;
@@ -62,21 +42,33 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-/** Upload image for inline rich text; falls back to data URL if API has no upload route. */
+/**
+ * Upload image for inline rich text (blogs, services, hero, packages, …).
+ * Uses `POST /v1/admin/uploads`. Falls back to a data URL only if the API is unreachable.
+ */
 export async function uploadEditorImage(file: File): Promise<string> {
-  for (const { path, field } of UPLOAD_PATHS) {
-    try {
-      const fd = new FormData();
-      fd.append(field, file);
-      const res = await api.post(path, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      const raw = pickUrlFromPayload(res.data);
-      if (raw) return resolveMediaUrl(raw);
-    } catch {
-      /* try next candidate */
-    }
+  const fd = new FormData();
+  fd.append("file", file);
+
+  try {
+    const res = await api.post(EDITOR_UPLOAD_PATH, fd);
+    const raw = pickUrlFromPayload(res.data);
+    if (raw) return resolveMediaUrl(raw);
+  } catch {
+    /* fall through — offline / route missing */
+  }
+
+  if (import.meta.env.DEV) {
+    console.warn(
+      `[editor] Upload to ${EDITOR_UPLOAD_PATH} failed; using inline data URL. ` +
+        `Deploy the API upload route and use /api proxy on Vercel for production.`,
+    );
   }
 
   return fileToDataUrl(file);
+}
+
+/** @deprecated Use resolveMediaUrl from @/lib/resolve-media-url */
+export function editorUploadOrigin(): string {
+  return apiOriginFromEnv();
 }
