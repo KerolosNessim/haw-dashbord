@@ -52,6 +52,9 @@ export function htmlForMultipartApi(html: string): string {
 
   doc.querySelectorAll(Array.from(BLOCKED_TAGS).join(",")).forEach((node) => node.remove());
 
+  // Inline base64 images blow up JSON/multipart bodies and often trigger Hostinger WAF (403).
+  doc.querySelectorAll('img[src^="data:"]').forEach((node) => node.remove());
+
   doc.body.querySelectorAll("*").forEach((el) => {
     for (const attr of Array.from(el.attributes)) {
       const name = attr.name.toLowerCase();
