@@ -9,8 +9,8 @@
  * the current server rejects that with `حقل slug يجب أن يكون مصفوفة` and requires
  * `slug[ar]` / `slug[en]` (matching blog-categories).
  */
+import { API_BASE_URL } from "@/config/api";
 import { api } from "@/lib/api";
-import { apiOriginFromEnv } from "@/lib/api-origin";
 import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { appendBilingualImageAlt, bilingualImageAltFromApi } from "@/lib/bilingual-image-alt";
 import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
@@ -189,9 +189,8 @@ export function assetUrlFromApiPath(path: string): string {
   const t = path.trim();
   if (!t) return "";
   if (/^https?:\/\//i.test(t)) return t;
-  const origin = apiOriginFromEnv();
-  if (t.startsWith("/")) return `${origin}${t}`;
-  return `${origin}/${t}`;
+  if (t.startsWith("/")) return `${API_BASE_URL}${t}`;
+  return `${API_BASE_URL}/${t}`;
 }
 
 function coverFromRecord(r: Record<string, unknown>): string | null {

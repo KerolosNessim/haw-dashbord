@@ -34,7 +34,7 @@ export function getHttpErrorMessage(
   ) {
     return (
       options?.[403] ??
-      "Request blocked by the hosting firewall (CDN). Redeploy the dashboard on Vercel so API calls use the /api proxy, then try again."
+      "Request blocked by the hosting firewall (CDN). Contact your host to allow API requests from the dashboard."
     );
   }
 

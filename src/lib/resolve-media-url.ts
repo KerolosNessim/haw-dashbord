@@ -1,6 +1,6 @@
-import { apiOriginFromEnv } from "@/lib/api-origin";
+import { API_BASE_URL } from "@/config/api";
 
-export { apiOriginFromEnv };
+const API_HOST = new URL(API_BASE_URL).hostname.toLowerCase();
 
 function preferHttpsForKnownHosts(url: string): string {
   try {
@@ -8,7 +8,7 @@ function preferHttpsForKnownHosts(url: string): string {
     if (parsed.protocol !== "http:") return url;
     const host = parsed.hostname.toLowerCase();
     if (
-      host === "howeyah.subcodeco.com" ||
+      host === API_HOST ||
       host.endsWith(".howeyah.com") ||
       host === "howeyah.com"
     ) {
@@ -27,12 +27,9 @@ export function resolveMediaUrl(raw: string): string {
   if (/^https?:\/\//i.test(path) || path.startsWith("data:") || path.startsWith("blob:")) {
     return preferHttpsForKnownHosts(path);
   }
-  const origin = apiOriginFromEnv();
-  const resolved = origin
-    ? path.startsWith("/")
-      ? `${origin}${path}`
-      : `${origin}/${path}`
-    : path;
+  const resolved = path.startsWith("/")
+    ? `${API_BASE_URL}${path}`
+    : `${API_BASE_URL}/${path}`;
   return preferHttpsForKnownHosts(resolved);
 }
 

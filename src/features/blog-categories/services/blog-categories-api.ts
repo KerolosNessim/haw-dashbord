@@ -25,7 +25,7 @@ export type BlogCategoryListParams = {
  * Admin blog-categories aligned with Postman: list `GET ?tree=…`, create `POST` multipart,
  * update via `POST` multipart + `_method=PUT` (Laravel method spoofing) — PHP often omits multipart fields on true PUT.
  * show `GET /{id}`, delete `DELETE /{id}`, bulk delete `POST …/bulk-delete` with `ids[0]`, `ids[1]`, ….
- * Dashboard `VITE_API_URL` ends with `/api`, so paths are `/v1/admin/...`.
+ * Paths are relative to `API_URL` (e.g. `/v1/admin/...`).
  *
  * Postman documents CRUD only under `blog-categories` (not `blogs/categories/{id}`).
  * The latter has only an alias for bulk-delete: `POST …/blogs/categories/bulk-delete`.

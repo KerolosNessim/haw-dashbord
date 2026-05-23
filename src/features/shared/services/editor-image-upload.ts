@@ -1,5 +1,4 @@
 import { api } from "@/lib/api";
-import { apiOriginFromEnv } from "@/lib/api-origin";
 import { resolveMediaUrl } from "@/lib/resolve-media-url";
 
 const EDITOR_UPLOAD_PATH = "/v1/admin/uploads";
@@ -60,15 +59,9 @@ export async function uploadEditorImage(file: File): Promise<string> {
 
   if (import.meta.env.DEV) {
     console.warn(
-      `[editor] Upload to ${EDITOR_UPLOAD_PATH} failed; using inline data URL. ` +
-        `Deploy the API upload route and use /api proxy on Vercel for production.`,
+      `[editor] Upload to ${EDITOR_UPLOAD_PATH} failed; using inline data URL.`,
     );
   }
 
   return fileToDataUrl(file);
-}
-
-/** @deprecated Use resolveMediaUrl from @/lib/resolve-media-url */
-export function editorUploadOrigin(): string {
-  return apiOriginFromEnv();
 }

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "@/config/api";
 import { api } from "@/lib/api";
 import { appendBilingualImageAlt, bilingualImageAltFromApi } from "@/lib/bilingual-image-alt";
 import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
@@ -23,21 +24,13 @@ export type PackageListParams = {
   search?: string;
 };
 
-function apiOriginFromEnv(): string {
-  const raw = (import.meta.env.VITE_API_URL ?? "").trim().replace(/\/$/, "");
-  if (!raw) return "";
-  return raw.replace(/\/?api$/i, "");
-}
-
 /** Build absolute URL for media paths returned by the backend (dashboard). */
 function resolveUploadedMediaUrl(raw: unknown): string {
   if (typeof raw !== "string" || !raw.trim()) return "";
   const path = raw.trim();
   if (/^https?:\/\//i.test(path)) return path;
-  const origin = apiOriginFromEnv();
-  if (!origin) return path;
-  if (path.startsWith("/")) return `${origin}${path}`;
-  return `${origin}/${path}`;
+  if (path.startsWith("/")) return `${API_BASE_URL}${path}`;
+  return `${API_BASE_URL}/${path}`;
 }
 
 function resolvePackageIconPreview(r: Record<string, unknown>): string {
