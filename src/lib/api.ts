@@ -1,8 +1,9 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios"
 import i18n from "@/i18n"
 import { clearPersistedAuth } from "@/features/auth/utils/clear-client-session"
+import { apiBaseUrl } from "@/lib/api-origin"
 
-const baseUrl = import.meta.env.VITE_API_URL
+const baseUrl = apiBaseUrl()
 
 function acceptLanguageFromDashboard(): "ar" | "en" {
   const lang = i18n.language ?? i18n.resolvedLanguage ?? "en"

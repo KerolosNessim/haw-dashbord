@@ -10,7 +10,9 @@ export const getHeroContent = (): Promise<HeroResponse> => {
     });
 };
 
-export const updateHeroContent = (data: FormData): Promise<HeroResponse> => {
+export const updateHeroContent = (
+  data: FormData | Record<string, unknown>,
+): Promise<HeroResponse> => {
   return api
     .post<HeroResponse>("/v1/admin/hero", data)
     .then((res) => res.data)

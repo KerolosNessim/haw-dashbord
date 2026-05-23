@@ -1,9 +1,6 @@
-/** Resolve storage paths and API image fields to a browser-loadable URL. */
-export function apiOriginFromEnv(): string {
-  const raw = (import.meta.env.VITE_API_URL ?? "").trim().replace(/\/$/, "");
-  if (!raw) return "";
-  return raw.replace(/\/?api$/i, "");
-}
+import { apiOriginFromEnv } from "@/lib/api-origin";
+
+export { apiOriginFromEnv };
 
 function preferHttpsForKnownHosts(url: string): string {
   try {

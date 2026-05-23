@@ -110,32 +110,42 @@ export default function HeroTab() {
   });
 
   const onSubmit = (formValues: HeroFormValues) => {
-    const formData = new FormData();
-    formData.append("title[ar]", htmlForMultipartApi(htmlFromEditor(formValues.title_ar)));
-    formData.append("title[en]", htmlForMultipartApi(htmlFromEditor(formValues.title_en)));
-    formData.append(
-      "description[ar]",
-      htmlForMultipartApi(htmlFromEditor(formValues.des_ar)),
-    );
-    formData.append(
-      "description[en]",
-      htmlForMultipartApi(htmlFromEditor(formValues.des_en)),
-    );
-    formData.append(
-      "sub_description[ar]",
-      htmlForMultipartApi(htmlFromEditor(formValues.sup_des_ar)),
-    );
-    formData.append(
-      "sub_description[en]",
-      htmlForMultipartApi(htmlFromEditor(formValues.sup_des_en)),
-    );
-    formData.append("phone", formValues.phone ?? "");
-    if (userImageFile instanceof File) {
-      formData.append("image", userImageFile);
-    }
-    appendBilingualImageAlt(formData, "image_alt", imageAlt);
+    const payload = {
+      title: {
+        ar: htmlForMultipartApi(htmlFromEditor(formValues.title_ar)),
+        en: htmlForMultipartApi(htmlFromEditor(formValues.title_en)),
+      },
+      description: {
+        ar: htmlForMultipartApi(htmlFromEditor(formValues.des_ar)),
+        en: htmlForMultipartApi(htmlFromEditor(formValues.des_en)),
+      },
+      sub_description: {
+        ar: htmlForMultipartApi(htmlFromEditor(formValues.sup_des_ar)),
+        en: htmlForMultipartApi(htmlFromEditor(formValues.sup_des_en)),
+      },
+      phone: formValues.phone ?? "",
+      image_alt: {
+        ar: (imageAlt.ar ?? "").trim(),
+        en: (imageAlt.en ?? "").trim(),
+      },
+    };
 
-    updateHero(formData);
+    if (userImageFile instanceof File) {
+      const formData = new FormData();
+      formData.append("title[ar]", payload.title.ar);
+      formData.append("title[en]", payload.title.en);
+      formData.append("description[ar]", payload.description.ar);
+      formData.append("description[en]", payload.description.en);
+      formData.append("sub_description[ar]", payload.sub_description.ar);
+      formData.append("sub_description[en]", payload.sub_description.en);
+      formData.append("phone", payload.phone);
+      formData.append("image", userImageFile);
+      appendBilingualImageAlt(formData, "image_alt", imageAlt);
+      updateHero(formData);
+      return;
+    }
+
+    updateHero(payload);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
