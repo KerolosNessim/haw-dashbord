@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import { api } from "@/lib/api";
 import { resolveMediaUrl } from "@/lib/resolve-media-url";
 
@@ -43,7 +44,7 @@ function fileToDataUrl(file: File): Promise<string> {
 
 /**
  * Upload image for inline rich text (blogs, services, hero, packages, …).
- * Uses `POST /v1/admin/uploads`. Falls back to a data URL only if the API is unreachable.
+ * Requires `POST /v1/admin/uploads` on the Laravel API (deploy EditorUploadController).
  */
 export async function uploadEditorImage(file: File): Promise<string> {
   const fd = new FormData();
@@ -53,15 +54,20 @@ export async function uploadEditorImage(file: File): Promise<string> {
     const res = await api.post(EDITOR_UPLOAD_PATH, fd);
     const raw = pickUrlFromPayload(res.data);
     if (raw) return resolveMediaUrl(raw);
-  } catch {
-    /* fall through — offline / route missing */
-  }
+    throw new Error("Upload response did not include an image URL.");
+  } catch (error) {
+    if (isAxiosError(error) && error.response?.status === 404) {
+      throw new Error(
+        "Image upload API is not available on the server (404). Deploy the latest Laravel backend.",
+      );
+    }
 
-  if (import.meta.env.DEV) {
-    console.warn(
-      `[editor] Upload to ${EDITOR_UPLOAD_PATH} failed; using inline data URL.`,
-    );
-  }
+    // Local dev only: allow editing when API is offline
+    if (import.meta.env.DEV) {
+      console.warn(`[editor] ${EDITOR_UPLOAD_PATH} failed; using inline data URL.`, error);
+      return fileToDataUrl(file);
+    }
 
-  return fileToDataUrl(file);
+    throw error;
+  }
 }
