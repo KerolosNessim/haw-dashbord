@@ -31,12 +31,25 @@ function appendSectionId(
   }
 }
 
+/** Global display order (from builder drag order). */
+function appendSectionSortOrder(
+  fd: FormData,
+  prefix: string,
+  index: number,
+  sortOrder?: number,
+) {
+  if (sortOrder != null && Number.isFinite(sortOrder) && sortOrder > 0) {
+    appendIndexedField(fd, prefix, index, "sort_order", sortOrder);
+  }
+}
+
 function appendBenefitsSection(
   fd: FormData,
   index: number,
   data: BenefitsSectionData,
 ) {
   appendSectionId(fd, "benefits", index, data.id);
+  appendSectionSortOrder(fd, "benefits", index, data.sort_order);
   appendIndexedLocalizedHtml(fd, "benefits", index, "title", data.title);
   if (data.description) {
     appendIndexedLocalizedHtml(fd, "benefits", index, "description", data.description);
@@ -57,6 +70,7 @@ function appendListSectionBlock(
   options?: { itemHtmlFields?: string[] },
 ) {
   appendSectionId(fd, prefix, index, data.id);
+  appendSectionSortOrder(fd, prefix, index, data.sort_order);
   appendIndexedLocalizedHtml(fd, prefix, index, "title", data.title);
   if (data.description) {
     appendIndexedLocalizedHtml(fd, prefix, index, "description", data.description);
@@ -105,6 +119,7 @@ function appendListSectionBlock(
 
 function appendFaqsSection(fd: FormData, index: number, data: FaqSectionData) {
   appendSectionId(fd, "faqs", index, data.id);
+  appendSectionSortOrder(fd, "faqs", index, data.sort_order);
   appendIndexedLocalizedHtml(fd, "faqs", index, "title", data.title);
   if (data.description) {
     appendIndexedLocalizedHtml(fd, "faqs", index, "description", data.description);
@@ -132,6 +147,7 @@ function appendFaqsSection(fd: FormData, index: number, data: FaqSectionData) {
 
 function appendToolsSection(fd: FormData, index: number, data: ToolsSectionData) {
   appendSectionId(fd, "tools", index, data.id);
+  appendSectionSortOrder(fd, "tools", index, data.sort_order);
   appendIndexedLocalizedHtml(fd, "tools", index, "title", data.title);
   appendIndexedLocalizedHtml(fd, "tools", index, "description", data.description);
   if (data.sub_title) {
@@ -152,7 +168,10 @@ function appendCtasSection(
   data: Record<string, unknown>,
 ) {
   const id = data.id != null ? Number(data.id) : undefined;
+  const sortOrder =
+    data.sort_order != null ? Number(data.sort_order) : undefined;
   appendSectionId(fd, "ctas", index, id);
+  appendSectionSortOrder(fd, "ctas", index, sortOrder);
   const title = data.title as { ar?: string; en?: string } | undefined;
   appendIndexedLocalizedHtml(fd, "ctas", index, "title", title);
   if (data.phone_number) {
@@ -171,6 +190,7 @@ function appendPackagesSection(
   data: PackagesSectionData,
 ) {
   appendSectionId(fd, "packages", index, data.id);
+  appendSectionSortOrder(fd, "packages", index, data.sort_order);
   appendIndexedLocalizedHtml(fd, "packages", index, "title", data.title);
   if (data.description) {
     appendIndexedLocalizedHtml(fd, "packages", index, "description", data.description);

@@ -1,3 +1,4 @@
+import { blogTagNames, normalizeBlogTagsFromApi } from "@/features/blogs/lib/blog-tags";
 import { unwrapDataArray } from "@/lib/api-payload";
 
 export type BlogStatus = "draft" | "published" | "scheduled";
@@ -75,10 +76,7 @@ function pickCategory(blog: Record<string, unknown>, locale: string): string {
 }
 
 function pickTags(blog: Record<string, unknown>): string[] {
-  const raw = blog.tags;
-  if (Array.isArray(raw)) return raw.map((x) => String(x));
-  if (typeof raw === "string") return raw.split(",").map((s) => s.trim()).filter(Boolean);
-  return [];
+  return blogTagNames(normalizeBlogTagsFromApi(blog.tags));
 }
 
 function pickStatus(raw: unknown): BlogStatus {

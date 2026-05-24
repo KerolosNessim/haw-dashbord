@@ -4,6 +4,7 @@ import {
   localizedHtmlForApi,
 } from "@/lib/localized-html-form";
 import type { BlogFormValues } from "@/features/blogs/blog-form-schema";
+import { appendBlogTagsToFormData, normalizeBlogTagsFromApi } from "@/features/blogs/lib/blog-tags";
 import { pickBilingualSlug, pickLocalized } from "@/lib/api-payload";
 import { isAxiosError } from "axios";
 
@@ -30,14 +31,6 @@ function shouldTryPublicBlogsFallback(error: unknown): boolean {
   if (!isAxiosError(error)) return false;
   const status = error.response?.status;
   return status === 404 || status === 500 || status === 502 || status === 503;
-}
-
-function parseTags(tagsValue: string | undefined): string[] {
-  if (!tagsValue) return [];
-  return tagsValue
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
 }
 
 /** API format `Y-m-d H:i:s` ↔ browser `datetime-local` `Y-m-dTHH:mm`. */
@@ -106,9 +99,7 @@ export function blogValuesToFormData(
 
   fd.append("published_at", publishedAtLocalToApi(values.published_at));
 
-  parseTags(values.tags).forEach((tag, index) => {
-    fd.append(`tags[${index}]`, tag);
-  });
+  appendBlogTagsToFormData(fd, values.tags);
 
   if (imageFile instanceof File) {
     fd.append("image", imageFile);
@@ -261,12 +252,7 @@ export function recordToBlogFormValues(raw: unknown): BlogFormValues | null {
   const rec = asRecord(mergeBlogShowPayload(raw));
   if (!rec) return null;
 
-  const tagsRaw = rec.tags;
-  const tagsString = Array.isArray(tagsRaw)
-    ? tagsRaw.map((t) => String(t)).join(", ")
-    : typeof tagsRaw === "string"
-      ? tagsRaw
-      : "";
+  const tags = normalizeBlogTagsFromApi(rec.tags);
 
   const categoryId = pickBlogFormCategoryId(rec);
 
@@ -303,7 +289,7 @@ export function recordToBlogFormValues(raw: unknown): BlogFormValues | null {
       en: pickLocalized(rec.content, "en"),
     },
     publisher_name: typeof rec.publisher_name === "string" ? rec.publisher_name : "",
-    tags: tagsString,
+    tags,
     category_id: categoryId,
     image_alt: pickBilingualImageAlt(rec.image_alt),
     is_active: rec.is_active === false || rec.is_active === 0 || rec.is_active === "0" ? false : true,

@@ -40,6 +40,7 @@ import RichTextEditor from "@/features/shared/components/editor";
 import { useBlogCategories } from "@/features/blog-categories/hooks/useBlogCategories";
 import { blogSchema } from "@/features/blogs/blog-form-schema";
 import type { BlogFormValues } from "@/features/blogs/blog-form-schema";
+import { BlogTagsField } from "@/features/blogs/components/blog-tags-field";
 import { useCreateBlog } from "@/features/blogs/hooks/useCreateBlog";
 import { useUpdateBlog } from "@/features/blogs/hooks/useUpdateBlog";
 
@@ -71,7 +72,7 @@ const DEFAULT_VALUES: BlogFormValues = {
   content: { ar: "", en: "" },
   faq: { ar: "", en: "" },
   publisher_name: "",
-  tags: "",
+  tags: [],
   category_id: "",
   image_alt: { ar: "", en: "" },
   is_active: true,
@@ -365,14 +366,7 @@ export default function BlogForm({
                 name="tags"
                 control={control}
                 render={({ field }) => (
-                  <Field>
-                    <FieldLabel>{t("tags")}</FieldLabel>
-                    <Input
-                      {...field}
-                      placeholder={t("tags_hint")}
-                      className="h-12 rounded-2xl border-border/40 bg-muted/10 focus:bg-white"
-                    />
-                  </Field>
+                  <BlogTagsField value={field.value} onChange={field.onChange} />
                 )}
               />
             </div>

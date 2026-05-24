@@ -1,6 +1,12 @@
 import { localizedSlugOptional } from "@/lib/zod-localized-slug";
 import * as z from "zod";
 
+const blogTagInputSchema = z.object({
+  name: z.string().default(""),
+  index: z.boolean().default(true),
+  follow: z.boolean().default(true),
+});
+
 /** Arabic required; English optional (blog create/edit). */
 const localizedArRequiredEnOptional = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
@@ -19,7 +25,14 @@ export const blogSchema = z.object({
   description: localizedArRequiredEnOptional,
   content: localizedArRequiredEnOptional,
   publisher_name: z.string().min(1, { message: "validation.required" }),
-  tags: z.string().default(""),
+  tags: z
+    .array(blogTagInputSchema)
+    .default([])
+    .transform((rows) =>
+      rows
+        .map((r) => ({ ...r, name: r.name.trim() }))
+        .filter((r) => r.name.length > 0),
+    ),
   category_id: z.string().min(1, { message: "validation.required" }),
   image_alt: localizedOptional,
   is_active: z.boolean().default(true),

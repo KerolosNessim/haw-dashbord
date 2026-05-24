@@ -74,7 +74,7 @@ export function mapFaqToPayload(data: Record<string, unknown>): FaqSectionData {
         answer: answer
           ? { ar: editorHtml(answer.ar), en: editorHtml(answer.en) }
           : undefined,
-        sort_order: index,
+        sort_order: index + 1,
       };
     },
   );
@@ -99,7 +99,7 @@ export function mapCardsToOfferings(data: Record<string, unknown>): ListSectionD
         description: desc
           ? { ar: editorHtml(desc.ar), en: editorHtml(desc.en) }
           : undefined,
-        sort_order: index,
+        sort_order: index + 1,
       };
     },
   );

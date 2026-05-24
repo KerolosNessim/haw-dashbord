@@ -1,3 +1,4 @@
+import { blogTagNames } from "@/features/blogs/lib/blog-tags";
 import {
   createBlog,
   fetchAdminBlogById,
@@ -59,7 +60,7 @@ function blogFormValuesToRow(id: string | number | "", values: BlogFormValues): 
     image_alt_ar: values.image_alt.ar,
     image_alt_en: values.image_alt.en,
     publisher_name: values.publisher_name,
-    tags: values.tags,
+    tags: blogTagNames(values.tags).join(", "),
     status: values.status,
     is_active: values.is_active ? 1 : 0,
     is_searchable: values.is_searchable ? 1 : 0,
@@ -98,7 +99,11 @@ function rowToBlogFormValues(row: Record<string, unknown>): BlogFormValues {
       en: cellString(row.image_alt_en),
     },
     publisher_name: cellString(row.publisher_name),
-    tags: cellString(row.tags),
+    tags: cellString(row.tags)
+      .split(/[,،]/)
+      .map((name) => name.trim())
+      .filter(Boolean)
+      .map((name) => ({ name, index: true, follow: true })),
     category_id: cellString(row.blog_category_id),
     is_active: cellBoolean(row.is_active, true),
     is_searchable: cellBoolean(row.is_searchable, true),
