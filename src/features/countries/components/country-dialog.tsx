@@ -23,7 +23,7 @@ import { toast } from "sonner";
 const countrySchema = z.object({
   id: z.number().optional(),
   name_ar: z.string().min(1, { message: "validation.required" }),
-  name_en: z.string().min(1, { message: "validation.required" }),
+  name_en: z.string().optional().default(""),
   is_active: z.boolean(),
   image: z.any().optional(),
 });

@@ -12,12 +12,12 @@ import type { SectionEmbeddedProps } from "../section-embedded-props";
 
 const localizedSchema = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
-  en: z.string().min(1, { message: "validation.required" }),
+  en: z.string().optional().default(""),
 });
 
 const localizedEditorSchema = z.object({
   ar: z.any().refine((val) => val && !val.isEmpty, { message: "validation.required" }),
-  en: z.any().refine((val) => val && !val.isEmpty, { message: "validation.required" }),
+  en: z.any().optional(),
 });
 
 const dualDescSchema = z.object({

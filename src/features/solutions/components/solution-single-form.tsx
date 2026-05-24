@@ -19,11 +19,11 @@ import * as z from "zod";
 
 const schema = z.object({
   title_ar: z.string().min(1, { message: "validation.required" }),
-  title_en: z.string().min(1, { message: "validation.required" }),
+  title_en: z.string().optional().default(""),
   des_ar: z.string().min(1, { message: "validation.required" }),
-  des_en: z.string().min(1, { message: "validation.required" }),
+  des_en: z.string().optional().default(""),
   slug_ar: z.string().min(1, { message: "validation.required" }),
-  slug_en: z.string().min(1, { message: "validation.required" }),
+  slug_en: z.string().optional().default(""),
   is_active: z.boolean(),
   image: z.any().optional(),
 });

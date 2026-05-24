@@ -51,7 +51,7 @@ import { LocalizedRichTextField } from "./localized-rich-text-field";
 // --- Static Schema Definition (Outside) ---
 const localizedSchema = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
-  en: z.string().min(1, { message: "validation.required" }),
+  en: z.string().optional().default(""),
 });
 
 const localizedEditorSchema = z.object({
@@ -64,7 +64,7 @@ const serviceImageSchema = z
     ar: z.any().nullable().optional(),
     en: z.any().nullable().optional(),
   })
-  .refine((val) => !!(val.ar || val.en), {
+  .refine((val) => !!val.ar, {
     message: "validation.cover_required",
   });
 

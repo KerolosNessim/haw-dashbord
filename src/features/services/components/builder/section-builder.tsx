@@ -1,15 +1,3 @@
-import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import {
-  Plus,
-  ImageIcon,
-  Layout,
-  SquareEqual,
-  AlignLeft,
-  HelpCircle,
-  PhoneCall,
-} from "lucide-react";
-import { SectionBuilderList } from "./section-builder-list";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,23 +7,36 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import {
+  AlignLeft,
+  HelpCircle,
+  ImageIcon,
+  Layout,
+  PhoneCall,
+  Plus,
+  SquareEqual,
+  ClipboardCheck,
+} from "lucide-react";
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { SectionBuilderList } from "./section-builder-list";
 
 // Import Section Components
-import ImageTextSection from "./sections/image-text-section";
-import CardsSection from "./sections/cards-section";
-import FullSection from "./sections/full-section";
-import DualDescSection from "./sections/dual-desc-section";
-import FAQSection from "./sections/faq-section";
-import ContactSection from "./sections/contact-section";
 import { useEffect } from "react";
+import { useServiceFormDraft } from "../../hooks/useServiceFormDraft";
 import { builderSectionsFromService } from "../../lib/section-order";
-import type { Service } from "../../type";
 import type { ServiceSectionsPayload } from "../../service-section-types";
+import type { Service } from "../../type";
 import {
   buildSectionsPayloadFromInstances,
   type SectionInstanceInput,
 } from "../../utils/section-form-mappers";
-import { useServiceFormDraft } from "../../hooks/useServiceFormDraft";
+import CardsSection from "./sections/cards-section";
+import ContactSection from "./sections/contact-section";
+import DualDescSection from "./sections/dual-desc-section";
+import FAQSection from "./sections/faq-section";
+import FullSection from "./sections/full-section";
+import ImageTextSection from "./sections/image-text-section";
 
 export type SectionType =
   | "image_text"
@@ -43,7 +44,8 @@ export type SectionType =
   | "full_section"
   | "dual_desc"
   | "faq"
-  | "contact";
+  | "contact"
+  | "audits";
 
 interface SectionInstance {
   id: string;
@@ -78,13 +80,15 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
   >({});
   const { draft, hydrated } = useServiceFormDraft(serviceId);
   const restoredDraftRef = useRef(false);
+  const initialServiceLoadedRef = useRef(false);
   const onSectionsDraftChangeRef = useRef(onSectionsDraftChange);
   onSectionsDraftChangeRef.current = onSectionsDraftChange;
 
   useEffect(() => {
-    if (!hydrated || restoredDraftRef.current) return;
+    if (!hydrated) return;
 
-    if (serviceId == null && draft?.sections?.length) {
+    // Restore draft on create page (only once)
+    if (serviceId == null && draft?.sections?.length && !restoredDraftRef.current) {
       restoredDraftRef.current = true;
       const restoredSections = draft.sections.map((section) => ({
         id: section.id,
@@ -96,7 +100,9 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
       return;
     }
 
-    if (initialService && sections.length === 0) {
+    // Populate from API service data (only once, independent of draft ref)
+    if (initialService && !initialServiceLoadedRef.current) {
+      initialServiceLoadedRef.current = true;
       const mappedSections: SectionInstance[] = builderSectionsFromService(
         initialService,
       ).map((def) => ({
@@ -107,7 +113,7 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
 
       setSections(mappedSections);
     }
-  }, [serviceId, hydrated, draft, initialService, sections.length, t]);
+  }, [serviceId, hydrated, draft, initialService]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -155,7 +161,7 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
     },
     { id: "faq", icon: HelpCircle, color: "bg-orange-50 text-orange-600" },
     { id: "contact", icon: PhoneCall, color: "bg-rose-50 text-rose-600" },
-  ] as const;
+   ] as const;
 
   const addSection = (type: SectionType) => {
     const newSection: SectionInstance = {
@@ -181,7 +187,9 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
   const sectionTypeLabel = (section: SectionInstance) =>
     section.type === "cards"
       ? t("sections.types.offerings")
-      : t(`sections.types.${section.type}`);
+      : section.type === "audits"
+        ? t("sections.types.audits")
+        : t(`sections.types.${section.type}`);
 
   const renderSectionContent = (section: SectionInstance, index: number) => {
     const props = {
@@ -192,6 +200,8 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
       onDataChange: (data: Record<string, unknown>) =>
         handleSectionDataChange(section.id, data),
     };
+
+    console.log({section});
 
     switch (section.type) {
       case "image_text":
@@ -210,6 +220,8 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
         return null;
     }
   };
+
+  console.log({sectionTypes})
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">

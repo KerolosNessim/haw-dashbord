@@ -13,9 +13,9 @@ import { useWhyUs } from "../hooks/useWhyUs";
 
 const generalSchema = z.object({
   title_ar: z.string().min(1, "Required"),
-  title_en: z.string().min(1, "Required"),
+  title_en: z.string().optional().default(""),
   des_ar: z.string().min(1, "Required"),
-  des_en: z.string().min(1, "Required"),
+  des_en: z.string().optional().default(""),
 });
 
 type GeneralFormValues = z.infer<typeof generalSchema>;

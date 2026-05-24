@@ -28,9 +28,9 @@ import { useAccreditations } from "../hooks/useAccreditations";
 
 const dependenciesSchema = z.object({
   title_ar: z.string().min(1, "Required"),
-  title_en: z.string().min(1, "Required"),
+  title_en: z.string().optional().default(""),
   des_ar: z.string().min(1, "Required"),
-  des_en: z.string().min(1, "Required"),
+  des_en: z.string().optional().default(""),
   sort_order: z.number().int().min(0).optional(),
   is_active: z.boolean(),
 });

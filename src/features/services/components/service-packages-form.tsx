@@ -13,7 +13,7 @@ import * as z from "zod";
 
 const localizedSchema = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
-  en: z.string().min(1, { message: "validation.required" }),
+  en: z.string().optional().default(""),
 });
 
 function editorNotEmpty(val: unknown): boolean {
@@ -30,7 +30,7 @@ function editorNotEmpty(val: unknown): boolean {
 
 const localizedEditorSchema = z.object({
   ar: z.any().refine(editorNotEmpty, { message: "validation.required" }),
-  en: z.any().refine(editorNotEmpty, { message: "validation.required" }),
+  en: z.any().optional(),
 });
 
 const packageItemSchema = z.object({
@@ -47,7 +47,7 @@ const packageItemSchema = z.object({
   currency: z.string().min(1),
   features: z.object({
     ar: z.array(z.string()).min(1),
-    en: z.array(z.string()).min(1),
+    en: z.array(z.string()).optional().default([]),
   }),
 });
 

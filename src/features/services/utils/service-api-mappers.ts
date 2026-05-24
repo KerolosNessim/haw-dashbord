@@ -105,6 +105,43 @@ export function offeringsDataFromService(service: Service): Record<string, unkno
   };
 }
 
+function normalizeAuditItem(item: unknown): Record<string, unknown> {
+  const row = item as Record<string, unknown>;
+  const desc = row.description;
+  let description: { ar: unknown; en: unknown } = { ar: null, en: null };
+  if (desc && typeof desc === "object" && ("ar" in desc || "en" in desc)) {
+    const d = desc as { ar?: unknown; en?: unknown };
+    description = { ar: d.ar ?? null, en: d.en ?? null };
+  } else if (typeof desc === "string") {
+    description = { ar: desc, en: desc };
+  }
+  return {
+    title: pickLocalized(row.title) ?? { ar: "", en: "" },
+    description,
+    button_text: pickLocalized(row.button_text) ?? { ar: "", en: "" },
+  };
+}
+
+export function auditsDataFromService(service: Service): Record<string, unknown> {
+  const raw = service as Record<string, unknown>;
+  const audits = raw.audits;
+  const items = Array.isArray(audits)
+    ? audits
+    : ((audits as { items?: unknown[] } | undefined)?.items ?? []);
+
+  return {
+    title:
+      pickLocalized((audits as { title?: unknown } | undefined)?.title) ??
+      pickLocalized(raw.audits_title) ?? { ar: "", en: "" },
+    description:
+      pickLocalized((audits as { description?: unknown } | undefined)?.description) ??
+      pickLocalized(raw.audits_description) ?? { ar: "", en: "" },
+    items: items.length
+      ? items.map(normalizeAuditItem)
+      : [{ title: { ar: "", en: "" }, description: { ar: "", en: "" }, button_text: { ar: "", en: "" } }],
+  };
+}
+
 function normalizePackageItems(items: unknown[]): Array<Record<string, unknown>> {
   return items.map((item) => {
     const row = item as Record<string, unknown>;

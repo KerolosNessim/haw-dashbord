@@ -20,8 +20,13 @@ const richTextRequiredField = z.preprocess(
   }),
 );
 
+const richTextOptionalField = z.preprocess(
+  (value) => richTextValueToString(value),
+  z.string().optional().default(""),
+);
+
 /** Required bilingual field backed by Lexical (validates visible text, not raw tags). */
 export const localizedRichTextRequired = z.object({
   ar: richTextRequiredField,
-  en: richTextRequiredField,
+  en: richTextOptionalField,
 });

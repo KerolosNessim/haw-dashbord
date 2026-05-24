@@ -17,9 +17,9 @@ import { slugify, slugifyAr } from "@/lib/slugify";
 const itemSchema = z.object({
   id: z.number().optional(),
   title_ar: z.string().min(1, "Required"),
-  title_en: z.string().min(1, "Required"),
+  title_en: z.string().optional().default(""),
   des_ar: z.string().min(1, "Required"),
-  des_en: z.string().min(1, "Required"),
+  des_en: z.string().optional().default(""),
   image: z.any().optional(),
 });
 

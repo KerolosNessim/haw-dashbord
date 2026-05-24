@@ -1,6 +1,6 @@
 import type { SectionType } from "../service-section-types";
 import type { Service } from "../type";
-import { offeringsDataFromService } from "../utils/service-api-mappers";
+import { offeringsDataFromService, auditsDataFromService } from "../utils/service-api-mappers";
 
 export type BuilderSectionDef = {
   id: string;
@@ -15,6 +15,7 @@ const DEFAULT_BUILDER_ORDER: Record<string, number> = {
   steps: 30,
   tools: 40,
   faqs: 50,
+  audits: 80,
   ctas: 90,
 };
 
@@ -77,6 +78,17 @@ export function builderSectionsFromService(service: Service): BuilderSectionDef[
       sort_order: blockSortOrder(
         service.offerings ?? { sort_order: raw.offerings_sort_order },
         DEFAULT_BUILDER_ORDER.offerings,
+      ),
+    });
+  }
+  if (raw.audits || raw.audits_title) {
+    defs.push({
+      id: "audits",
+      type: "audits",
+      data: auditsDataFromService(service),
+      sort_order: blockSortOrder(
+        raw.audits ?? { sort_order: raw.audits_sort_order },
+        DEFAULT_BUILDER_ORDER.audits,
       ),
     });
   }

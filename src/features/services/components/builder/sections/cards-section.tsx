@@ -13,7 +13,7 @@ import type { SectionEmbeddedProps } from "../section-embedded-props";
 
 const localizedSchema = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
-  en: z.string().min(1, { message: "validation.required" }),
+  en: z.string().optional().default(""),
 });
 
 function editorNotEmpty(val: unknown): boolean {
@@ -30,7 +30,7 @@ function editorNotEmpty(val: unknown): boolean {
 
 const localizedEditorSchema = z.object({
   ar: z.any().refine(editorNotEmpty, { message: "validation.required" }),
-  en: z.any().refine(editorNotEmpty, { message: "validation.required" }),
+  en: z.any().optional(),
 });
 
 const cardsSchema = z.object({

@@ -17,11 +17,11 @@ import { cn } from "@/lib/utils";
 
 const legalSchema = z.object({
   description_ar: z.string().min(1, { message: "validation.required" }),
-  description_en: z.string().min(1, { message: "validation.required" }),
+  description_en: z.string().optional().default(""),
   meta_title_ar: z.string().min(1, { message: "validation.required" }),
-  meta_title_en: z.string().min(1, { message: "validation.required" }),
+  meta_title_en: z.string().optional().default(""),
   meta_description_ar: z.string().min(1, { message: "validation.required" }),
-  meta_description_en: z.string().min(1, { message: "validation.required" }),
+  meta_description_en: z.string().optional().default(""),
   slug: z.string().optional(),
   image: z.any().optional(),
 });

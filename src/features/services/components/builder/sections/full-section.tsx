@@ -24,7 +24,7 @@ import { bilingualImageAltFromApi } from "@/lib/bilingual-image-alt";
 
 const localizedSchema = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
-  en: z.string().min(1, { message: "validation.required" }),
+  en: z.string().optional().default(""),
 });
 
 const imageAltSchema = z.object({

@@ -44,6 +44,7 @@ export function serviceCoverUrl(
 
 export function normalizeService(raw: Record<string, unknown>): Service {
   return {
+    ...raw,
     id: Number(raw.id),
     slug: pickLocalizedField(raw.slug as LocalizedField),
     image: pickServiceImage(raw.image, raw.images),
@@ -67,5 +68,7 @@ export function normalizeService(raw: Record<string, unknown>): Service {
     steps: raw.steps,
     tools: raw.tools,
     ctas: raw.ctas,
-  };
+    audits: raw.audits,
+    offerings: raw.offerings,
+  } as unknown as Service;
 }

@@ -21,11 +21,11 @@ import { useEffect } from "react";
 const faqSchema = z.object({
   question: z.object({
     ar: z.string().min(1, { message: "validation.required" }),
-    en: z.string().min(1, { message: "validation.required" }),
+    en: z.string().optional().default(""),
   }),
   answer: z.object({
     ar: z.string().min(1, { message: "validation.required" }),
-    en: z.string().min(1, { message: "validation.required" }),
+    en: z.string().optional().default(""),
   }),
   status: z.string().min(1, { message: "validation.required" }),
 });

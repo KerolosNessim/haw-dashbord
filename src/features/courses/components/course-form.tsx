@@ -29,7 +29,7 @@ import * as z from "zod";
 
 const localizedRequired = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
-  en: z.string().min(1, { message: "validation.required" }),
+  en: z.string().optional().default(""),
 });
 
 const courseSchema = z.object({

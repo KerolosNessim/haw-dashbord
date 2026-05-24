@@ -13,7 +13,7 @@ import type { SectionEmbeddedProps } from "../section-embedded-props";
 
 const localizedSchema = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
-  en: z.string().min(1, { message: "validation.required" }),
+  en: z.string().optional().default(""),
 });
 
 const contactSchema = z.object({

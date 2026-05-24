@@ -28,9 +28,9 @@ import { toast } from "sonner";
 
 const generalSchema = z.object({
   site_name_ar: z.string().min(1, { message: "validation.required" }),
-  site_name_en: z.string().min(1, { message: "validation.required" }),
+  site_name_en: z.string().optional().default(""),
   site_description_ar: z.string().min(1, { message: "validation.required" }),
-  site_description_en: z.string().min(1, { message: "validation.required" }),
+  site_description_en: z.string().optional().default(""),
   timezone: z.string().min(1, { message: "validation.required" }),
   default_language: z.enum(["ar", "en"]),
 });

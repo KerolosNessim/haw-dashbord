@@ -21,9 +21,9 @@ const statesSchema = z.object({
         id: z.number().optional(), // present for existing, absent for new
         number: z.string().min(1, "Required"),
         title_ar: z.string().min(1, "Required"),
-        title_en: z.string().min(1, "Required"),
+        title_en: z.string().optional().default(""),
         des_ar: z.string().min(1, "Required"),
-        des_en: z.string().min(1, "Required"),
+        des_en: z.string().optional().default(""),
       }),
     )
     .min(1, "At least one statistic is required"),

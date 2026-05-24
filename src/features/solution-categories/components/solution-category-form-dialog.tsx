@@ -24,9 +24,9 @@ import * as z from "zod";
 
 const schema = z.object({
   name_ar: z.string().min(1, { message: "validation.required" }),
-  name_en: z.string().min(1, { message: "validation.required" }),
+  name_en: z.string().optional().default(""),
   slug_ar: z.string().min(1, { message: "validation.required" }),
-  slug_en: z.string().min(1, { message: "validation.required" }),
+  slug_en: z.string().optional().default(""),
   des_ar: z.string(),
   des_en: z.string(),
   meta_title_ar: z.string(),

@@ -18,9 +18,9 @@ import { useClients } from "../hooks/useCliets";
 
 const clientsSchema = z.object({
   title_ar: z.string().min(1, "Required"),
-  title_en: z.string().min(1, "Required"),
+  title_en: z.string().optional().default(""),
   des_ar: z.string().min(1, "Required"),
-  des_en: z.string().min(1, "Required"),
+  des_en: z.string().optional().default(""),
 });
 
 type ClientsFormValues = z.infer<typeof clientsSchema>;
