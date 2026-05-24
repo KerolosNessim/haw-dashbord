@@ -130,9 +130,7 @@ export default function BookingsTable({
                         <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0 border border-primary/10">
                           <Briefcase className="w-5 h-5" />
                         </div>
-                        <span className="font-bold text-gray-900 line-clamp-2 max-w-[250px]">
-                          {booking.service.title[currentLang]}
-                        </span>
+                        <span className="font-bold text-gray-900 line-clamp-2 max-w-[250px]" dangerouslySetInnerHTML={{ __html: booking.service.title[currentLang] }} />
                       </div>
                     </TableCell>
                     <TableCell>

@@ -5,6 +5,8 @@ import {
 } from "../constants/social-meta-options";
 import type { Service } from "../type";
 import type { ServiceSectionsPayload } from "../service-section-types";
+import { builderSectionsFromService } from "../lib/section-blocks";
+import { buildSectionsPayloadFromInstances } from "./section-form-mappers";
 import { mapPackagesToPayload } from "./section-form-mappers";
 import { pickPackageImage, pickServiceImageAlt } from "./service-mapper";
 
@@ -212,96 +214,25 @@ export function packagesDataFromService(service: Service): Record<string, unknow
   };
 }
 
-/** Rebuild section payload from API so a packages-only save does not wipe other sections. */
+/** Rebuild section payload from API so a partial save does not wipe other sections. */
 export function serviceToSectionsPayload(service: Service): ServiceSectionsPayload {
-  const raw = service as Record<string, unknown>;
-  const payload: ServiceSectionsPayload = {};
+  const defs = builderSectionsFromService(service);
+  const dataById: Record<string, Record<string, unknown>> = {};
 
-  if (service.benefits) {
-    const benefits = service.benefits as Record<string, unknown>;
-    payload.benefits = {
-      title: pickLocalized(benefits.title),
-      description: benefits.description as { ar: unknown; en: unknown } | undefined,
-      image: (benefits.image as string | null) ?? null,
-      image_alt: pickServiceImageAlt(benefits.image_alt),
-      sort_order: Number(benefits.sort_order ?? 0) || undefined,
-    };
+  for (const def of defs) {
+    const row = (def.data ?? {}) as Record<string, unknown>;
+    dataById[def.id] = row;
   }
-  if (service.steps) {
-    const stepsItems = Array.isArray(service.steps)
-      ? service.steps
-      : (service.steps as { items?: unknown }).items;
-    const stepsObj =
-      service.steps && typeof service.steps === "object" && !Array.isArray(service.steps)
-        ? (service.steps as Record<string, unknown>)
-        : null;
-    payload.steps = {
-      title: pickLocalized(raw.steps_title ?? stepsObj?.title),
-      description: pickLocalized(raw.steps_description ?? stepsObj?.description),
-      image: (stepsObj?.image as string | null) ?? (raw.steps_image as string | null) ?? null,
-      image_alt: pickServiceImageAlt(stepsObj?.image_alt ?? raw.steps_image_alt),
-      items: stepsItems as ServiceSectionsPayload["steps"],
-      sort_order: Number(stepsObj?.sort_order ?? raw.steps_sort_order ?? 0) || undefined,
-    };
-  }
-  if (service.faqs) {
-    const faqsObj =
-      service.faqs && typeof service.faqs === "object" && !Array.isArray(service.faqs)
-        ? (service.faqs as Record<string, unknown>)
-        : null;
-    payload.faqs = {
-      title: pickLocalized(raw.faqs_title ?? faqsObj?.title),
-      description: pickLocalized(raw.faqs_description ?? faqsObj?.description),
-      items: Array.isArray(service.faqs)
-        ? service.faqs
-        : (service.faqs as { items?: unknown }).items,
-      sort_order: Number(faqsObj?.sort_order ?? raw.faqs_sort_order ?? 0) || undefined,
-    } as ServiceSectionsPayload["faqs"];
-  }
-  if (service.tools) {
-    const tools = service.tools as Record<string, unknown>;
-    payload.tools = {
-      ...(service.tools as ServiceSectionsPayload["tools"]),
-      sort_order: Number(tools.sort_order ?? raw.tools_sort_order ?? 0) || undefined,
-    };
-  }
-  if (service.ctas) {
-    const ctas = service.ctas as Record<string, unknown>;
-    payload.ctas = {
-      ...(service.ctas as Record<string, unknown>),
-      sort_order: Number(ctas.sort_order ?? raw.ctas_sort_order ?? 0) || undefined,
-    };
-  }
-  if (raw.audits || raw.audits_title) {
-    const auditsObj =
-      raw.audits && typeof raw.audits === "object" && !Array.isArray(raw.audits)
-        ? (raw.audits as Record<string, unknown>)
-        : null;
-    payload.audits = {
-      title: pickLocalized(raw.audits_title ?? auditsObj?.title),
-      description: pickLocalized(raw.audits_description ?? auditsObj?.description),
-      items: (Array.isArray(raw.audits)
-        ? raw.audits
-        : (raw.audits as { items?: unknown }).items) as ServiceSectionsPayload["audits"],
-      sort_order: Number(auditsObj?.sort_order ?? raw.audits_sort_order ?? 0) || undefined,
-    };
-  }
-  if (service.packages || raw.packages_title) {
-    payload.packages = mapPackagesToPayload(packagesDataFromService(service));
-  }
-  if (raw.offerings || raw.offerings_title) {
-    const offeringsObj =
-      service.offerings && typeof service.offerings === "object" && !Array.isArray(service.offerings)
-        ? (service.offerings as Record<string, unknown>)
-        : null;
-    payload.offerings = {
-      title: pickLocalized(raw.offerings_title ?? offeringsObj?.title),
-      description: pickLocalized(raw.offerings_description ?? offeringsObj?.description),
-      items: (Array.isArray(raw.offerings)
-        ? raw.offerings
-        : (service.offerings as { items?: unknown }).items) as ServiceSectionsPayload["offerings"],
-      sort_order: Number(offeringsObj?.sort_order ?? raw.offerings_sort_order ?? 0) || undefined,
-    };
+
+  const payload = buildSectionsPayloadFromInstances(
+    defs.map((def) => ({ id: def.id, type: def.type })),
+    dataById,
+  );
+
+  if (service.packages || (service as Record<string, unknown>).packages_title) {
+    payload.packages = [
+      mapPackagesToPayload(packagesDataFromService(service)),
+    ];
   }
 
   return payload;

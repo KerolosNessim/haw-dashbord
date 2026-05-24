@@ -103,15 +103,21 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
     // Populate from API service data (only once, independent of draft ref)
     if (initialService && !initialServiceLoadedRef.current) {
       initialServiceLoadedRef.current = true;
-      const mappedSections: SectionInstance[] = builderSectionsFromService(
-        initialService,
-      ).map((def) => ({
+      const defs = builderSectionsFromService(initialService);
+      const mappedSections: SectionInstance[] = defs.map((def) => ({
         id: def.id,
         type: def.type,
         data: def.data,
       }));
 
+      const nextDataById: Record<string, Record<string, unknown>> = {};
+      for (const def of defs) {
+        const row = (def.data ?? {}) as Record<string, unknown>;
+        nextDataById[def.id] = row;
+      }
+
       setSections(mappedSections);
+      setSectionDataById(nextDataById);
     }
   }, [serviceId, hydrated, draft, initialService]);
 
@@ -137,14 +143,16 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
   const handleSectionDataChange = useCallback(
     (sectionId: string, data: Record<string, unknown>) => {
       setSectionDataById((prev) => {
+        const preservedId = prev[sectionId]?.id ?? data.id;
+        const nextData =
+          preservedId != null && data.id == null
+            ? { ...data, id: preservedId }
+            : data;
         const prevData = prev[sectionId];
-        if (
-          prevData &&
-          JSON.stringify(prevData) === JSON.stringify(data)
-        ) {
+        if (prevData && JSON.stringify(prevData) === JSON.stringify(nextData)) {
           return prev;
         }
-        return { ...prev, [sectionId]: data };
+        return { ...prev, [sectionId]: nextData };
       });
     },
     [],
@@ -201,8 +209,6 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
         handleSectionDataChange(section.id, data),
     };
 
-    console.log({section});
-
     switch (section.type) {
       case "image_text":
         return <ImageTextSection {...props} />;
@@ -220,8 +226,6 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
         return null;
     }
   };
-
-  console.log({sectionTypes})
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">

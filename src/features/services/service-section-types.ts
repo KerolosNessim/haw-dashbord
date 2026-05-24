@@ -1,6 +1,7 @@
 /** Section payloads for unified POST (full overwrite on backend) */
 
 export type BenefitsSectionData = {
+  id?: number;
   title?: { ar: string; en: string };
   description?: { ar: unknown; en: unknown };
   image?: File | string | null;
@@ -19,6 +20,7 @@ export type ListSectionItem = {
 };
 
 export type ListSectionData = {
+  id?: number;
   title?: { ar: string; en: string };
   description?: { ar: string; en: string };
   image?: File | string | null;
@@ -30,6 +32,7 @@ export type ListSectionData = {
 export type FaqSectionData = ListSectionData;
 
 export type ToolsSectionData = {
+  id?: number;
   title?: { ar: string; en: string };
   description?: { ar: unknown; en: unknown };
   sub_title?: { ar: string; en: string };
@@ -49,6 +52,7 @@ export type PackagesSectionItem = {
 };
 
 export type PackagesSectionData = {
+  id?: number;
   title?: { ar: string; en: string };
   description?: { ar: string; en: string };
   items?: PackagesSectionItem[];
@@ -56,14 +60,14 @@ export type PackagesSectionData = {
 };
 
 export interface ServiceSectionsPayload {
-  benefits?: BenefitsSectionData;
-  steps?: ListSectionData;
-  faqs?: FaqSectionData;
-  offerings?: ListSectionData;
-  tools?: ToolsSectionData;
-  ctas?: Record<string, unknown>;
-  audits?: ListSectionData;
-  packages?: PackagesSectionData;
+  benefits?: BenefitsSectionData[];
+  steps?: ListSectionData[];
+  faqs?: FaqSectionData[];
+  offerings?: ListSectionData[];
+  tools?: ToolsSectionData[];
+  ctas?: Array<Record<string, unknown>>;
+  audits?: ListSectionData[];
+  packages?: PackagesSectionData[];
 }
 
 export const SECTION_TYPE_TO_API_KEY = {

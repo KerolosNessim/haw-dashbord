@@ -15,180 +15,226 @@ import {
   appendLocalized,
   appendLocalizedHtml,
   appendScalar,
+  appendSectionItemField,
+  appendSectionItemLocalizedHtml,
   htmlFromUnknown,
 } from "../utils/form-data-helpers";
 
-function appendSectionBlockSortOrder(
+function appendSectionId(
   fd: FormData,
   prefix: string,
-  sortOrder?: number,
+  index: number,
+  id?: number,
 ) {
-  if (sortOrder == null) return;
-  fd.append(`${prefix}_sort_order`, String(sortOrder));
+  if (id != null && Number.isFinite(id) && id > 0) {
+    appendIndexedField(fd, prefix, index, "id", id);
+  }
 }
 
-function appendLocalizedContentTitle(
+function appendBenefitsSection(
   fd: FormData,
-  prefix: string,
-  title: { ar?: string; en?: string } | undefined,
+  index: number,
+  data: BenefitsSectionData,
 ) {
-  if (!title) return;
-  appendLocalizedHtml(fd, prefix, title.ar, "ar");
-  appendLocalizedHtml(fd, prefix, title.en, "en");
-}
-
-function appendBenefits(fd: FormData, data: BenefitsSectionData) {
-  appendSectionBlockSortOrder(fd, "benefits", data.sort_order);
-  appendLocalizedContentTitle(fd, "benefits_title", data.title);
+  appendSectionId(fd, "benefits", index, data.id);
+  appendIndexedLocalizedHtml(fd, "benefits", index, "title", data.title);
   if (data.description) {
-    appendLocalizedHtml(fd, "benefits_description", data.description.ar, "ar");
-    appendLocalizedHtml(fd, "benefits_description", data.description.en, "en");
+    appendIndexedLocalizedHtml(fd, "benefits", index, "description", data.description);
   }
   if (data.image instanceof File) {
-    fd.append("benefits_image", data.image);
+    fd.append(`benefits[${index}][image]`, data.image);
   }
   if (data.image_alt) {
-    appendLocalized(fd, "benefits_image_alt", data.image_alt);
+    appendIndexedLocalized(fd, "benefits", index, "image_alt", data.image_alt);
   }
 }
 
-function appendListSection(
+function appendListSectionBlock(
   fd: FormData,
   prefix: string,
+  index: number,
   data: ListSectionData,
   options?: { itemHtmlFields?: string[] },
 ) {
-  appendSectionBlockSortOrder(fd, prefix, data.sort_order);
-  appendLocalizedContentTitle(fd, `${prefix}_title`, data.title);
+  appendSectionId(fd, prefix, index, data.id);
+  appendIndexedLocalizedHtml(fd, prefix, index, "title", data.title);
   if (data.description) {
-    appendLocalizedHtml(fd, `${prefix}_description`, data.description.ar, "ar");
-    appendLocalizedHtml(fd, `${prefix}_description`, data.description.en, "en");
+    appendIndexedLocalizedHtml(fd, prefix, index, "description", data.description);
   }
   if (data.image instanceof File) {
-    fd.append(`${prefix}_image`, data.image);
+    fd.append(`${prefix}[${index}][image]`, data.image);
   }
   if (data.image_alt) {
-    appendLocalized(fd, `${prefix}_image_alt`, data.image_alt);
+    appendIndexedLocalized(fd, prefix, index, "image_alt", data.image_alt);
   }
+
   const itemHtmlFields = options?.itemHtmlFields ?? [];
-  data.items?.forEach((item, index) => {
-    appendIndexedLocalizedHtml(fd, prefix, index, "title", item.title);
+  data.items?.forEach((item, itemIndex) => {
+    appendSectionItemLocalizedHtml(fd, prefix, index, itemIndex, "title", item.title);
     const itemDesc =
       item.description && typeof item.description === "object"
         ? (item.description as { ar?: unknown; en?: unknown })
         : undefined;
-    appendIndexedLocalizedHtml(fd, prefix, index, "description", itemDesc);
+    appendSectionItemLocalizedHtml(
+      fd,
+      prefix,
+      index,
+      itemIndex,
+      "description",
+      itemDesc,
+    );
     for (const field of itemHtmlFields) {
       const value = item[field as keyof typeof item] as
         | { ar?: string; en?: string }
         | undefined;
-      appendIndexedLocalizedHtml(fd, prefix, index, field, value);
+      appendSectionItemLocalizedHtml(fd, prefix, index, itemIndex, field, value);
     }
-    appendIndexedField(fd, prefix, index, "sort_order", item.sort_order ?? index + 1);
+    appendSectionItemField(
+      fd,
+      prefix,
+      index,
+      itemIndex,
+      "sort_order",
+      item.sort_order ?? itemIndex + 1,
+    );
     if (item.image instanceof File) {
-      fd.append(`${prefix}[${index}][image]`, item.image);
+      fd.append(`${prefix}[${index}][items][${itemIndex}][image]`, item.image);
     }
   });
 }
 
-function appendSteps(fd: FormData, data: ListSectionData) {
-  appendListSection(fd, "steps", data);
-}
-
-function appendAudits(fd: FormData, data: ListSectionData) {
-  appendListSection(fd, "audits", data, { itemHtmlFields: ["button_text"] });
-}
-
-function appendFaqs(fd: FormData, data: FaqSectionData) {
-  appendSectionBlockSortOrder(fd, "faqs", data.sort_order);
-  if (data.title) {
-    appendLocalizedHtml(fd, "faqs_title", data.title.ar, "ar");
-    appendLocalizedHtml(fd, "faqs_title", data.title.en, "en");
-  }
+function appendFaqsSection(fd: FormData, index: number, data: FaqSectionData) {
+  appendSectionId(fd, "faqs", index, data.id);
+  appendIndexedLocalizedHtml(fd, "faqs", index, "title", data.title);
   if (data.description) {
-    appendLocalizedHtml(fd, "faqs_description", data.description.ar, "ar");
-    appendLocalizedHtml(fd, "faqs_description", data.description.en, "en");
+    appendIndexedLocalizedHtml(fd, "faqs", index, "description", data.description);
   }
-  data.items?.forEach((item, index) => {
-    appendIndexedLocalizedHtml(fd, "faqs", index, "question", item.question);
-    appendIndexedLocalizedHtml(fd, "faqs", index, "answer", item.answer);
-    appendIndexedField(fd, "faqs", index, "sort_order", item.sort_order ?? index + 1);
+  data.items?.forEach((item, itemIndex) => {
+    appendSectionItemLocalizedHtml(
+      fd,
+      "faqs",
+      index,
+      itemIndex,
+      "question",
+      item.question,
+    );
+    appendSectionItemLocalizedHtml(fd, "faqs", index, itemIndex, "answer", item.answer);
+    appendSectionItemField(
+      fd,
+      "faqs",
+      index,
+      itemIndex,
+      "sort_order",
+      item.sort_order ?? itemIndex + 1,
+    );
   });
 }
 
-function appendOfferings(fd: FormData, data: ListSectionData) {
-  appendSectionBlockSortOrder(fd, "offerings", data.sort_order);
-  appendLocalizedContentTitle(fd, "offerings_title", data.title);
-  if (data.description) {
-    appendLocalizedHtml(fd, "offerings_description", data.description.ar, "ar");
-    appendLocalizedHtml(fd, "offerings_description", data.description.en, "en");
-  }
-  data.items?.forEach((item, index) => {
-    appendIndexedLocalizedHtml(fd, "offerings", index, "title", item.title);
-    const desc =
-      item.description && typeof item.description === "object"
-        ? (item.description as { ar?: unknown; en?: unknown })
-        : undefined;
-    appendIndexedLocalizedHtml(fd, "offerings", index, "description", desc);
-    appendIndexedField(fd, "offerings", index, "sort_order", item.sort_order ?? index + 1);
-  });
-}
-
-function appendTools(fd: FormData, data: ToolsSectionData) {
-  appendSectionBlockSortOrder(fd, "tools", data.sort_order);
-  appendLocalizedContentTitle(fd, "tools_title", data.title);
-  appendLocalizedHtml(fd, "tools_description", data.description?.ar, "ar");
-  appendLocalizedHtml(fd, "tools_description", data.description?.en, "en");
+function appendToolsSection(fd: FormData, index: number, data: ToolsSectionData) {
+  appendSectionId(fd, "tools", index, data.id);
+  appendIndexedLocalizedHtml(fd, "tools", index, "title", data.title);
+  appendIndexedLocalizedHtml(fd, "tools", index, "description", data.description);
   if (data.sub_title) {
-    appendLocalizedHtml(fd, "tools_sub_title", data.sub_title.ar, "ar");
-    appendLocalizedHtml(fd, "tools_sub_title", data.sub_title.en, "en");
+    appendIndexedLocalizedHtml(fd, "tools", index, "sub_title", data.sub_title);
   }
-  appendLocalizedHtml(fd, "tools_sub_description", data.sub_description?.ar, "ar");
-  appendLocalizedHtml(fd, "tools_sub_description", data.sub_description?.en, "en");
+  appendIndexedLocalizedHtml(
+    fd,
+    "tools",
+    index,
+    "sub_description",
+    data.sub_description,
+  );
 }
 
-function appendCtas(fd: FormData, data: Record<string, unknown>) {
-  const sortOrder = data.sort_order;
-  if (sortOrder != null) {
-    appendSectionBlockSortOrder(fd, "ctas", Number(sortOrder));
-  }
+function appendCtasSection(
+  fd: FormData,
+  index: number,
+  data: Record<string, unknown>,
+) {
+  const id = data.id != null ? Number(data.id) : undefined;
+  appendSectionId(fd, "ctas", index, id);
   const title = data.title as { ar?: string; en?: string } | undefined;
-  if (title) appendLocalizedContentTitle(fd, "ctas_title", title);
-  if (data.phone_number) fd.append("ctas_phone_number", String(data.phone_number));
-  if (data.phone) fd.append("ctas_phone_number", String(data.phone));
-  appendLocalizedHtml(fd, "ctas_description", (data.description as { ar?: unknown })?.ar, "ar");
-  appendLocalizedHtml(fd, "ctas_description", (data.description as { en?: unknown })?.en, "en");
+  appendIndexedLocalizedHtml(fd, "ctas", index, "title", title);
+  if (data.phone_number) {
+    appendIndexedField(fd, "ctas", index, "phone_number", String(data.phone_number));
+  }
+  if (data.phone) {
+    appendIndexedField(fd, "ctas", index, "phone_number", String(data.phone));
+  }
+  const description = data.description as { ar?: unknown; en?: unknown } | undefined;
+  appendIndexedLocalizedHtml(fd, "ctas", index, "description", description);
 }
 
-function appendPackages(fd: FormData, data: PackagesSectionData) {
-  appendSectionBlockSortOrder(fd, "packages", data.sort_order);
-  appendLocalizedContentTitle(fd, "packages_title", data.title);
+function appendPackagesSection(
+  fd: FormData,
+  index: number,
+  data: PackagesSectionData,
+) {
+  appendSectionId(fd, "packages", index, data.id);
+  appendIndexedLocalizedHtml(fd, "packages", index, "title", data.title);
   if (data.description) {
-    appendLocalizedHtml(fd, "packages_description", data.description.ar, "ar");
-    appendLocalizedHtml(fd, "packages_description", data.description.en, "en");
+    appendIndexedLocalizedHtml(fd, "packages", index, "description", data.description);
   }
-  data.items?.forEach((item, index) => {
-    appendIndexedLocalizedHtml(fd, "packages", index, "title", item.title);
-    appendIndexedLocalizedHtml(fd, "packages", index, "description", item.description);
-    appendIndexedLocalized(fd, "packages", index, "image_alt", item.image_alt);
+  data.items?.forEach((item, itemIndex) => {
+    appendSectionItemLocalizedHtml(
+      fd,
+      "packages",
+      index,
+      itemIndex,
+      "title",
+      item.title,
+    );
+    appendSectionItemLocalizedHtml(
+      fd,
+      "packages",
+      index,
+      itemIndex,
+      "description",
+      item.description,
+    );
+    if (item.image_alt) {
+      const itemBase = `packages[${index}][items][${itemIndex}][image_alt]`;
+      if (item.image_alt.ar) fd.append(`${itemBase}[ar]`, item.image_alt.ar);
+      if (item.image_alt.en) fd.append(`${itemBase}[en]`, item.image_alt.en);
+    }
     if (item.image instanceof File) {
-      fd.append(`packages[${index}][image]`, item.image);
+      fd.append(`packages[${index}][items][${itemIndex}][image]`, item.image);
     }
     if (item.price != null) {
-      fd.append(`packages[${index}][price]`, String(item.price));
+      appendSectionItemField(fd, "packages", index, itemIndex, "price", item.price);
     }
     if (item.currency) {
-      fd.append(`packages[${index}][currency]`, item.currency);
+      appendSectionItemField(
+        fd,
+        "packages",
+        index,
+        itemIndex,
+        "currency",
+        item.currency,
+      );
     }
-    appendIndexedField(fd, "packages", index, "sort_order", item.sort_order ?? index + 1);
+    appendSectionItemField(
+      fd,
+      "packages",
+      index,
+      itemIndex,
+      "sort_order",
+      item.sort_order ?? itemIndex + 1,
+    );
     item.features?.ar?.forEach((feature, fi) => {
       if (feature?.trim()) {
-        fd.append(`packages[${index}][features][ar][${fi}]`, feature);
+        fd.append(
+          `packages[${index}][items][${itemIndex}][features][ar][${fi}]`,
+          feature,
+        );
       }
     });
     item.features?.en?.forEach((feature, fi) => {
       if (feature?.trim()) {
-        fd.append(`packages[${index}][features][en][${fi}]`, feature);
+        fd.append(
+          `packages[${index}][items][${itemIndex}][features][en][${fi}]`,
+          feature,
+        );
       }
     });
   });
@@ -276,14 +322,22 @@ export function buildServicePageFormData(
 
   appendBasicSocialAndMedia(fd, basic);
 
-  if (sections.benefits) appendBenefits(fd, sections.benefits);
-  if (sections.steps) appendSteps(fd, sections.steps);
-  if (sections.faqs) appendFaqs(fd, sections.faqs);
-  if (sections.offerings) appendOfferings(fd, sections.offerings);
-  if (sections.tools) appendTools(fd, sections.tools);
-  if (sections.ctas) appendCtas(fd, sections.ctas);
-  if (sections.audits) appendAudits(fd, sections.audits);
-  if (sections.packages) appendPackages(fd, sections.packages);
+  sections.benefits?.forEach((section, index) => appendBenefitsSection(fd, index, section));
+  sections.steps?.forEach((section, index) => appendListSectionBlock(fd, "steps", index, section));
+  sections.faqs?.forEach((section, index) => appendFaqsSection(fd, index, section));
+  sections.offerings?.forEach((section, index) =>
+    appendListSectionBlock(fd, "offerings", index, section),
+  );
+  sections.tools?.forEach((section, index) => appendToolsSection(fd, index, section));
+  sections.ctas?.forEach((section, index) => appendCtasSection(fd, index, section));
+  sections.audits?.forEach((section, index) =>
+    appendListSectionBlock(fd, "audits", index, section, {
+      itemHtmlFields: ["button_text"],
+    }),
+  );
+  sections.packages?.forEach((section, index) =>
+    appendPackagesSection(fd, index, section),
+  );
 
   return fd;
 }

@@ -206,7 +206,7 @@ export function mapAuditsToPayload(data: Record<string, unknown>): ListSectionDa
 
 const MAPPERS: Record<
   SectionType,
-  (data: Record<string, unknown>) => ServiceSectionsPayload[keyof ServiceSectionsPayload]
+  (data: Record<string, unknown>) => Record<string, unknown>
 > = {
   image_text: mapImageTextToBenefits,
   full_section: mapFullSectionToSteps,
@@ -221,7 +221,7 @@ const MAPPERS: Record<
 export function mapSectionFormToPayload(
   type: SectionType,
   data: Record<string, unknown>,
-): ServiceSectionsPayload[keyof ServiceSectionsPayload] {
+): Record<string, unknown> {
   return MAPPERS[type](data);
 }
 
@@ -230,7 +230,17 @@ export interface SectionInstanceInput {
   type: SectionType;
 }
 
-/** Build API sections object from builder instances (last instance wins per API key). */
+function pushSectionPayload(
+  payload: ServiceSectionsPayload,
+  apiKey: keyof ServiceSectionsPayload,
+  section: Record<string, unknown>,
+) {
+  const bucket = (payload[apiKey] as Record<string, unknown>[] | undefined) ?? [];
+  bucket.push(section);
+  (payload as Record<string, unknown>)[apiKey] = bucket;
+}
+
+/** Build API sections object from builder instances (supports multiple per type). */
 export function buildSectionsPayloadFromInstances(
   instances: SectionInstanceInput[],
   dataByInstanceId: Record<string, Record<string, unknown>>,
@@ -242,8 +252,11 @@ export function buildSectionsPayloadFromInstances(
     if (!raw) return;
     const apiKey = SECTION_TYPE_TO_API_KEY[instance.type];
     const mapped = mapSectionFormToPayload(instance.type, raw) as Record<string, unknown>;
+    if (raw.id != null && raw.id !== "") {
+      mapped.id = Number(raw.id);
+    }
     mapped.sort_order = index + 1;
-    (payload as Record<string, unknown>)[apiKey] = mapped;
+    pushSectionPayload(payload, apiKey, mapped);
   });
 
   return payload;

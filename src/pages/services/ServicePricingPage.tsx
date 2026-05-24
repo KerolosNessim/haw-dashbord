@@ -41,7 +41,9 @@ export default function ServicePricingPage() {
 
     const sections = {
       ...serviceToSectionsPayload(service),
-      packages: mapPackagesToPayload(packagesValues as Record<string, unknown>),
+      packages: [
+        mapPackagesToPayload(packagesValues as Record<string, unknown>),
+      ],
     };
 
     await saveServicePage({

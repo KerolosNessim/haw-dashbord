@@ -27,6 +27,9 @@ import {
   Link as LinkIcon,
   Share2,
   EyeOff,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Controller, useForm, type FieldErrors, type Resolver } from "react-hook-form";
 import { useEffect, useState } from "react";
@@ -66,6 +69,7 @@ const DEFAULT_VALUES: BlogFormValues = {
   subtitle: { ar: "", en: "" },
   description: { ar: "", en: "" },
   content: { ar: "", en: "" },
+  faq: { ar: "", en: "" },
   publisher_name: "",
   tags: "",
   category_id: "",
@@ -134,6 +138,12 @@ export default function BlogForm({
     i18n.language.startsWith("ar") ? "ar" : "en",
   );
 
+  const [faqLangTab, setFaqLangTab] = useState<"ar" | "en">(() =>
+    i18n.language.startsWith("ar") ? "ar" : "en",
+  );
+
+  const [faqExpanded, setFaqExpanded] = useState(false);
+
   const {
     control,
     handleSubmit,
@@ -149,7 +159,9 @@ export default function BlogForm({
   });
 
   useEffect(() => {
-    setArticleLangTab(i18n.language.startsWith("ar") ? "ar" : "en");
+    const lang = i18n.language.startsWith("ar") ? "ar" : "en";
+    setArticleLangTab(lang);
+    setFaqLangTab(lang);
   }, [i18n.language]);
 
   const watchTitleAr = watch("title.ar");
@@ -247,6 +259,7 @@ export default function BlogForm({
     >
       <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-12">
         <div className="min-w-0 space-y-8 lg:col-span-8">
+          {/* ── Basic Info ─────────────────────────────────────────────────── */}
           <div className="space-y-8 rounded-[32px] border bg-white p-8 shadow-sm">
             <div className="flex items-center gap-3 border-b pb-6">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -256,34 +269,34 @@ export default function BlogForm({
             </div>
 
             <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2">
-                  <Controller
-                    name="subtitle.ar"
-                    control={control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel>{t("subtitle_ar")}</FieldLabel>
-                        <Input
-                          {...field}
-                          dir="rtl"
-                          className="h-12 rounded-2xl border-border/40 bg-muted/10 focus:bg-white"
-                        />
-                      </Field>
-                    )}
-                  />
-                  <Controller
-                    name="subtitle.en"
-                    control={control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel>{t("subtitle_en")}</FieldLabel>
-                        <Input
-                          {...field}
-                          dir="ltr"
-                          className="h-12 rounded-2xl border-border/40 bg-muted/10 focus:bg-white"
-                        />
-                      </Field>
-                    )}
-                  />
+              <Controller
+                name="subtitle.ar"
+                control={control}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel>{t("subtitle_ar")}</FieldLabel>
+                    <Input
+                      {...field}
+                      dir="rtl"
+                      className="h-12 rounded-2xl border-border/40 bg-muted/10 focus:bg-white"
+                    />
+                  </Field>
+                )}
+              />
+              <Controller
+                name="subtitle.en"
+                control={control}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel>{t("subtitle_en")}</FieldLabel>
+                    <Input
+                      {...field}
+                      dir="ltr"
+                      className="h-12 rounded-2xl border-border/40 bg-muted/10 focus:bg-white"
+                    />
+                  </Field>
+                )}
+              />
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -365,6 +378,7 @@ export default function BlogForm({
             </div>
           </div>
 
+          {/* ── Content Editor ─────────────────────────────────────────────── */}
           <div
             id="blog-article-editor-anchor"
             className="space-y-8 rounded-[32px] border bg-white p-8 shadow-sm"
@@ -513,6 +527,125 @@ export default function BlogForm({
             </Tabs>
           </div>
 
+          {/* ── FAQ Editor ─────────────────────────────────────────────────── */}
+          <div
+            id="blog-faq-editor-anchor"
+            className="space-y-0 rounded-[32px] border bg-white shadow-sm overflow-hidden"
+          >
+            {/* Collapsible header */}
+            <button
+              type="button"
+              onClick={() => setFaqExpanded((prev) => !prev)}
+              className="w-full flex items-center justify-between gap-3 p-8 text-start hover:bg-muted/5 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600">
+                  <HelpCircle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">{t("faq_section_title", { defaultValue: "FAQ" })}</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t("faq_section_hint", { defaultValue: "Frequently asked questions — supports rich formatting" })}
+                  </p>
+                </div>
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl border bg-muted/10 text-muted-foreground shrink-0">
+                {faqExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </div>
+            </button>
+
+            {/* Collapsible body */}
+            {faqExpanded && (
+              <div className="px-8 pb-8 space-y-6 border-t pt-6">
+                <Tabs
+                  value={faqLangTab}
+                  onValueChange={(v) => setFaqLangTab(v === "en" ? "en" : "ar")}
+                  className="w-full"
+                  dir={i18n.language.startsWith("ar") ? "rtl" : "ltr"}
+                >
+                  <TabsList className="grid h-12 w-full grid-cols-2 rounded-2xl bg-muted/20">
+                    <TabsTrigger value="ar" className="rounded-xl font-bold">
+                      {t("tab_ar")}
+                    </TabsTrigger>
+                    <TabsTrigger value="en" className="rounded-xl font-bold">
+                      {t("tab_en")}
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {(["ar", "en"] as const).map((lang) => (
+                    <TabsContent key={lang} value={lang} className="mt-6 space-y-6">
+                      <Controller
+                        name={lang === "ar" ? "faq.ar" : "faq.en"}
+                        control={control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel>
+                              {lang === "ar"
+                                ? t("faq_label_ar", { defaultValue: "FAQ (Arabic)" })
+                                : t("faq_label_en", { defaultValue: "FAQ (English)" })}
+                              {lang === "en" ? (
+                                <span className="ms-1 font-normal text-muted-foreground">
+                                  {t("optional_suffix")}
+                                </span>
+                              ) : null}
+                            </FieldLabel>
+                            <p className="text-[11px] text-muted-foreground -mt-1 mb-1">
+                              {lang === "ar"
+                                ? t("faq_hint_ar", {
+                                    defaultValue:
+                                      "استخدم العناوين للأسئلة والفقرات للأجوبة. يدعم التنسيق الغني.",
+                                  })
+                                : t("faq_hint_en", {
+                                    defaultValue:
+                                      "Use headings for questions and paragraphs for answers. Rich formatting supported.",
+                                  })}
+                            </p>
+                            <RichTextEditor
+                              dir={lang === "ar" ? "rtl" : "ltr"}
+                              value={field.value}
+                              placeholder={
+                                lang === "ar"
+                                  ? t("faq_placeholder_ar", {
+                                      defaultValue: "أضف الأسئلة والأجوبة هنا…",
+                                    })
+                                  : t("faq_placeholder_en", {
+                                      defaultValue: "Add questions and answers here…",
+                                    })
+                              }
+                              onChange={(val: unknown) => {
+                                const html = (val as { html?: string })?.html ?? "";
+                                field.onChange(typeof html === "string" ? html : "");
+                              }}
+                            />
+                            <FieldError
+                              errors={[
+                                {
+                                  message:
+                                    lang === "ar"
+                                      ? (errors as any).faq?.ar?.message
+                                        ? commonT((errors as any).faq.ar.message)
+                                        : undefined
+                                      : (errors as any).faq?.en?.message
+                                        ? commonT((errors as any).faq.en.message)
+                                        : undefined,
+                                },
+                              ]}
+                            />
+                          </Field>
+                        )}
+                      />
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              </div>
+            )}
+          </div>
+
+          {/* ── SEO Advanced ────────────────────────────────────────────────── */}
           <div
             data-slot="seo-advanced-anchor"
             className="space-y-8 rounded-[32px] border bg-white p-8 shadow-sm"
@@ -527,9 +660,6 @@ export default function BlogForm({
             </div>
 
             <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-2 md:*:min-w-0">
-              {/* Slug toggle behaves the same in create and edit: the field always starts in
-                 Manual mode so the stored slug is preserved, and clicking "Linked to Title"
-                 explicitly opts in to syncing from the matching title. */}
               <SmartSlugField<BlogFormValues>
                 control={control}
                 name="slug.ar"
@@ -652,6 +782,7 @@ export default function BlogForm({
           </div>
         </div>
 
+        {/* ── Right sidebar ───────────────────────────────────────────────── */}
         <div className="space-y-8 lg:col-span-4">
           <div className="space-y-6 rounded-[32px] border bg-white p-8 shadow-sm">
             <div className="flex items-center gap-3 border-b pb-6">
@@ -713,7 +844,10 @@ export default function BlogForm({
                         className="flex items-center gap-3 rounded-xl border p-3 transition-colors hover:bg-muted/10"
                       >
                         <RadioGroupItem value={status} id={`status-${status}`} />
-                        <Label htmlFor={`status-${status}`} className="flex-1 cursor-pointer font-medium capitalize">
+                        <Label
+                          htmlFor={`status-${status}`}
+                          className="flex-1 cursor-pointer font-medium capitalize"
+                        >
                           {commonT(`blogs.status.${status}`)}
                         </Label>
                       </div>
@@ -728,7 +862,9 @@ export default function BlogForm({
                 render={({ field }) => (
                   <Field>
                     <FieldLabel className="text-sm">{t("published_at")}</FieldLabel>
-                    <p className="mb-1 text-[10px] text-muted-foreground">{t("published_at_hint")}</p>
+                    <p className="mb-1 text-[10px] text-muted-foreground">
+                      {t("published_at_hint")}
+                    </p>
                     <Input
                       {...field}
                       type="datetime-local"
@@ -830,6 +966,7 @@ export default function BlogForm({
         </div>
       </div>
 
+      {/* ── Footer ────────────────────────────────────────────────────────── */}
       <div className="flex flex-col items-stretch justify-between gap-6 border-t pt-8 sm:flex-row sm:items-center">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Share2 className="h-4 w-4 shrink-0" />

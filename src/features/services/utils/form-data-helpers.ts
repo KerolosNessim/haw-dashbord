@@ -77,3 +77,34 @@ export function appendScalar(fd: FormData, key: string, value: unknown) {
   if (value == null || value === "") return;
   fd.append(key, String(value));
 }
+
+/** Appends `steps[0][items][1][title][ar]` style nested keys */
+export function appendSectionItemLocalizedHtml(
+  fd: FormData,
+  sectionPrefix: string,
+  sectionIndex: number,
+  itemIndex: number,
+  field: string,
+  value: { ar?: unknown; en?: unknown } | null | undefined,
+) {
+  if (!value) return;
+  const ar = htmlForMultipartApi(htmlFromUnknown(value.ar));
+  const en = htmlForMultipartApi(htmlFromUnknown(value.en));
+  const base = `${sectionPrefix}[${sectionIndex}][items][${itemIndex}]`;
+  if (ar) fd.append(`${base}[${field}][ar]`, ar);
+  if (en) fd.append(`${base}[${field}][en]`, en);
+}
+
+export function appendSectionItemField(
+  fd: FormData,
+  sectionPrefix: string,
+  sectionIndex: number,
+  itemIndex: number,
+  field: string,
+  value: string | number,
+) {
+  fd.append(
+    `${sectionPrefix}[${sectionIndex}][items][${itemIndex}][${field}]`,
+    String(value),
+  );
+}

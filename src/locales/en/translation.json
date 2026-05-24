@@ -1,4 +1,5 @@
-{
+{  "success_message": "Saved successfully",
+  "error_message": "An error occurred, please try again",
   "welcome": "Welcome to the application",
   "editor": {
     "undo": "Undo",
@@ -108,8 +109,10 @@
     "forbidden": "You do not have permission to perform this action.",
     "unauthorized": "Your session has expired. Please sign in again.",
     "server_error": "Server error. Please try again later.",
-    "network_error": "Network error. Check your connection and try again."
-  },
+    "network_error": "Network error. Check your connection and try again.", 
+    "success_message": "Saved successfully",
+    "error_message": "An error occurred, please try again"
+    }, 
   "forms": {
     "smart_slug": {
       "linked": "Linked to Title",

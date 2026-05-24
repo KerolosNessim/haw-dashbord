@@ -100,12 +100,12 @@ export default function SeoSettingsRepeater() {
 
     try {
       await saveSeo(data);
-      toast.success(commonT("success_message") || "Saved successfully");
+      toast.success(commonT("success_message", { defaultValue: "Saved successfully" }));
       setEditingId(null);
       setEditPageKey("");
       setEditDescriptions({ description_ar: "", description_en: "" });
     } catch (error) {
-      toast.error(commonT("error_message") || "Something went wrong");
+      toast.error(commonT("error_message", { defaultValue: "Something went wrong" }));
     }
   };
 
@@ -117,9 +117,9 @@ export default function SeoSettingsRepeater() {
 
     try {
       await deleteSeo(id);
-      toast.success(commonT("success_message") || "Deleted successfully");
+      toast.success(commonT("success_message", { defaultValue: "Deleted successfully" }));
     } catch (error) {
-      toast.error(commonT("error_message") || "Something went wrong");
+      toast.error(commonT("error_message", { defaultValue: "Something went wrong" }));
     }
   };
 
