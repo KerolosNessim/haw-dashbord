@@ -21,7 +21,7 @@ const DEFAULT_BUILDER_ORDER: Record<string, number> = {
 function blockSortOrder(raw: unknown, fallback: number): number {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return fallback;
   const n = Number((raw as Record<string, unknown>).sort_order);
-  return Number.isFinite(n) ? n : fallback;
+  return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
 /** Build builder section list from admin service, ordered by API `sort_order`. */

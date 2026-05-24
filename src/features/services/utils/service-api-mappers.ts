@@ -236,12 +236,17 @@ export function serviceToSectionsPayload(service: Service): ServiceSectionsPaylo
     };
   }
   if (raw.audits || raw.audits_title) {
+    const auditsObj =
+      raw.audits && typeof raw.audits === "object" && !Array.isArray(raw.audits)
+        ? (raw.audits as Record<string, unknown>)
+        : null;
     payload.audits = {
-      title: pickLocalized(raw.audits_title),
-      description: pickLocalized(raw.audits_description),
+      title: pickLocalized(raw.audits_title ?? auditsObj?.title),
+      description: pickLocalized(raw.audits_description ?? auditsObj?.description),
       items: (Array.isArray(raw.audits)
         ? raw.audits
         : (raw.audits as { items?: unknown }).items) as ServiceSectionsPayload["audits"],
+      sort_order: Number(auditsObj?.sort_order ?? raw.audits_sort_order ?? 0) || undefined,
     };
   }
   if (service.packages || raw.packages_title) {
