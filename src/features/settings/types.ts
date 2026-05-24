@@ -44,7 +44,8 @@ export interface SocialMedia {
 }
 
 export interface SeoSettings {
-  id: number;
+  id: number | string;
+  page_key?: string;
   name_ar: string;
   name_en: string;
   metaTitle_ar: string;

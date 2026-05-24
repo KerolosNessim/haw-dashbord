@@ -1,4 +1,12 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -7,18 +15,35 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pencil, Save, X, Check, Search, Plus, Trash2, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Input } from "@/components/ui/input";
 import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { localizedHtmlForApi } from "@/lib/localized-html-form";
-import { useSettings, useSaveSeo, useDeleteSeo } from "../hooks/useSettings";
+import { Pencil, X, Check, Search, Plus, Trash2, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import {
+  SEO_PAGE_KEYS,
+  type SeoPageKey,
+  isSeoPageKey,
+} from "../lib/seo-page-keys";
+import { useSettings, useSaveSeo, useDeleteSeo } from "../hooks/useSettings";
 import type { SeoSettings } from "../types";
 
+function resolvePageKey(
+  p: SeoSettings,
+  pageLabel: (key: SeoPageKey, lng: "ar" | "en") => string,
+): string {
+  if (p.page_key && isSeoPageKey(p.page_key)) return p.page_key;
+  for (const key of SEO_PAGE_KEYS) {
+    if (p.name_ar === pageLabel(key, "ar") || p.name_en === pageLabel(key, "en")) {
+      return key;
+    }
+  }
+  return "";
+}
+
 export default function SeoSettingsRepeater() {
-  const { t } = useTranslation("translation", { keyPrefix: "settings.seo" });
+  const { t, i18n } = useTranslation("translation", { keyPrefix: "settings.seo" });
   const { t: commonT } = useTranslation("translation");
 
   const { data: settingsData, isLoading } = useSettings();
@@ -27,10 +52,24 @@ export default function SeoSettingsRepeater() {
 
   const [pages, setPages] = useState<SeoSettings[]>([]);
   const [editingId, setEditingId] = useState<number | string | null>(null);
+  const [editPageKey, setEditPageKey] = useState("");
   const [editDescriptions, setEditDescriptions] = useState<{
     description_ar: string;
     description_en: string;
   }>({ description_ar: "", description_en: "" });
+
+  const pageLabel = (key: SeoPageKey, lng: "ar" | "en") =>
+    t(`pages.${key}`, { lng });
+
+  const usedPageKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const page of pages) {
+      if (page.id === editingId) continue;
+      const key = resolvePageKey(page, pageLabel);
+      if (key) keys.add(key);
+    }
+    return keys;
+  }, [pages, editingId, i18n.language]);
 
   useEffect(() => {
     if (settingsData?.data?.seo) {
@@ -40,10 +79,15 @@ export default function SeoSettingsRepeater() {
 
   const handleSave = async (id: number | string, e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!editPageKey || !isSeoPageKey(editPageKey)) {
+      toast.error(t("page_select_placeholder"));
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     const data: Partial<SeoSettings> = {
-      name_ar: formData.get("name_ar") as string,
-      name_en: formData.get("name_en") as string,
+      page_key: editPageKey,
+      name_ar: pageLabel(editPageKey, "ar"),
+      name_en: pageLabel(editPageKey, "en"),
       metaTitle_ar: formData.get("metaTitle_ar") as string,
       metaTitle_en: formData.get("metaTitle_en") as string,
       description_ar: localizedHtmlForApi(editDescriptions.description_ar),
@@ -58,6 +102,7 @@ export default function SeoSettingsRepeater() {
       await saveSeo(data);
       toast.success(commonT("success_message") || "Saved successfully");
       setEditingId(null);
+      setEditPageKey("");
       setEditDescriptions({ description_ar: "", description_en: "" });
     } catch (error) {
       toast.error(commonT("error_message") || "Something went wrong");
@@ -91,8 +136,24 @@ export default function SeoSettingsRepeater() {
     };
     setPages([newPage, ...pages]);
     setEditingId(tempId);
+    setEditPageKey("");
     setEditDescriptions({ description_ar: "", description_en: "" });
   };
+
+  const renderPageSelect = (lng: "ar" | "en") => (
+    <Select value={editPageKey || undefined} onValueChange={setEditPageKey} required>
+      <SelectTrigger className="h-12 rounded-xl bg-white border-border/40 focus:ring-primary/20 transition-all w-full">
+        <SelectValue placeholder={t("page_select_placeholder")} />
+      </SelectTrigger>
+      <SelectContent>
+        {SEO_PAGE_KEYS.map((key) => (
+          <SelectItem key={key} value={key} disabled={usedPageKeys.has(key)}>
+            {pageLabel(key, lng)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
 
   if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
@@ -145,7 +206,7 @@ export default function SeoSettingsRepeater() {
                               <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">AR</span>
                               <span className="text-sm font-bold text-gray-600">{t("page")}</span>
                            </div>
-                           <Input name="name_ar" defaultValue={p.name_ar} placeholder="اسم الصفحة بالعربية" className="h-12 rounded-xl bg-white border-border/40 focus:ring-primary/20 transition-all" required />
+                           {renderPageSelect("ar")}
 
                            <div className="flex items-center gap-2 mb-2 pt-2">
                               <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">AR</span>
@@ -174,7 +235,7 @@ export default function SeoSettingsRepeater() {
                               <span className="text-[10px] font-black bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full uppercase tracking-wider">EN</span>
                               <span className="text-sm font-bold text-gray-600">{t("page")}</span>
                            </div>
-                           <Input name="name_en" defaultValue={p.name_en} placeholder="Page name in English" className="h-12 rounded-xl bg-white border-border/40 focus:ring-primary/20 transition-all" required />
+                           {renderPageSelect("en")}
 
                            <div className="flex items-center gap-2 mb-2 pt-2">
                               <span className="text-[10px] font-black bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full uppercase tracking-wider">EN</span>
@@ -204,6 +265,7 @@ export default function SeoSettingsRepeater() {
                             setPages(pages.filter(page => page.id !== p.id));
                           }
                           setEditingId(null);
+                          setEditPageKey("");
                           setEditDescriptions({ description_ar: "", description_en: "" });
                         }} className="h-11 px-6 rounded-xl font-bold text-gray-500">
                           <X className="w-4 h-4 mr-2" />
@@ -227,11 +289,21 @@ export default function SeoSettingsRepeater() {
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">AR</span>
-                              <span className="font-black text-gray-900 text-base">{p.name_ar}</span>
+                              <span className="font-black text-gray-900 text-base">
+                                {(() => {
+                                  const key = resolvePageKey(p, pageLabel);
+                                  return key ? pageLabel(key as SeoPageKey, "ar") : p.name_ar;
+                                })()}
+                              </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] font-black bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full uppercase tracking-wider">EN</span>
-                              <span className="font-black text-gray-900 text-base uppercase tracking-tight">{p.name_en}</span>
+                              <span className="font-black text-gray-900 text-base uppercase tracking-tight">
+                                {(() => {
+                                  const key = resolvePageKey(p, pageLabel);
+                                  return key ? pageLabel(key as SeoPageKey, "en") : p.name_en;
+                                })()}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -281,6 +353,7 @@ export default function SeoSettingsRepeater() {
                           className="w-11 h-11 rounded-2xl text-muted-foreground hover:text-primary hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all shadow-sm bg-white"
                           onClick={() => {
                             setEditingId(p.id);
+                            setEditPageKey(resolvePageKey(p, pageLabel));
                             setEditDescriptions({
                               description_ar: p.description_ar ?? "",
                               description_en: p.description_en ?? "",

@@ -1082,14 +1082,17 @@
       "save": "حفظ الإعدادات",
       "cancel": "إلغاء",
       "delete_confirm": "هل أنت متأكد من حذف هذه الصفحة؟",
+      "page_select_placeholder": "اختر الصفحة",
       "pages": {
         "home": "الرئيسية",
         "about": "من نحن",
-        "portfolio": "نماذج العملاء",
+        "services": "الخدمات",
+        "packages": "الباقات",
+        "clients": "شركاؤنا",
         "blog": "المدونة",
         "courses": "الدورات",
         "faq": "الأسئلة الشائعة",
-        "contact": "اتصل بنا"
+        "contact-us": "اتصل بنا"
       }
     }
   },

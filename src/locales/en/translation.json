@@ -1088,14 +1088,17 @@
       "save": "Save SEO",
       "cancel": "Cancel",
       "delete_confirm": "Are you sure you want to delete this SEO page?",
+      "page_select_placeholder": "Select a page",
       "pages": {
         "home": "Home",
         "about": "About Us",
-        "portfolio": "Portfolio",
+        "services": "Services",
+        "packages": "Packages",
+        "clients": "Clients",
         "blog": "Blog",
         "courses": "Courses",
         "faq": "FAQ",
-        "contact": "Contact Us"
+        "contact-us": "Contact Us"
       }
     }
   },
