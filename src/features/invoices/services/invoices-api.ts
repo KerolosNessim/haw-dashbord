@@ -130,14 +130,14 @@ export async function fetchInvoiceById(id: string): Promise<InvoiceDetail | null
 }
 
 export async function createInvoice(payload: CreateInvoicePayload): Promise<InvoiceDetail> {
-  const body: CreateInvoicePayload = {
+  const requestBody: CreateInvoicePayload = {
     ...payload,
     line_items: payload.line_items.map((item) => ({
       ...item,
       currency: normalizeInvoiceCurrency(item.currency),
     })),
   };
-  const res = await api.post<unknown>("/v1/admin/invoices", body);
+  const res = await api.post<unknown>("/v1/admin/invoices", requestBody);
   const body = (res.data as { data?: unknown })?.data ?? res.data;
   const detail = normalizeInvoiceDetail(body);
   if (!detail) throw new Error("Invalid invoice response");
