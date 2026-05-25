@@ -20,8 +20,17 @@ export type SolutionSingleFormPayload = {
   title: LocaleString;
   description: LocaleString;
   slug: LocaleString;
+  category_id?: string | number | null;
   is_active?: boolean;
   image_alt?: BilingualImageAlt;
+};
+
+export type SolutionSinglesListParams = {
+  category_id?: string | number;
+  category_slug?: string;
+  search?: string;
+  per_page?: number;
+  page?: number;
 };
 
 function payloadToFormData(p: SolutionSingleFormPayload, imageFile: File | null, mode: "create" | "update"): FormData {
@@ -42,6 +51,13 @@ function payloadToFormData(p: SolutionSingleFormPayload, imageFile: File | null,
   }
   if (p.image_alt) {
     appendBilingualImageAlt(fd, "image_alt", p.image_alt);
+  }
+  const categoryId =
+    p.category_id != null && String(p.category_id).trim() !== ""
+      ? String(p.category_id).trim()
+      : "";
+  if (categoryId) {
+    fd.append("category_id", categoryId);
   }
   return fd;
 }
@@ -96,17 +112,42 @@ function mergeLocalizedSingle(
       ar: localizedValue(arSingle?.slug, "ar") || localizedValue(base.slug, "ar"),
       en: localizedValue(enSingle?.slug, "en") || localizedValue(base.slug, "en"),
     },
+    category: base.category ?? arSingle?.category ?? enSingle?.category ?? null,
   };
 }
 
-async function fetchSolutionSinglesForLocale(locale?: "ar" | "en"): Promise<SolutionItemsResponse> {
-  const res = await api.get<unknown>(BASE, locale ? { headers: { "Accept-Language": locale } } : undefined);
+async function fetchSolutionSinglesForLocale(
+  locale?: "ar" | "en",
+  params?: SolutionSinglesListParams,
+): Promise<SolutionItemsResponse> {
+  const query: Record<string, string | number> = {};
+  if (params?.category_id != null && String(params.category_id).trim()) {
+    query.category_id = String(params.category_id).trim();
+  }
+  if (params?.category_slug?.trim()) {
+    query.category_slug = params.category_slug.trim();
+  }
+  if (params?.search?.trim()) {
+    query.search = params.search.trim();
+  }
+  if (params?.per_page != null && params.per_page > 0) {
+    query.per_page = params.per_page;
+  }
+  if (params?.page != null && params.page > 0) {
+    query.page = params.page;
+  }
+  const res = await api.get<unknown>(BASE, {
+    ...(locale ? { headers: { "Accept-Language": locale } } : {}),
+    ...(Object.keys(query).length ? { params: query } : {}),
+  });
   assertApiEnvelopeSuccess(res.data);
   return normalizeSinglesListEnvelope(res.data);
 }
 
-export async function fetchSolutionSingles(): Promise<SolutionItemsResponse> {
-  return fetchSolutionSinglesForLocale();
+export async function fetchSolutionSingles(
+  params?: SolutionSinglesListParams,
+): Promise<SolutionItemsResponse> {
+  return fetchSolutionSinglesForLocale(undefined, params);
 }
 
 export async function fetchSolutionSingleById(id: string | number): Promise<SolutionFeature | null> {
@@ -138,10 +179,15 @@ export async function updateSolutionSingle(
     assertApiEnvelopeSuccess(res.data);
     return res.data;
   }
+  const categoryId =
+    p.category_id != null && String(p.category_id).trim() !== ""
+      ? String(p.category_id).trim()
+      : null;
   const body = {
     title: p.title,
     description: p.description,
     slug: p.slug,
+    ...(categoryId ? { category_id: categoryId } : { category_id: null }),
     ...(typeof p.is_active === "boolean" ? { is_active: p.is_active } : {}),
   };
   const res = await api.put(`${BASE}/${id}`, body);

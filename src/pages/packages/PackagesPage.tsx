@@ -2,6 +2,7 @@ import PackagesTable from "@/features/packages/components/packages-table";
 import { Button } from "@/components/ui/button";
 import { Boxes, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Can } from "@/features/permissions/components/PermissionGate";
 import { useNavigate } from "react-router-dom";
 
 export default function PackagesPage() {
@@ -21,14 +22,16 @@ export default function PackagesPage() {
           </div>
         </div>
 
-        <Button
-          size="lg"
-          onClick={() => navigate("/packages/create")}
-          className="h-14 rounded-2xl px-8 font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95"
-        >
-          <Plus className="mr-2 h-6 w-6" />
-          {t("add_button")}
-        </Button>
+        <Can permission="packages.create">
+          <Button
+            size="lg"
+            onClick={() => navigate("/packages/create")}
+            className="h-14 rounded-2xl px-8 font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95"
+          >
+            <Plus className="mr-2 h-6 w-6" />
+            {t("add_button")}
+          </Button>
+        </Can>
       </div>
 
       <PackagesTable />

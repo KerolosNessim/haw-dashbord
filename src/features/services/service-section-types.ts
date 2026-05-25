@@ -1,11 +1,14 @@
+import type { BilingualSectionImage } from "@/lib/bilingual-section-image";
+
 /** Section payloads for unified POST (full overwrite on backend) */
 
 export type BenefitsSectionData = {
   id?: number;
   title?: { ar: string; en: string };
   description?: { ar: unknown; en: unknown };
-  image?: File | string | null;
-  image_alt?: { ar: string; en: string };
+  image?: BilingualSectionImage | File | string | null;
+  image_alt?: { ar: string; en: string };  /** Optional — when set, the whole section is a link on the public site. */
+  link?: string;
   sort_order?: number;
 };
 
@@ -16,15 +19,16 @@ export type ListSectionItem = {
   answer?: { ar: unknown; en: unknown };
   button_text?: { ar: string; en: string };
   sort_order?: number;
-  image?: File | string | null;
+  image?: BilingualSectionImage | File | string | null;
 };
 
 export type ListSectionData = {
   id?: number;
   title?: { ar: string; en: string };
   description?: { ar: string; en: string };
-  image?: File | string | null;
+  image?: BilingualSectionImage | File | string | null;
   image_alt?: { ar: string; en: string };
+  link?: string;
   items?: ListSectionItem[];
   sort_order?: number;
 };
@@ -37,13 +41,14 @@ export type ToolsSectionData = {
   description?: { ar: unknown; en: unknown };
   sub_title?: { ar: string; en: string };
   sub_description?: { ar: unknown; en: unknown };
+  link?: string;
   sort_order?: number;
 };
 
 export type PackagesSectionItem = {
   title?: { ar: string; en: string };
   description?: { ar: unknown; en: unknown };
-  image?: File | string | null;
+  image?: BilingualSectionImage | File | string | null;
   image_alt?: { ar: string; en: string };
   price?: number;
   currency?: string;
@@ -55,6 +60,7 @@ export type PackagesSectionData = {
   id?: number;
   title?: { ar: string; en: string };
   description?: { ar: string; en: string };
+  link?: string;
   items?: PackagesSectionItem[];
   sort_order?: number;
 };

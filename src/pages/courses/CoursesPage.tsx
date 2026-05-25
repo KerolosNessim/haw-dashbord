@@ -2,6 +2,7 @@ import CoursesTable from "@/features/courses/components/courses-table";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Can } from "@/features/permissions/components/PermissionGate";
 import { useNavigate } from "react-router-dom";
 
 export default function CoursesPage() {
@@ -21,14 +22,16 @@ export default function CoursesPage() {
           </div>
         </div>
 
-        <Button
-          size="lg"
-          onClick={() => navigate("/courses/create")}
-          className="h-14 rounded-2xl px-8 font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95"
-        >
-          <Plus className="mr-2 h-6 w-6" />
-          {t("add_button")}
-        </Button>
+        <Can permission="courses.create">
+          <Button
+            size="lg"
+            onClick={() => navigate("/courses/create")}
+            className="h-14 rounded-2xl px-8 font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95"
+          >
+            <Plus className="mr-2 h-6 w-6" />
+            {t("add_button")}
+          </Button>
+        </Can>
       </div>
 
       <CoursesTable />

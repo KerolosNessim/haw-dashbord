@@ -35,6 +35,7 @@ import { useExportBlogsBulk } from "@/features/backup-export/hooks/use-export-bl
 import { Download, Loader2, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Can } from "@/features/permissions/components/PermissionGate";
 import { Link } from "react-router-dom";
 
 export default function BlogsTable() {
@@ -328,17 +329,20 @@ export default function BlogsTable() {
                         >
                           <Download className="w-4 h-4" />
                         </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="w-9 h-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all"
-                          asChild
-                        >
-                          <Link to={`/blogs/edit/${blog.id}`}>
-                            <Pencil className="w-4 h-4" />
-                          </Link>
-                        </Button>
+                        <Can permission="blogs.update">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="w-9 h-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all"
+                            asChild
+                          >
+                            <Link to={`/blogs/edit/${blog.id}`}>
+                              <Pencil className="w-4 h-4" />
+                            </Link>
+                          </Button>
+                        </Can>
+                        <Can permission="blogs.delete">
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
@@ -367,6 +371,7 @@ export default function BlogsTable() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                        </Can>
                       </div>
                     </TableCell>
                   </TableRow>

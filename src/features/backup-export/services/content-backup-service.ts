@@ -129,12 +129,28 @@ async function fetchAllBlogRecords(): Promise<Record<string, unknown>[]> {
       if (id == null) continue;
       const detail = await fetchAdminBlogById(id);
       const values = recordToBlogFormValues(detail);
-      if (values) rows.push(blogFormValuesToRow(id, values));
+      if (!values) {
+        throw new Error(`Could not map blog ${id} for export`);
+      }
+      rows.push(blogFormValuesToRow(id, values));
     }
     page += 1;
   } while (page <= lastPage);
 
   return rows;
+}
+
+function assertBlogExportRows(
+  rows: Record<string, unknown>[],
+  requestedIds: (string | number)[],
+): void {
+  if (!rows.length) {
+    throw new Error(
+      requestedIds.length === 1
+        ? `Could not export blog ${requestedIds[0]}`
+        : "No blogs could be exported",
+    );
+  }
 }
 
 /** Export one or many blogs into a single `blogs` sheet. */
@@ -147,9 +163,13 @@ export async function exportBlogsByIds(
   for (const id of unique) {
     const detail = await fetchAdminBlogById(id);
     const values = recordToBlogFormValues(detail);
-    if (values) rows.push(blogFormValuesToRow(id, values));
+    if (!values) {
+      throw new Error(`Could not map blog ${id} for export`);
+    }
+    rows.push(blogFormValuesToRow(id, values));
   }
 
+  assertBlogExportRows(rows, unique);
   return [{ name: "blogs", rows }];
 }
 
@@ -158,7 +178,9 @@ export async function exportBlogById(blogId: string | number): Promise<ExcelShee
 }
 
 export async function buildAllBlogsSheets(): Promise<ExcelSheetInput[]> {
-  return [{ name: "blogs", rows: await fetchAllBlogRecords() }];
+  const rows = await fetchAllBlogRecords();
+  assertBlogExportRows(rows, ["all"]);
+  return [{ name: "blogs", rows }];
 }
 
 export async function buildFullBackupSheets(): Promise<ExcelSheetInput[]> {

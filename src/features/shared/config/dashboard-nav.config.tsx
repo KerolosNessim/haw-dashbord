@@ -22,11 +22,14 @@ import {
   Scale,
   ShieldCheck,
   FileText,
+  Receipt,
   Handshake,
   MessageSquare,
   Users,
   MessageCircle,
   Package,
+  Shield,
+  UserCog,
 } from "lucide-react"
 
 
@@ -62,14 +65,30 @@ export const DASHBOARD_SETTINGS_LINK: NavLinkDef = {
   icon: Settings,
 }
 export const DASHBOARD_USERS_LINK: NavLinkDef = {
-  titleKey: "users",
+  titleKey: "site_users",
   href: "/users",
   icon: Users,
+}
+export const DASHBOARD_TEAM_LINK: NavLinkDef = {
+  titleKey: "team",
+  href: "/team",
+  icon: UserCog,
+}
+export const DASHBOARD_ROLES_LINK: NavLinkDef = {
+  titleKey: "roles",
+  href: "/roles",
+  icon: Shield,
 }
 export const DASHBOARD_CONSULTATION_LINK: NavLinkDef = {
   titleKey: "consultation",
   href: "/service-bookings",
   icon: MessageCircle,
+}
+
+export const DASHBOARD_INVOICES_LINK: NavLinkDef = {
+  titleKey: "invoices",
+  href: "/invoices",
+  icon: Receipt,
 }
 
 export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
@@ -118,10 +137,16 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
         icon: BriefcaseBusiness,
       },
       {
+        titleKey: "service_catalog",
+        href: "/service-catalog",
+        icon: BriefcaseBusiness,
+      },
+      {
         titleKey: "service_pricing",
         href: "/services/pricing",
         icon: Package,
       },
+      DASHBOARD_INVOICES_LINK,
     ],
   },
   {

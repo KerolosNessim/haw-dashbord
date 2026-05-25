@@ -46,7 +46,7 @@ export function normalizeService(raw: Record<string, unknown>): Service {
   return {
     ...raw,
     id: Number(raw.id),
-    slug: pickLocalizedField(raw.slug as LocalizedField),
+    slug: pickLocalizedField((raw.slug_local ?? raw.slug) as LocalizedField),
     image: pickServiceImage(raw.image, raw.images),
     image_alt: pickServiceImageAlt(raw.image_alt ?? null),
     title: pickLocalizedField(raw.title as LocalizedField),

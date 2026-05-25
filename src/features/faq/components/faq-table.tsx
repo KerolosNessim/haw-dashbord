@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Can } from "@/features/permissions/components/PermissionGate";
 import { Link } from "react-router-dom";
 import { useFaqItem } from "../hooks/useFaqItem";
 import type { FaqItem } from "../types";
@@ -130,28 +131,32 @@ export default function FaqTable({ data, isLoading }: FaqTableProps) {
                 </TableCell>
                 <TableCell className="py-5 px-6">
                   <div className="flex items-center justify-start gap-2">
-                    <Link to={`/faq/edit/${faq.id}`}>
+                    <Can permission="faq.update">
+                      <Link to={`/faq/edit/${faq.id}`}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-9 h-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                    </Can>
+                    <Can permission="faq.delete">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="w-9 h-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5"
+                        disabled={isDeleting && deletingId === faq.id}
+                        onClick={() => handleDelete(faq.id)}
+                        className="w-9 h-9 rounded-xl text-muted-foreground hover:text-red-600 hover:bg-red-50"
                       >
-                        <Pencil className="w-4 h-4" />
+                        {isDeleting && deletingId === faq.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </Button>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      disabled={isDeleting && deletingId === faq.id}
-                      onClick={() => handleDelete(faq.id)}
-                      className="w-9 h-9 rounded-xl text-muted-foreground hover:text-red-600 hover:bg-red-50"
-                    >
-                      {isDeleting && deletingId === faq.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </Button>
+                    </Can>
                   </div>
                 </TableCell>
               </TableRow>

@@ -16,7 +16,20 @@ export function workbookFromSheets(sheets: ExcelSheetInput[]): XLSX.WorkBook {
 }
 
 export function downloadWorkbook(wb: XLSX.WorkBook, filename: string): void {
-  XLSX.writeFile(wb, filename.endsWith(".xlsx") ? filename : `${filename}.xlsx`);
+  const safeName = filename.endsWith(".xlsx") ? filename : `${filename}.xlsx`;
+  const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = safeName;
+  anchor.rel = "noopener";
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
 }
 
 export async function parseWorkbookFile(

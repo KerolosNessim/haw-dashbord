@@ -1,3 +1,5 @@
+import { normalizeSlugRedirectCodeInput } from "@/lib/http-redirect-codes";
+import { normalizeServiceTagsFromApi } from "../lib/service-tags";
 import type { BasicInfoValues } from "../components/builder/basic-info-form";
 import {
   normalizeOgType,
@@ -8,7 +10,8 @@ import type { ServiceSectionsPayload } from "../service-section-types";
 import { builderSectionsFromService } from "../lib/section-blocks";
 import { buildSectionsPayloadFromInstances } from "./section-form-mappers";
 import { mapPackagesToPayload } from "./section-form-mappers";
-import { pickPackageImage, pickServiceImageAlt } from "./service-mapper";
+import { bilingualSectionImageFromApi } from "@/lib/bilingual-section-image";
+import { pickServiceImageAlt } from "./service-mapper";
 
 function pickLocalized(
   field: unknown,
@@ -24,13 +27,25 @@ function pickLocalized(
 /** Map loaded service API → basic form values (for partial saves without wiping fields). */
 export function serviceToBasicInfoValues(service: Service): BasicInfoValues {
   const raw = service as Service & Record<string, unknown>;
+  const slugRedirectRaw = raw.slug_redirect_code ?? raw.slugRedirectCode;
+  const slugRedirect = { ar: "", en: "" };
+  if (slugRedirectRaw && typeof slugRedirectRaw === "object") {
+    const o = slugRedirectRaw as { ar?: unknown; en?: unknown };
+    slugRedirect.ar = normalizeSlugRedirectCodeInput(o.ar);
+    slugRedirect.en = normalizeSlugRedirectCodeInput(o.en);
+  }
+
   return {
     slug: { ar: service.slug?.ar ?? "", en: service.slug?.en ?? "" },
+    slug_redirect_code: slugRedirect,
     country_ids: service.countries?.map((c) => String(c.id)) ?? [],
     package_ids: (raw.package_ids as number[] | undefined)?.map(String) ?? [],
     is_active: service.is_active ?? true,
     show_footer: service.show_footer ?? true,
     title: { ar: service.title?.ar ?? "", en: service.title?.en ?? "" },
+    single_page_title: pickLocalized(raw.single_page_title) ?? { ar: null, en: null },
+    tags: normalizeServiceTagsFromApi(raw.tags ?? raw.article_tags),
+    page_script: String(raw.page_script ?? ""),
     description: {
       ar: service.description?.ar ?? "",
       en: service.description?.en ?? "",
@@ -94,13 +109,21 @@ export function offeringsDataFromService(service: Service): Record<string, unkno
     ? offerings
     : ((offerings as { items?: unknown[] } | undefined)?.items ?? []);
 
+  const block = Array.isArray(offerings) ? offerings[0] : offerings;
+  const blockObj =
+    block && typeof block === "object" ? (block as Record<string, unknown>) : {};
+
   return {
     title:
       pickLocalized((offerings as { title?: unknown } | undefined)?.title) ??
-      pickLocalized(raw.offerings_title) ?? { ar: "", en: "" },
+      pickLocalized(raw.offerings_title) ??
+      pickLocalized(blockObj.title) ?? { ar: "", en: "" },
     description:
       pickLocalized((offerings as { description?: unknown } | undefined)?.description) ??
-      pickLocalized(raw.offerings_description) ?? { ar: "", en: "" },
+      pickLocalized(raw.offerings_description) ??
+      pickLocalized(blockObj.description) ?? { ar: "", en: "" },
+    image: bilingualSectionImageFromApi(blockObj.image, blockObj.images),
+    image_alt: pickServiceImageAlt(blockObj.image_alt),
     items: items.length
       ? items.map(normalizeOfferingItem)
       : [{ title: { ar: "", en: "" }, description: { ar: null, en: null } }],
@@ -172,7 +195,7 @@ function normalizePackageItems(items: unknown[]): Array<Record<string, unknown>>
     return {
       ...row,
       description,
-      image: pickPackageImage(row.image),
+      image: bilingualSectionImageFromApi(row.image, row.images),
       image_alt: pickServiceImageAlt(row.image_alt),
       features: featuresNormalized,
     };
@@ -204,7 +227,7 @@ export function packagesDataFromService(service: Service): Record<string, unknow
           {
             title: { ar: "", en: "" },
             description: { ar: null, en: null },
-            image: null,
+            image: { ar: null, en: null },
             image_alt: { ar: "", en: "" },
             price: 0,
             currency: "OMR",

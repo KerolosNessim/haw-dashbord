@@ -5,6 +5,7 @@ import type { SolutionFeature } from "@/features/solutions/types";
 import { Lightbulb, Plus, Settings2, Tags } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Can } from "@/features/permissions/components/PermissionGate";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function SolutionSinglesPage() {
@@ -31,37 +32,43 @@ export default function SolutionSinglesPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            className="h-12 rounded-xl border-border/60 px-6 text-base font-bold hover:bg-muted/40"
-            asChild
-          >
-            <Link to="/solution-categories">
-              <Tags className="me-2 h-5 w-5" />
-              {t("manage_categories")}
-            </Link>
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            className="h-12 rounded-xl border-border/60 px-6 text-base font-bold hover:bg-muted/40"
-            onClick={() => setSectionOpen(true)}
-          >
-            <Settings2 className="me-2 h-5 w-5" />
-            {t("section_settings")}
-          </Button>
-          <Button
-            type="button"
-            size="lg"
-            className="h-12 rounded-xl px-8 text-base font-bold shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
-            onClick={() => navigate("/solution-singles/create")}
-          >
-            <Plus className="me-2 h-5 w-5" />
-            {t("add_solution")}
-          </Button>
+          <Can permission="solution-categories.view">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="h-12 rounded-xl border-border/60 px-6 text-base font-bold hover:bg-muted/40"
+              asChild
+            >
+              <Link to="/solution-categories">
+                <Tags className="me-2 h-5 w-5" />
+                {t("manage_categories")}
+              </Link>
+            </Button>
+          </Can>
+          <Can permission="solutions.update">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="h-12 rounded-xl border-border/60 px-6 text-base font-bold hover:bg-muted/40"
+              onClick={() => setSectionOpen(true)}
+            >
+              <Settings2 className="me-2 h-5 w-5" />
+              {t("section_settings")}
+            </Button>
+          </Can>
+          <Can permission="solutions.create">
+            <Button
+              type="button"
+              size="lg"
+              className="h-12 rounded-xl px-8 text-base font-bold shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+              onClick={() => navigate("/solution-singles/create")}
+            >
+              <Plus className="me-2 h-5 w-5" />
+              {t("add_solution")}
+            </Button>
+          </Can>
         </div>
       </div>
 

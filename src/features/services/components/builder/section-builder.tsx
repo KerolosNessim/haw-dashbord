@@ -31,6 +31,7 @@ import {
   buildSectionsPayloadFromInstances,
   type SectionInstanceInput,
 } from "../../utils/section-form-mappers";
+import { SectionLinkField } from "./section-link-field";
 import CardsSection from "./sections/cards-section";
 import ContactSection from "./sections/contact-section";
 import DualDescSection from "./sections/dual-desc-section";
@@ -144,10 +145,17 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
     (sectionId: string, data: Record<string, unknown>) => {
       setSectionDataById((prev) => {
         const preservedId = prev[sectionId]?.id ?? data.id;
-        const nextData =
+        const base =
           preservedId != null && data.id == null
             ? { ...data, id: preservedId }
             : data;
+        const nextData = {
+          ...base,
+          link:
+            typeof data.link === "string"
+              ? data.link
+              : (prev[sectionId]?.link as string | undefined),
+        };
         const prevData = prev[sectionId];
         if (prevData && JSON.stringify(prevData) === JSON.stringify(nextData)) {
           return prev;
@@ -261,7 +269,20 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
             onReorder={setSections}
             onRemove={removeSection}
             renderHeaderLabel={(section) => sectionTypeLabel(section)}
-            renderContent={(section, index) => renderSectionContent(section, index)}
+            renderContent={(section, index) => (
+              <div className="space-y-0">
+                <SectionLinkField
+                  value={String(sectionDataById[section.id]?.link ?? "")}
+                  onChange={(link) =>
+                    handleSectionDataChange(section.id, {
+                      ...(sectionDataById[section.id] ?? {}),
+                      link,
+                    })
+                  }
+                />
+                {renderSectionContent(section, index)}
+              </div>
+            )}
           />
         )}
 

@@ -1,3 +1,4 @@
+import { BLOG_SLUG_REDIRECT_CODES } from "@/lib/http-redirect-codes";
 import { localizedSlugOptional } from "@/lib/zod-localized-slug";
 import * as z from "zod";
 
@@ -16,6 +17,23 @@ const localizedArRequiredEnOptional = z.object({
 const localizedOptional = z.object({
   ar: z.string().optional().default(""),
   en: z.string().optional().default(""),
+});
+
+const slugRedirectCodeOptional = z.object({
+  ar: z
+    .string()
+    .optional()
+    .default("")
+    .refine((v) => v === "" || (BLOG_SLUG_REDIRECT_CODES as readonly string[]).includes(v), {
+      message: "validation.invalid_redirect_code",
+    }),
+  en: z
+    .string()
+    .optional()
+    .default("")
+    .refine((v) => v === "" || (BLOG_SLUG_REDIRECT_CODES as readonly string[]).includes(v), {
+      message: "validation.invalid_redirect_code",
+    }),
 });
 
 export const blogSchema = z.object({
@@ -40,6 +58,11 @@ export const blogSchema = z.object({
   is_searchable: z.boolean().default(true),
   status: z.enum(["draft", "published", "scheduled"]).default("draft"),
   slug: localizedSlugOptional,
+  /**
+   * When the slug changes, the previous URL can respond with this status (per locale).
+   * Empty = no redirect rule for that locale.
+   */
+  slug_redirect_code: slugRedirectCodeOptional,
   /** Browser `datetime-local`; serialized as `Y-m-d H:i:s` for API. */
   published_at: z.string().default(""),
   canonical_url: z

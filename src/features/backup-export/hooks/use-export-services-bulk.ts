@@ -1,4 +1,5 @@
 import { exportServicesByIds } from "@/features/backup-export/services/service-backup-service";
+import { getHttpErrorMessage } from "@/lib/http-error-message";
 import { downloadWorkbook, workbookFromSheets } from "@/lib/excel-io";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -18,6 +19,7 @@ export function useExportServicesBulk() {
     },
     onSuccess: (_data, ids) =>
       toast.success(t("export_bulk_success", { count: ids.length })),
-    onError: (e: Error) => toast.error(e.message || t("export_bulk_error")),
+    onError: (e: Error) =>
+      toast.error(getHttpErrorMessage(e, { default: t("export_bulk_error") })),
   });
 }

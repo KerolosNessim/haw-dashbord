@@ -21,6 +21,12 @@ function localizedEditorHtml(
   return { ar: editorHtml(value.ar), en: editorHtml(value.en) };
 }
 
+function pickSectionLink(data: Record<string, unknown>): string | undefined {
+  const link = data.link;
+  if (typeof link === "string" && link.trim()) return link.trim();
+  return undefined;
+}
+
 export function mapImageTextToBenefits(data: Record<string, unknown>): BenefitsSectionData {
   const description = data.description as { ar?: unknown; en?: unknown } | undefined;
   const title = data.title as { ar?: unknown; en?: unknown } | undefined;
@@ -31,6 +37,7 @@ export function mapImageTextToBenefits(data: Record<string, unknown>): BenefitsS
       : undefined,
     image: data.image as File | string | null,
     image_alt: data.image_alt as BenefitsSectionData["image_alt"],
+    link: pickSectionLink(data),
   };
 }
 
@@ -57,6 +64,7 @@ export function mapFullSectionToSteps(data: Record<string, unknown>): ListSectio
       : undefined,
     image: data.image as File | string | null,
     image_alt: data.image_alt as ListSectionData["image_alt"],
+    link: pickSectionLink(data),
     items,
     sort_order: Number(data.sort_order ?? 0) || undefined,
   };
@@ -85,6 +93,7 @@ export function mapFaqToPayload(data: Record<string, unknown>): FaqSectionData {
     description: description
       ? { ar: editorHtml(description.ar), en: editorHtml(description.en) }
       : undefined,
+    link: pickSectionLink(data),
     items,
   };
 }
@@ -113,6 +122,9 @@ export function mapCardsToOfferings(data: Record<string, unknown>): ListSectionD
           en: editorHtml(sectionDescription.en),
         }
       : undefined,
+    image: data.image as ListSectionData["image"],
+    image_alt: data.image_alt as ListSectionData["image_alt"],
+    link: pickSectionLink(data),
     items,
   };
 }
@@ -134,6 +146,7 @@ export function mapDualDescToTools(data: Record<string, unknown>): ToolsSectionD
           en: editorHtml(subDescription.en),
         }
       : undefined,
+    link: pickSectionLink(data),
   };
 }
 
@@ -146,6 +159,7 @@ export function mapContactToCtas(data: Record<string, unknown>): Record<string, 
     description: description
       ? { ar: editorHtml(description.ar), en: editorHtml(description.en) }
       : undefined,
+    link: pickSectionLink(data),
   };
 }
 
@@ -173,6 +187,7 @@ export function mapPackagesToPayload(data: Record<string, unknown>): PackagesSec
   return {
     title: localizedEditorHtml(title) ?? (data.title as PackagesSectionData["title"]),
     description: localizedEditorHtml(sectionDescription) ?? (data.description as PackagesSectionData["description"]),
+    link: pickSectionLink(data),
     items,
   };
 }
@@ -200,6 +215,7 @@ export function mapAuditsToPayload(data: Record<string, unknown>): ListSectionDa
     description: description
       ? { ar: editorHtml(description.ar), en: editorHtml(description.en) }
       : undefined,
+    link: pickSectionLink(data),
     items,
   };
 }

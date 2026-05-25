@@ -1,10 +1,12 @@
 import type { SectionType } from "../service-section-types";
 import { SECTION_TYPE_TO_API_KEY, type SectionApiKey } from "../service-section-types";
 import type { Service } from "../type";
+import { bilingualSectionImageFromApi } from "@/lib/bilingual-section-image";
 import {
   auditsDataFromService,
   offeringsDataFromService,
 } from "../utils/service-api-mappers";
+import { pickServiceImageAlt } from "../utils/service-mapper";
 
 export type BuilderSectionDef = {
   id: string;
@@ -44,18 +46,34 @@ function sectionId(apiKey: SectionApiKey, raw: unknown, index: number): string {
   return `${apiKey}-${index}`;
 }
 
+function normalizeSectionBlockForForm(raw: unknown): Record<string, unknown> {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const o = raw as Record<string, unknown>;
+  return {
+    ...o,
+    image: bilingualSectionImageFromApi(o.image, o.images),
+    image_alt: pickServiceImageAlt(o.image_alt),
+  };
+}
+
 function dataForBuilder(
   apiKey: SectionApiKey,
   raw: unknown,
   service: Service,
 ): unknown {
   if (apiKey === "offerings") {
-    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw)) return raw.map(normalizeSectionBlockForForm);
     return offeringsDataFromService(service);
   }
   if (apiKey === "audits") {
-    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw)) return raw.map(normalizeSectionBlockForForm);
     return auditsDataFromService(service);
+  }
+  if (Array.isArray(raw)) {
+    return raw.map(normalizeSectionBlockForForm);
+  }
+  if (raw && typeof raw === "object") {
+    return normalizeSectionBlockForForm(raw);
   }
   return raw;
 }

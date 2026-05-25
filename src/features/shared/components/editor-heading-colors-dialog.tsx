@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import type { HeadingTagType } from "@lexical/rich-text";
+import type { HeadingTagType } from "../lib/heading-types";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {

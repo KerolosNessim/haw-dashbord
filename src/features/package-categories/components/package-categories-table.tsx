@@ -16,6 +16,7 @@ import type { LaravelPaginationMeta } from "@/lib/laravel-pagination";
 import { Pencil, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Can } from "@/features/permissions/components/PermissionGate";
 import { Link } from "react-router-dom";
 
 export default function PackageCategoriesTable() {
@@ -110,20 +111,24 @@ export default function PackageCategoriesTable() {
                 </TableCell>
                 <TableCell className="py-6 pe-8">
                   <div className="flex items-center justify-start gap-2">
-                    <Button variant="ghost" size="icon" className="rounded-xl" asChild>
-                      <Link to={`/package-categories/edit/${row.id}`}>
-                        <Pencil className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-xl text-rose-600 hover:bg-rose-50"
-                      disabled={isDeleting}
-                      onClick={() => setSingleDeleteId(row.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <Can permission="package-categories.update">
+                      <Button variant="ghost" size="icon" className="rounded-xl" asChild>
+                        <Link to={`/package-categories/edit/${row.id}`}>
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </Can>
+                    <Can permission="package-categories.delete">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-xl text-rose-600 hover:bg-rose-50"
+                        disabled={isDeleting}
+                        onClick={() => setSingleDeleteId(row.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </Can>
                   </div>
                 </TableCell>
               </TableRow>

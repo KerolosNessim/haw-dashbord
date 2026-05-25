@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Plus, LayoutGrid } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Can } from "@/features/permissions/components/PermissionGate";
 import { useNavigate } from "react-router-dom";
 import CategoriesTable from "@/features/categories/components/categories-table";
 
@@ -22,14 +23,16 @@ export default function CategoriesPage() {
           </div>
         </div>
 
-        <Button 
-          size="lg" 
-          onClick={() => navigate("/categories/create")}
-          className="h-14 px-8 rounded-2xl font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
-        >
-          <Plus className="w-6 h-6 mr-2" />
-          {t("add_button")}
-        </Button>
+        <Can permission="courses.create">
+          <Button
+            size="lg"
+            onClick={() => navigate("/categories/create")}
+            className="h-14 px-8 rounded-2xl font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+          >
+            <Plus className="w-6 h-6 mr-2" />
+            {t("add_button")}
+          </Button>
+        </Can>
       </div>
 
       {/* Course category taxonomy list fetched from the backend. */}

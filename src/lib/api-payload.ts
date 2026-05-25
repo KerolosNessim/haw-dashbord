@@ -1,3 +1,43 @@
+/** Laravel ApiResponse: HTTP 200 with `{ status: "false", ... }` is a failure. */
+export function assertApiEnvelopeSuccess(data: unknown): void {
+  if (data == null || typeof data !== "object") return;
+  const d = data as Record<string, unknown>;
+  const s = d.status;
+  if (s === false || s === "false" || s === 0 || s === "0") {
+    const msg =
+      typeof d.message === "string" && d.message.trim()
+        ? d.message.trim()
+        : "Request failed";
+    throw new Error(msg);
+  }
+}
+
+/** Unwraps a single resource from show/detail envelopes (`data`, nested `data.data`, `blog`, …). */
+export function unwrapShowResource(body: unknown): Record<string, unknown> {
+  assertApiEnvelopeSuccess(body);
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    throw new Error("Invalid API response");
+  }
+  const root = body as Record<string, unknown>;
+  let data = root.data;
+  if (Array.isArray(data)) {
+    if (data.length === 1 && data[0] && typeof data[0] === "object") {
+      data = data[0];
+    } else {
+      throw new Error("Missing resource in API response");
+    }
+  }
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error("Missing resource in API response");
+  }
+  const rec = data as Record<string, unknown>;
+  const nested = rec.blog ?? rec.blog_post ?? rec.service;
+  if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+    return { ...(nested as Record<string, unknown>), ...rec };
+  }
+  return rec;
+}
+
 /** Normalizes common Laravel / API list envelope shapes to a plain array. */
 export function unwrapDataArray(payload: unknown): Record<string, unknown>[] {
   if (Array.isArray(payload)) return payload as Record<string, unknown>[];

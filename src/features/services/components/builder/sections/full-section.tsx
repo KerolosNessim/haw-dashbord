@@ -1,26 +1,21 @@
+import { BilingualImageAltFields } from "@/components/form/bilingual-image-alt-fields";
+import { BilingualSectionImageUpload } from "@/components/form/bilingual-section-image-upload";
+import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { useEmbeddedSectionWatch } from "@/features/services/hooks/useEmbeddedSectionWatch";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { bilingualImageAltFromApi } from "@/lib/bilingual-image-alt";
+import {
+  bilingualSectionImageFromApi,
+  hasBilingualSectionImage,
+} from "@/lib/bilingual-section-image";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus, Trash2 } from "lucide-react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Field, FieldLabel, FieldError } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  ImageIcon,
-  ImagePlus,
-  X,
-  Plus,
-  Trash2,
-} from "lucide-react";
-import { resolveImagePreviewFromUnknown } from "@/lib/resolve-media-url";
-import { useEffect, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { BilingualImageAltFields } from "@/components/form/bilingual-image-alt-fields";
-import { useEmbeddedSectionWatch } from "@/features/services/hooks/useEmbeddedSectionWatch";
 import type { SectionEmbeddedProps } from "../section-embedded-props";
-import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { LocalizedRichTextField } from "../localized-rich-text-field";
-import { bilingualImageAltFromApi } from "@/lib/bilingual-image-alt";
 
 const localizedSchema = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
@@ -32,10 +27,17 @@ const imageAltSchema = z.object({
   en: z.string(),
 });
 
+const bilingualImageSchema = z
+  .object({
+    ar: z.any().nullable().optional(),
+    en: z.any().nullable().optional(),
+  })
+  .refine((v) => hasBilingualSectionImage(v), { message: "validation.required" });
+
 const fullSectionSchema = z.object({
   title: localizedSchema,
   description: localizedSchema,
-  image: z.any().refine((file) => !!file, { message: "validation.required" }),
+  image: bilingualImageSchema,
   image_alt: imageAltSchema,
   items: z
     .array(
@@ -60,31 +62,18 @@ export default function FullSection({
   onDataChange,
 }: FullSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
-  const [imagePreview, setImagePreview] = useState<string | null>(() =>
-    resolveImagePreviewFromUnknown(initialData?.image),
-  );
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const resolved = resolveImagePreviewFromUnknown(initialData?.image);
-    setImagePreview((prev) => {
-      if (prev?.startsWith("blob:") || prev?.startsWith("data:")) return prev;
-      return resolved;
-    });
-  }, [initialData?.image]);
 
   const {
     control,
     watch,
     getValues,
-    setValue,
     formState: { errors },
   } = useForm<FullSectionValues>({
     resolver: zodResolver(fullSectionSchema),
     values: {
       title: initialData?.title || { ar: "", en: "" },
       description: initialData?.description || { ar: "", en: "" },
-      image: initialData?.image || null,
+      image: bilingualSectionImageFromApi(initialData?.image, initialData?.images),
       image_alt: bilingualImageAltFromApi(initialData?.image_alt),
       items: initialData?.items || [],
     },
@@ -94,25 +83,6 @@ export default function FullSection({
     control,
     name: "items",
   });
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setValue("image", file, { shouldValidate: true });
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    setValue("image", null, { shouldValidate: true });
-    setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
 
   useEmbeddedSectionWatch(embedded, onDataChange, watch, getValues);
 
@@ -208,81 +178,22 @@ export default function FullSection({
           </div>
         </div>
 
-        {/* Right: Image Upload Area */}
         <div className="space-y-6">
-          <FieldLabel className="text-sm font-bold flex items-center gap-2 px-2">
-            <ImageIcon className="w-5 h-5 text-primary" />{" "}
-            {t("sections.fields.image")}
-          </FieldLabel>
-          <div
-            className={cn(
-              "relative group overflow-hidden rounded-[40px] border-2 border-dashed transition-all h-full min-h-[400px]",
-              imagePreview
-                ? "border-primary/20 bg-background shadow-xl"
-                : "border-border hover:border-primary/40 flex flex-col items-center justify-center bg-muted/10 cursor-pointer",
+          <Controller
+            name="image"
+            control={control}
+            render={({ field }) => (
+              <BilingualSectionImageUpload
+                value={field.value}
+                onChange={field.onChange}
+                aspectClass="min-h-[320px]"
+                errorMessage={
+                  errors.image?.message
+                    ? t(errors.image.message as "validation.required")
+                    : undefined
+                }
+              />
             )}
-            onClick={() => !imagePreview && fileInputRef.current?.click()}
-          >
-            {imagePreview ? (
-              <>
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-4">
-                  <Button
-                    type="button"
-                    size="icon"
-                    className="rounded-full h-12 w-12 bg-red-500 hover:bg-red-600 shadow-xl transition-all"
-                    onClick={removeImage}
-                  >
-                    <X className="w-6 h-6" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    className="rounded-full h-12 w-12 shadow-xl hover:scale-110 transition-all"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      fileInputRef.current?.click();
-                    }}
-                  >
-                    <ImagePlus className="w-6 h-6" />
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <div className="text-center p-8 space-y-4">
-                <div className="w-20 h-20 rounded-[32px] bg-primary/10 flex items-center justify-center mx-auto text-primary animate-pulse">
-                  <ImagePlus className="w-10 h-10" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-lg font-bold">{t("upload_image")}</p>
-                  <p className="text-xs opacity-40 uppercase tracking-widest">
-                    {t("sections.fields.image_placeholder")}
-                  </p>
-                </div>
-              </div>
-            )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              accept="image/*"
-              onChange={handleImageChange}
-            />
-          </div>
-          <FieldError
-            errors={[
-              {
-                message: errors.image?.message
-                  ? t(errors.image.message as any)
-                  : undefined,
-              },
-            ]}
           />
           <Controller
             name="image_alt"

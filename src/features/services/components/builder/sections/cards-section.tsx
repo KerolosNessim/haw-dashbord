@@ -1,15 +1,18 @@
+import { BilingualImageAltFields } from "@/components/form/bilingual-image-alt-fields";
+import { BilingualSectionImageUpload } from "@/components/form/bilingual-section-image-upload";
+import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { useEmbeddedSectionWatch } from "@/features/services/hooks/useEmbeddedSectionWatch";
+import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
+import { bilingualImageAltFromApi } from "@/lib/bilingual-image-alt";
+import { bilingualSectionImageFromApi } from "@/lib/bilingual-section-image";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus, Trash2 } from "lucide-react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Field, FieldLabel, FieldError } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
-import { LocalizedRichTextField } from "../localized-rich-text-field";
-import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useEmbeddedSectionWatch } from "@/features/services/hooks/useEmbeddedSectionWatch";
 import type { SectionEmbeddedProps } from "../section-embedded-props";
+import { LocalizedRichTextField } from "../localized-rich-text-field";
 
 const localizedSchema = z.object({
   ar: z.string().min(1, { message: "validation.required" }),
@@ -33,9 +36,20 @@ const localizedEditorSchema = z.object({
   en: z.any().optional(),
 });
 
+const optionalBilingualImageSchema = z
+  .object({
+    ar: z.any().nullable().optional(),
+    en: z.any().nullable().optional(),
+  })
+  .optional();
+
 const cardsSchema = z.object({
   title: localizedSchema,
   description: localizedSchema,
+  image: optionalBilingualImageSchema,
+  image_alt: z
+    .object({ ar: z.string().optional(), en: z.string().optional() })
+    .optional(),
   items: z
     .array(
       z.object({
@@ -70,6 +84,8 @@ export default function CardsSection({
     values: {
       title: initialData?.title || { ar: "", en: "" },
       description: initialData?.description || { ar: "", en: "" },
+      image: bilingualSectionImageFromApi(initialData?.image, initialData?.images),
+      image_alt: bilingualImageAltFromApi(initialData?.image_alt),
       items:
         (Array.isArray(initialData?.items) ? initialData.items : null) || [
           { title: { ar: "", en: "" }, description: { ar: null, en: null } },
@@ -173,6 +189,29 @@ export default function CardsSection({
           />
         </div>
       </div>
+
+      <Controller
+        name="image"
+        control={control}
+        render={({ field }) => (
+          <BilingualSectionImageUpload
+            value={field.value}
+            onChange={field.onChange}
+            required={false}
+          />
+        )}
+      />
+      <Controller
+        name="image_alt"
+        control={control}
+        render={({ field }) => (
+          <BilingualImageAltFields
+            value={field.value ?? { ar: "", en: "" }}
+            onChange={field.onChange}
+            keyPrefix="services.form"
+          />
+        )}
+      />
 
       <div className="space-y-6">
         <h3 className="text-xl font-bold flex items-center gap-2 px-2">

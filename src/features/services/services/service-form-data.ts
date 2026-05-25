@@ -8,6 +8,11 @@ import type {
   ToolsSectionData,
 } from "../service-section-types";
 import { htmlForMultipartApi } from "@/lib/html-for-multipart-api";
+import { appendServiceTagsToFormData } from "../lib/service-tags";
+import {
+  appendIndexedBilingualSectionImage,
+  appendItemBilingualSectionImage,
+} from "../utils/append-bilingual-section-image";
 import {
   appendIndexedField,
   appendIndexedLocalized,
@@ -43,6 +48,18 @@ function appendSectionSortOrder(
   }
 }
 
+function appendSectionLink(
+  fd: FormData,
+  prefix: string,
+  index: number,
+  link?: string,
+) {
+  const trimmed = link?.trim();
+  if (trimmed) {
+    appendIndexedField(fd, prefix, index, "link", trimmed);
+  }
+}
+
 function appendBenefitsSection(
   fd: FormData,
   index: number,
@@ -50,13 +67,12 @@ function appendBenefitsSection(
 ) {
   appendSectionId(fd, "benefits", index, data.id);
   appendSectionSortOrder(fd, "benefits", index, data.sort_order);
+  appendSectionLink(fd, "benefits", index, data.link);
   appendIndexedLocalizedHtml(fd, "benefits", index, "title", data.title);
   if (data.description) {
     appendIndexedLocalizedHtml(fd, "benefits", index, "description", data.description);
   }
-  if (data.image instanceof File) {
-    fd.append(`benefits[${index}][image]`, data.image);
-  }
+  appendIndexedBilingualSectionImage(fd, "benefits", index, data.image);
   if (data.image_alt) {
     appendIndexedLocalized(fd, "benefits", index, "image_alt", data.image_alt);
   }
@@ -71,13 +87,12 @@ function appendListSectionBlock(
 ) {
   appendSectionId(fd, prefix, index, data.id);
   appendSectionSortOrder(fd, prefix, index, data.sort_order);
+  appendSectionLink(fd, prefix, index, data.link);
   appendIndexedLocalizedHtml(fd, prefix, index, "title", data.title);
   if (data.description) {
     appendIndexedLocalizedHtml(fd, prefix, index, "description", data.description);
   }
-  if (data.image instanceof File) {
-    fd.append(`${prefix}[${index}][image]`, data.image);
-  }
+  appendIndexedBilingualSectionImage(fd, prefix, index, data.image);
   if (data.image_alt) {
     appendIndexedLocalized(fd, prefix, index, "image_alt", data.image_alt);
   }
@@ -111,15 +126,14 @@ function appendListSectionBlock(
       "sort_order",
       item.sort_order ?? itemIndex + 1,
     );
-    if (item.image instanceof File) {
-      fd.append(`${prefix}[${index}][items][${itemIndex}][image]`, item.image);
-    }
+    appendItemBilingualSectionImage(fd, prefix, index, itemIndex, item.image);
   });
 }
 
 function appendFaqsSection(fd: FormData, index: number, data: FaqSectionData) {
   appendSectionId(fd, "faqs", index, data.id);
   appendSectionSortOrder(fd, "faqs", index, data.sort_order);
+  appendSectionLink(fd, "faqs", index, data.link);
   appendIndexedLocalizedHtml(fd, "faqs", index, "title", data.title);
   if (data.description) {
     appendIndexedLocalizedHtml(fd, "faqs", index, "description", data.description);
@@ -148,6 +162,7 @@ function appendFaqsSection(fd: FormData, index: number, data: FaqSectionData) {
 function appendToolsSection(fd: FormData, index: number, data: ToolsSectionData) {
   appendSectionId(fd, "tools", index, data.id);
   appendSectionSortOrder(fd, "tools", index, data.sort_order);
+  appendSectionLink(fd, "tools", index, data.link);
   appendIndexedLocalizedHtml(fd, "tools", index, "title", data.title);
   appendIndexedLocalizedHtml(fd, "tools", index, "description", data.description);
   if (data.sub_title) {
@@ -172,6 +187,7 @@ function appendCtasSection(
     data.sort_order != null ? Number(data.sort_order) : undefined;
   appendSectionId(fd, "ctas", index, id);
   appendSectionSortOrder(fd, "ctas", index, sortOrder);
+  appendSectionLink(fd, "ctas", index, typeof data.link === "string" ? data.link : undefined);
   const title = data.title as { ar?: string; en?: string } | undefined;
   appendIndexedLocalizedHtml(fd, "ctas", index, "title", title);
   if (data.phone_number) {
@@ -191,6 +207,7 @@ function appendPackagesSection(
 ) {
   appendSectionId(fd, "packages", index, data.id);
   appendSectionSortOrder(fd, "packages", index, data.sort_order);
+  appendSectionLink(fd, "packages", index, data.link);
   appendIndexedLocalizedHtml(fd, "packages", index, "title", data.title);
   if (data.description) {
     appendIndexedLocalizedHtml(fd, "packages", index, "description", data.description);
@@ -217,9 +234,7 @@ function appendPackagesSection(
       if (item.image_alt.ar) fd.append(`${itemBase}[ar]`, item.image_alt.ar);
       if (item.image_alt.en) fd.append(`${itemBase}[en]`, item.image_alt.en);
     }
-    if (item.image instanceof File) {
-      fd.append(`packages[${index}][items][${itemIndex}][image]`, item.image);
-    }
+    appendItemBilingualSectionImage(fd, "packages", index, itemIndex, item.image);
     if (item.price != null) {
       appendSectionItemField(fd, "packages", index, itemIndex, "price", item.price);
     }
@@ -301,8 +316,20 @@ export function buildServicePageFormData(
   const fd = new FormData();
 
   appendLocalized(fd, "slug", basic.slug);
+  fd.append("slug_redirect_code[ar]", basic.slug_redirect_code?.ar ?? "");
+  fd.append("slug_redirect_code[en]", basic.slug_redirect_code?.en ?? "");
   appendLocalizedHtml(fd, "title", basic.title?.ar, "ar");
   appendLocalizedHtml(fd, "title", basic.title?.en, "en");
+  if (basic.single_page_title?.ar) {
+    appendLocalizedHtml(fd, "single_page_title", basic.single_page_title.ar, "ar");
+  }
+  if (basic.single_page_title?.en) {
+    appendLocalizedHtml(fd, "single_page_title", basic.single_page_title.en, "en");
+  }
+  if (basic.page_script?.trim()) {
+    fd.append("page_script", basic.page_script.trim());
+  }
+  appendServiceTagsToFormData(fd, basic.tags ?? []);
   if (basic.description) {
     appendLocalizedHtml(fd, "description", basic.description.ar, "ar");
     appendLocalizedHtml(fd, "description", basic.description.en, "en");
@@ -337,8 +364,16 @@ export function buildServicePageFormData(
   appendLocalizedHtml(fd, "meta_description", basic.meta_description?.en, "en");
   appendLocalized(fd, "image_alt", basic.image_alt);
 
-  if (basic.image.ar instanceof File) fd.append("image[ar]", basic.image.ar);
-  if (basic.image.en instanceof File) fd.append("image[en]", basic.image.en);
+  if (basic.image.ar instanceof File) {
+    fd.append("image[ar]", basic.image.ar);
+  } else if (typeof basic.image.ar === "string" && basic.image.ar.trim()) {
+    fd.append("image[ar]", basic.image.ar.trim());
+  }
+  if (basic.image.en instanceof File) {
+    fd.append("image[en]", basic.image.en);
+  } else if (typeof basic.image.en === "string" && basic.image.en.trim()) {
+    fd.append("image[en]", basic.image.en.trim());
+  }
 
   appendBasicSocialAndMedia(fd, basic);
 

@@ -22,7 +22,7 @@ const statesSchema = z.object({
         number: z.string().min(1, "Required"),
         title_ar: z.string().min(1, "Required"),
         title_en: z.string().optional().default(""),
-        des_ar: z.string().min(1, "Required"),
+        des_ar: z.string().optional().default(""),
         des_en: z.string().optional().default(""),
       }),
     )
@@ -140,12 +140,13 @@ export default function StatesTab() {
                     <Field>
                       <FieldLabel className="text-sm font-bold flex items-center gap-2">
                         <Hash className="w-4 h-4 text-primary" />
-                        {t("number")} 
+                        {t("number")}
                       </FieldLabel>
+                      <p className="text-xs text-muted-foreground">{t("number_hint")}</p>
                       <Input
                         {...field}
                         dir="rtl"
-                        placeholder="مثال: 100+"
+                        placeholder="مثال: +5K أو 200+"
                         className="h-14 rounded-2xl bg-white border-border/60 focus:ring-2 focus:ring-primary/20 transition-all text-lg font-black text-primary"
                       />
                       <FieldError errors={[{ message: errors.stats?.[index]?.number?.message }]} />

@@ -8,10 +8,16 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import {
+  DASHBOARD_CONSULTATION_LINK,
   DASHBOARD_HOME_LINK,
   DASHBOARD_NAV_GROUPS,
+  DASHBOARD_ROLES_LINK,
   DASHBOARD_SETTINGS_LINK,
+  DASHBOARD_TEAM_LINK,
+  DASHBOARD_USERS_LINK,
 } from "@/features/shared/config/dashboard-nav.config"
+import { filterNavGroups, navLinkPermission } from "@/features/permissions/filter-nav"
+import { usePermission } from "@/features/permissions/hooks/usePermission"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { SearchIcon } from "lucide-react"
@@ -24,16 +30,33 @@ function hrefSearchTokens(href: string) {
   return href.slice(1).replaceAll("-", " ")
 }
 
+const EXTRA_LINKS = [
+  DASHBOARD_CONSULTATION_LINK,
+  DASHBOARD_USERS_LINK,
+  DASHBOARD_TEAM_LINK,
+  DASHBOARD_ROLES_LINK,
+  DASHBOARD_SETTINGS_LINK,
+] as const
+
 export function DashboardNavSearch() {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
+  const { can } = usePermission()
   const { i18n } = useTranslation()
   const { t: nb } = useTranslation("translation", { keyPrefix: "navbar" })
   const { t: s } = useTranslation("translation", { keyPrefix: "sidebar" })
   const dir = i18n.dir()
 
+  const visibleGroups = filterNavGroups(DASHBOARD_NAV_GROUPS, can)
+  const visibleExtras = EXTRA_LINKS.filter((link) => {
+    const perm = navLinkPermission(link.href)
+    return !perm || can(perm)
+  })
+
   const HomeIcon = DASHBOARD_HOME_LINK.icon
-  const SettingsIcon = DASHBOARD_SETTINGS_LINK.icon
+  const showHome =
+    !navLinkPermission(DASHBOARD_HOME_LINK.href) ||
+    can(navLinkPermission(DASHBOARD_HOME_LINK.href)!)
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -104,19 +127,21 @@ export function DashboardNavSearch() {
             <CommandList className="no-scrollbar mt-1 max-h-80">
               <CommandEmpty>{nb("no_results")}</CommandEmpty>
 
-              <CommandGroup heading={s("navigation")}>
-                <CommandItem
-                  keywords={[DASHBOARD_HOME_LINK.href, hrefSearchTokens("/")]}
-                  value={buildSearchValue(s("home"), DASHBOARD_HOME_LINK.href)}
-                  className="cursor-pointer gap-2"
-                  onSelect={() => navigateTo(DASHBOARD_HOME_LINK.href)}
-                >
-                  <HomeIcon aria-hidden />
-                  <span>{s("home")}</span>
-                </CommandItem>
-              </CommandGroup>
+              {showHome ? (
+                <CommandGroup heading={s("navigation")}>
+                  <CommandItem
+                    keywords={[DASHBOARD_HOME_LINK.href, hrefSearchTokens("/")]}
+                    value={buildSearchValue(s("home"), DASHBOARD_HOME_LINK.href)}
+                    className="cursor-pointer gap-2"
+                    onSelect={() => navigateTo(DASHBOARD_HOME_LINK.href)}
+                  >
+                    <HomeIcon aria-hidden />
+                    <span>{s("home")}</span>
+                  </CommandItem>
+                </CommandGroup>
+              ) : null}
 
-              {DASHBOARD_NAV_GROUPS.map((group) => (
+              {visibleGroups.map((group) => (
                 <CommandGroup key={group.id} heading={s(group.titleKey)}>
                   {group.links.map((link) => {
                     const LIcon = link.icon
@@ -141,23 +166,25 @@ export function DashboardNavSearch() {
                 </CommandGroup>
               ))}
 
-              <CommandGroup heading={s("settings")}>
-                <CommandItem
-                  keywords={[
-                    DASHBOARD_SETTINGS_LINK.href,
-                    hrefSearchTokens("/settings"),
-                  ]}
-                  value={buildSearchValue(
-                    s("settings"),
-                    DASHBOARD_SETTINGS_LINK.href,
-                  )}
-                  className="cursor-pointer gap-2"
-                  onSelect={() => navigateTo(DASHBOARD_SETTINGS_LINK.href)}
-                >
-                  <SettingsIcon aria-hidden />
-                  <span>{s("settings")}</span>
-                </CommandItem>
-              </CommandGroup>
+              {visibleExtras.length > 0 ? (
+                <CommandGroup heading={s("group_system")}>
+                  {visibleExtras.map((link) => {
+                    const LIcon = link.icon
+                    return (
+                      <CommandItem
+                        key={link.href}
+                        keywords={[link.href, hrefSearchTokens(link.href)]}
+                        value={buildSearchValue(s(link.titleKey), link.href)}
+                        className="cursor-pointer gap-2"
+                        onSelect={() => navigateTo(link.href)}
+                      >
+                        <LIcon aria-hidden />
+                        <span>{s(link.titleKey)}</span>
+                      </CommandItem>
+                    )
+                  })}
+                </CommandGroup>
+              ) : null}
             </CommandList>
           </Command>
         </div>

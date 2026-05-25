@@ -7,6 +7,9 @@ import ServicesPage from "./pages/services/Services"
 import CreateServicesPage from "./pages/services/CreateServices"
 import EditServicesPage from "./pages/services/EditServices"
 import ServicePricingPage from "./pages/services/ServicePricingPage"
+import ServiceCatalogPage from "./pages/service-catalog/ServiceCatalogPage"
+import CreateServiceCatalogPage from "./pages/service-catalog/CreateServiceCatalogPage"
+import EditServiceCatalogPage from "./pages/service-catalog/EditServiceCatalogPage"
 import FaqPage from "./pages/faq/FaqPage"
 import CreateFaqPage from "./pages/faq/CreateFaqPage"
 import EditFaqPage from "./pages/faq/EditFaqPage"
@@ -47,6 +50,10 @@ import RefundPolicyPage from "./pages/legal/RefundPolicy"
 import ContactSubmissionsPage from "./pages/contact/ContactSubmissionsPage"
 import UsersPage from "./pages/users/UsersPage"
 import ServiceBookingsPage from "./pages/service-bookings/ServiceBookingsPage"
+import TeamPage from "./pages/team/TeamPage"
+import RolesPage from "./pages/roles/RolesPage"
+import InvoicesPage from "./pages/invoices/InvoicesPage"
+import CreateInvoicePage from "./pages/invoices/CreateInvoicePage"
 
 
 const router = createBrowserRouter([
@@ -199,6 +206,18 @@ const router = createBrowserRouter([
         element: <ServicePricingPage />,
       },
       {
+        path: "/service-catalog",
+        element: <ServiceCatalogPage />,
+      },
+      {
+        path: "/service-catalog/create",
+        element: <CreateServiceCatalogPage />,
+      },
+      {
+        path: "/service-catalog/edit/:id",
+        element: <EditServiceCatalogPage />,
+      },
+      {
         path: "/testimonials",
         element: <TestimonialsPage />,
       },
@@ -229,6 +248,22 @@ const router = createBrowserRouter([
       {
         path: "/service-bookings",
         element: <ServiceBookingsPage />,
+      },
+      {
+        path: "/invoices",
+        element: <InvoicesPage />,
+      },
+      {
+        path: "/invoices/create",
+        element: <CreateInvoicePage />,
+      },
+      {
+        path: "/team",
+        element: <TeamPage />,
+      },
+      {
+        path: "/roles",
+        element: <RolesPage />,
       },
 
     ],

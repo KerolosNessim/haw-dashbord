@@ -1,6 +1,6 @@
 import { api } from "@/lib/api"
 import type { LoginValues } from "../components/login-form"
-import type { LoginResponse } from "../types"
+import type { LoginResponse, MeResponse } from "../types"
 
 
 export const loginApi = (values: LoginValues): Promise<LoginResponse> => {
@@ -9,6 +9,10 @@ export const loginApi = (values: LoginValues): Promise<LoginResponse> => {
     .catch((error) => {
       throw error;
     });
+};
+
+export const getMeApi = (): Promise<MeResponse> => {
+  return api.get("/v1/admin/me").then((res) => res.data);
 };
 
 export const logoutApi = (): Promise<LoginResponse> => {

@@ -10,6 +10,18 @@ const ALLOWED_STYLE_PROPERTIES = new Set([
   "font-style",
   "text-decoration",
   "white-space",
+  // Table cell / row sizing from the rich editor
+  "width",
+  "height",
+  "min-width",
+  "min-height",
+  "max-width",
+  "vertical-align",
+  "border",
+  "border-width",
+  "border-style",
+  "border-color",
+  "border-collapse",
 ]);
 
 const DANGEROUS_STYLE_VALUE = /expression|javascript|url\s*\(|@import|behavior|-moz-binding/i;

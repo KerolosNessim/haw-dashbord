@@ -23,6 +23,7 @@ import { useDeleteCourse } from "@/features/courses/hooks/useDeleteCourse";
 import { useCourses } from "@/features/courses/hooks/useCourses";
 import { Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Can } from "@/features/permissions/components/PermissionGate";
 import { Link } from "react-router-dom";
 
 export default function CoursesTable() {
@@ -81,11 +82,14 @@ export default function CoursesTable() {
                 <TableCell className="text-muted-foreground">{row.priceLabel}</TableCell>
                 <TableCell className="py-6 pe-8">
                   <div className="flex items-center justify-start gap-2">
-                    <Button variant="ghost" size="icon" className="rounded-xl" asChild>
-                      <Link to={`/courses/edit/${row.id}`}>
-                        <Pencil className="h-4 w-4" />
-                      </Link>
-                    </Button>
+                    <Can permission="courses.update">
+                      <Button variant="ghost" size="icon" className="rounded-xl" asChild>
+                        <Link to={`/courses/edit/${row.id}`}>
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </Can>
+                    <Can permission="courses.delete">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
@@ -115,6 +119,7 @@ export default function CoursesTable() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+                    </Can>
                   </div>
                 </TableCell>
               </TableRow>

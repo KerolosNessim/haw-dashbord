@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import CountriesTable from "@/features/countries/components/countries-table";
 import CountryDialog from "@/features/countries/components/country-dialog";
+import { Can } from "@/features/permissions/components/PermissionGate";
 
 export default function CountriesPage() {
   const { t } = useTranslation("translation", { keyPrefix: "countries" });
@@ -28,14 +29,16 @@ export default function CountriesPage() {
           </p>
         </div>
 
-        <Button
-          size="lg"
-          onClick={() => setDialogOpen(true)}
-          className="rounded-2xl px-8 h-14 shadow-xl shadow-primary/20 hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all duration-300 font-bold text-lg gap-2"
-        >
-          <Plus className="w-6 h-6" />
-          {t("add_button")}
-        </Button>
+        <Can permission="countries.create">
+          <Button
+            size="lg"
+            onClick={() => setDialogOpen(true)}
+            className="rounded-2xl px-8 h-14 shadow-xl shadow-primary/20 hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all duration-300 font-bold text-lg gap-2"
+          >
+            <Plus className="w-6 h-6" />
+            {t("add_button")}
+          </Button>
+        </Can>
       </div>
 
       <CountriesTable />

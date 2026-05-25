@@ -1,12 +1,6 @@
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { ServicePricingServiceSelect } from "@/features/services/components/service-pricing-service-select";
 import ServicePackagesForm, {
   type ServicePackagesFormHandle,
 } from "@/features/services/components/service-packages-form";
@@ -19,12 +13,13 @@ import {
   serviceToSectionsPayload,
 } from "@/features/services/utils/service-api-mappers";
 import { mapPackagesToPayload } from "@/features/services/utils/section-form-mappers";
+import { Can } from "@/features/permissions/components/PermissionGate";
 import { Loader2, Package, Save } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export default function ServicePricingPage() {
-  const { t, i18n } = useTranslation("translation", { keyPrefix: "services.pricing" });
+  const { t } = useTranslation("translation", { keyPrefix: "services.pricing" });
   const { data: servicesList, isLoading: listLoading } = useGetServices();
   const [serviceId, setServiceId] = useState<string>("");
   const numericId = serviceId ? Number(serviceId) : undefined;
@@ -53,14 +48,6 @@ export default function ServicePricingPage() {
     });
   };
 
-  const serviceLabel = (id: number) => {
-    const found = services.find((s) => s.id === id);
-    if (!found) return String(id);
-    return i18n.language.startsWith("ar")
-      ? found.title?.ar || found.title?.en
-      : found.title?.en || found.title?.ar;
-  };
-
   return (
     <div className="mx-auto max-w-[1200px] space-y-8 pb-20">
       <div className="flex flex-col gap-4 border-b pb-8 md:flex-row md:items-center md:justify-between">
@@ -77,19 +64,16 @@ export default function ServicePricingPage() {
 
       <div className="rounded-[24px] border bg-card p-6 shadow-sm">
         <Field>
-          <FieldLabel>{t("select_service")}</FieldLabel>
-          <Select value={serviceId} onValueChange={setServiceId} disabled={listLoading}>
-            <SelectTrigger className="h-12 w-full max-w-md rounded-xl">
-              <SelectValue placeholder={t("select_placeholder")} />
-            </SelectTrigger>
-            <SelectContent>
-              {services.map((s) => (
-                <SelectItem key={s.id} value={String(s.id)}>
-                  {serviceLabel(s.id)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FieldLabel htmlFor="service-pricing-select">{t("select_service")}</FieldLabel>
+          <ServicePricingServiceSelect
+            services={services}
+            value={serviceId}
+            onValueChange={setServiceId}
+            disabled={listLoading}
+          />
+          {!listLoading && services.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("no_services")}</p>
+          ) : null}
         </Field>
       </div>
 
@@ -111,20 +95,22 @@ export default function ServicePricingPage() {
             initialData={packagesDataFromService(service)}
           />
           <div className="flex justify-end">
-            <Button
-              type="button"
-              size="lg"
-              disabled={isPending}
-              onClick={handleSave}
-              className="h-12 gap-2 rounded-full px-12 font-bold shadow-lg"
-            >
-              {isPending ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <Save className="h-5 w-5" />
-              )}
-              {t("save")}
-            </Button>
+            <Can permission="service-pricing.update">
+              <Button
+                type="button"
+                size="lg"
+                disabled={isPending}
+                onClick={handleSave}
+                className="h-12 gap-2 rounded-full px-12 font-bold shadow-lg"
+              >
+                {isPending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Save className="h-5 w-5" />
+                )}
+                {t("save")}
+              </Button>
+            </Can>
           </div>
         </div>
       )}

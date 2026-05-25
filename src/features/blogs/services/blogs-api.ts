@@ -5,24 +5,12 @@ import {
 } from "@/lib/localized-html-form";
 import type { BlogFormValues } from "@/features/blogs/blog-form-schema";
 import { appendBlogTagsToFormData, normalizeBlogTagsFromApi } from "@/features/blogs/lib/blog-tags";
-import { pickBilingualSlug, pickLocalized } from "@/lib/api-payload";
+import { assertApiEnvelopeSuccess, pickBilingualSlug, pickLocalized } from "@/lib/api-payload";
+import { normalizeSlugRedirectCodeInput } from "@/lib/http-redirect-codes";
 import { isAxiosError } from "axios";
 
 const ADMIN_BLOGS_BASE = "/v1/admin/blogs";
 
-/** Laravel ApiResponse: HTTP 200 with `{ status: "false", message, errors }` must not be treated as success. */
-function assertApiEnvelopeSuccess(data: unknown): void {
-  if (data == null || typeof data !== "object") return;
-  const d = data as Record<string, unknown>;
-  const s = d.status;
-  if (s === false || s === "false" || s === 0 || s === "0") {
-    const msg =
-      typeof d.message === "string" && d.message.trim()
-        ? d.message.trim()
-        : "Request failed";
-    throw new Error(msg);
-  }
-}
 /** Public list — same item shape as many admin list APIs; used as fallback when admin route errors. */
 const PUBLIC_BLOGS_LIST = "/v1/blogs";
 
@@ -31,6 +19,12 @@ function shouldTryPublicBlogsFallback(error: unknown): boolean {
   if (!isAxiosError(error)) return false;
   const status = error.response?.status;
   return status === 404 || status === 500 || status === 502 || status === 503;
+}
+
+function shouldTryPublicBlogShowFallback(error: unknown): boolean {
+  if (!isAxiosError(error)) return false;
+  const status = error.response?.status;
+  return status === 403 || status === 404 || status === 500 || status === 502 || status === 503;
 }
 
 /** API format `Y-m-d H:i:s` ↔ browser `datetime-local` `Y-m-dTHH:mm`. */
@@ -81,6 +75,9 @@ export function blogValuesToFormData(
 
   fd.append("slug[ar]", (values.slug.ar ?? "").trim());
   fd.append("slug[en]", (values.slug.en ?? "").trim());
+
+  fd.append("slug_redirect_code[ar]", values.slug_redirect_code.ar ?? "");
+  fd.append("slug_redirect_code[en]", values.slug_redirect_code.en ?? "");
 
   fd.append("canonical_url", (values.canonical_url ?? "").trim());
 
@@ -177,10 +174,25 @@ function coalesceIdField(a: unknown, b: unknown): unknown {
   return a ?? b;
 }
 
-export async function fetchAdminBlogById(blogId: string | number) {
-  const res = await api.get<unknown>(`${ADMIN_BLOGS_BASE}/${blogId}`);
+async function fetchPublicBlogById(blogId: string | number) {
+  const res = await api.get<unknown>(`${PUBLIC_BLOGS_LIST}/${blogId}`);
+  assertApiEnvelopeSuccess(res.data);
   const payload: unknown = (res.data as { data?: unknown })?.data ?? res.data;
   return unwrapBlogShowPayloadEnvelope(payload);
+}
+
+export async function fetchAdminBlogById(blogId: string | number) {
+  try {
+    const res = await api.get<unknown>(`${ADMIN_BLOGS_BASE}/${blogId}`);
+    assertApiEnvelopeSuccess(res.data);
+    const payload: unknown = (res.data as { data?: unknown })?.data ?? res.data;
+    return unwrapBlogShowPayloadEnvelope(payload);
+  } catch (error) {
+    if (shouldTryPublicBlogShowFallback(error) || shouldTryPublicBlogsFallback(error)) {
+      return fetchPublicBlogById(blogId);
+    }
+    throw error;
+  }
 }
 
 export async function deleteBlog(blogId: string | number) {
@@ -200,6 +212,20 @@ export async function deleteBlogsBulk(ids: (string | number)[]) {
 
 function asRecord(v: unknown): Record<string, unknown> | null {
   return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+}
+
+function pickBilingualSlugRedirectCode(rec: Record<string, unknown>): { ar: string; en: string } {
+  const raw = rec.slug_redirect_code ?? rec.slugRedirectCode;
+  if (raw != null) {
+    return {
+      ar: normalizeSlugRedirectCodeInput(pickLocalized(raw, "ar")),
+      en: normalizeSlugRedirectCodeInput(pickLocalized(raw, "en")),
+    };
+  }
+  return {
+    ar: normalizeSlugRedirectCodeInput(rec.slug_redirect_code_ar ?? rec.slugRedirectCodeAr),
+    en: normalizeSlugRedirectCodeInput(rec.slug_redirect_code_en ?? rec.slugRedirectCodeEn),
+  };
 }
 
 function pickBilingualImageAlt(raw: unknown): { ar: string; en: string } {
@@ -295,6 +321,7 @@ export function recordToBlogFormValues(raw: unknown): BlogFormValues | null {
     is_active: rec.is_active === false || rec.is_active === 0 || rec.is_active === "0" ? false : true,
     is_searchable: isSearchable,
     slug: pickBilingualSlug(rec.slug),
+    slug_redirect_code: pickBilingualSlugRedirectCode(rec),
     canonical_url: typeof rec.canonical_url === "string" ? rec.canonical_url : "",
     status,
     meta_title: {

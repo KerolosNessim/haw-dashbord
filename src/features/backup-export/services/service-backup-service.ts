@@ -1,11 +1,13 @@
+import { isAxiosError } from "axios";
 import {
   getAdminServiceByIdApi,
   getAdminServicesApi,
 } from "@/features/services/services/admin-services";
+import { getPublicServiceByIdApi, getServicesApi } from "@/features/services/services/get-services";
+import type { Service } from "@/features/services/type";
 import { saveServicePageApi } from "@/features/services/services/service-page-api";
 import type { BasicInfoValues } from "@/features/services/components/builder/basic-info-form";
 import type { ServiceSectionsPayload } from "@/features/services/service-section-types";
-import type { Service } from "@/features/services/type";
 import {
   serviceToBasicInfoValues,
   serviceToSectionsPayload,
@@ -43,6 +45,37 @@ function serviceToExportRow(service: Service): Record<string, unknown> {
   };
 }
 
+function shouldUsePublicServiceFallback(error: unknown): boolean {
+  if (!isAxiosError(error)) return false;
+  const status = error.response?.status;
+  return status === 403 || status === 404 || status === 500 || status === 502 || status === 503;
+}
+
+async function fetchServiceForExport(id: number | string): Promise<Service> {
+  try {
+    const detail = await getAdminServiceByIdApi(id);
+    return detail.data;
+  } catch (error) {
+    if (shouldUsePublicServiceFallback(error)) {
+      return getPublicServiceByIdApi(id);
+    }
+    throw error;
+  }
+}
+
+function assertServiceExportRows(
+  rows: Record<string, unknown>[],
+  requestedIds: (number | string)[],
+): void {
+  if (!rows.length) {
+    throw new Error(
+      requestedIds.length === 1
+        ? `Could not export service ${requestedIds[0]}`
+        : "No services could be exported",
+    );
+  }
+}
+
 function parsePayloadJson(row: Record<string, unknown>): ServiceBackupPayload | null {
   const raw = cellString(row.payload_json);
   if (!raw) return null;
@@ -58,16 +91,27 @@ function parsePayloadJson(row: Record<string, unknown>): ServiceBackupPayload | 
   }
 }
 
+async function listServicesForExport(): Promise<Service[]> {
+  try {
+    const res = await getAdminServicesApi();
+    return res.data?.data ?? [];
+  } catch (error) {
+    if (!shouldUsePublicServiceFallback(error)) throw error;
+    const res = await getServicesApi();
+    return res.data?.data ?? [];
+  }
+}
+
 export async function fetchAllServiceExportRows(): Promise<Record<string, unknown>[]> {
-  const res = await getAdminServicesApi();
-  const list = res.data?.data ?? [];
+  const list = await listServicesForExport();
   const rows: Record<string, unknown>[] = [];
 
   for (const summary of list) {
-    const detail = await getAdminServiceByIdApi(summary.id);
-    rows.push(serviceToExportRow(detail.data));
+    const service = await fetchServiceForExport(summary.id);
+    rows.push(serviceToExportRow(service));
   }
 
+  assertServiceExportRows(rows, list.map((s) => s.id));
   return rows;
 }
 
@@ -86,10 +130,11 @@ export async function exportServicesByIds(
   const rows: Record<string, unknown>[] = [];
 
   for (const id of unique) {
-    const detail = await getAdminServiceByIdApi(id);
-    rows.push(serviceToExportRow(detail.data));
+    const service = await fetchServiceForExport(id);
+    rows.push(serviceToExportRow(service));
   }
 
+  assertServiceExportRows(rows, unique);
   return [{ name: "services", rows }];
 }
 

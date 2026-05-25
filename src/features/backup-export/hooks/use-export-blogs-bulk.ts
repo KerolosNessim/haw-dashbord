@@ -2,6 +2,7 @@ import {
   buildAllBlogsSheets,
   exportBlogsByIds,
 } from "@/features/backup-export/services/content-backup-service";
+import { getHttpErrorMessage } from "@/lib/http-error-message";
 import { downloadWorkbook, workbookFromSheets } from "@/lib/excel-io";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -28,7 +29,8 @@ export function useExportBlogsBulk() {
     },
     onSuccess: (_data, ids) =>
       toast.success(t("export_bulk_success", { count: ids.length })),
-    onError: (e: Error) => toast.error(e.message || t("export_bulk_error")),
+    onError: (e: Error) =>
+      toast.error(getHttpErrorMessage(e, { default: t("export_bulk_error") })),
   });
 
   const exportAll = useMutation({
@@ -38,7 +40,8 @@ export function useExportBlogsBulk() {
       downloadBlogWorkbook(sheets, `howeyah-blogs-all-${stamp}.xlsx`);
     },
     onSuccess: () => toast.success(t("export_all_success")),
-    onError: (e: Error) => toast.error(e.message || t("export_bulk_error")),
+    onError: (e: Error) =>
+      toast.error(getHttpErrorMessage(e, { default: t("export_bulk_error") })),
   });
 
   return {

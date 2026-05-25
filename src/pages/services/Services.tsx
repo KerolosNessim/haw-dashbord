@@ -7,6 +7,7 @@ import Loader from "@/features/shared/components/loader";
 import { Download, Loader2, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Can } from "@/features/permissions/components/PermissionGate";
 import { Link } from "react-router-dom";
 
 export default function ServicesPage() {
@@ -44,6 +45,7 @@ export default function ServicesPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">{t("title")}</h1>
         <div className="flex flex-wrap items-center gap-2">
+          <Can permission="services.view">
           <Button
             type="button"
             variant="outline"
@@ -74,12 +76,15 @@ export default function ServicesPage() {
             )}
             {t("export_all")}
           </Button>
-          <Button asChild size="lg" className="rounded-xl">
-            <Link to="/services/create" className="flex items-center gap-2">
-              <Plus />
-              {t("add_service")}
-            </Link>
-          </Button>
+          </Can>
+          <Can permission="services.create">
+            <Button asChild size="lg" className="rounded-xl">
+              <Link to="/services/create" className="flex items-center gap-2">
+                <Plus />
+                {t("add_service")}
+              </Link>
+            </Button>
+          </Can>
         </div>
       </div>
 

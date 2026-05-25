@@ -18,7 +18,9 @@ import LogoutBtn from "@/features/auth/components/logout-btn"
 import {
   DASHBOARD_HOME_LINK,
   DASHBOARD_NAV_GROUPS,
+  DASHBOARD_ROLES_LINK,
   DASHBOARD_SETTINGS_LINK,
+  DASHBOARD_TEAM_LINK,
   groupMatchingPathname,
   routeMatches,
   type NavGroupId,
@@ -26,17 +28,27 @@ import {
   DASHBOARD_USERS_LINK,
   DASHBOARD_CONSULTATION_LINK,
 } from "@/features/shared/config/dashboard-nav.config"
+import { filterNavGroups, navLinkPermission } from "@/features/permissions/filter-nav"
+import { usePermission } from "@/features/permissions/hooks/usePermission"
 import { cn } from "@/lib/utils"
 import { ChevronDown, Languages, LayoutDashboard } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useLocation } from "react-router-dom"
 
+function useVisibleNavLink(link: NavLinkDef) {
+  const { can } = usePermission()
+  const permission = navLinkPermission(link.href)
+  return !permission || can(permission)
+}
+
 export function AppSidebar() {
   const { i18n } = useTranslation()
   const { t: s } = useTranslation("translation", { keyPrefix: "sidebar" })
+  const { can } = usePermission()
   const dir = i18n.dir()
   const location = useLocation()
+  const visibleGroups = filterNavGroups(DASHBOARD_NAV_GROUPS, can)
 
   const toggleLanguage = () => {
     const nextLang = i18n.language.startsWith("ar") ? "en" : "ar"
@@ -100,11 +112,22 @@ export function AppSidebar() {
   const settingsLink: NavLinkDef = DASHBOARD_SETTINGS_LINK
   const usersLink: NavLinkDef = DASHBOARD_USERS_LINK
   const consultationLink: NavLinkDef = DASHBOARD_CONSULTATION_LINK
+  const teamLink: NavLinkDef = DASHBOARD_TEAM_LINK
+  const rolesLink: NavLinkDef = DASHBOARD_ROLES_LINK
+
+  const showHome = useVisibleNavLink(homeLink)
+  const showSettings = useVisibleNavLink(settingsLink)
+  const showUsers = useVisibleNavLink(usersLink)
+  const showConsultation = useVisibleNavLink(consultationLink)
+  const showTeam = useVisibleNavLink(teamLink)
+  const showRoles = useVisibleNavLink(rolesLink)
 
   const HomeIcon = homeLink.icon
   const SettingsIcon = settingsLink.icon
   const UsersIcon = usersLink.icon
   const ConsultationIcon = consultationLink.icon
+  const TeamIcon = teamLink.icon
+  const RolesIcon = rolesLink.icon
 
   const logoPublicSrc = `${import.meta.env.BASE_URL}logo.png`.replace(
     /\/+/g,
@@ -168,29 +191,31 @@ export function AppSidebar() {
         <SidebarGroup className="p-0">
           <SidebarGroupContent className="px-1 pb-2">
             <SidebarMenu className="gap-[0.5625rem] space-y-0">
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={routeActive(homeLink.href)}
-                  size="lg"
-                  className={cn(
-                    "group/nav h-[2.75rem] rounded-[calc(0.8125rem)] text-[0.95rem]",
-                    linkButtonClass(routeActive(homeLink.href)),
-                  )}
-                >
-                  <Link
-                    to={homeLink.href}
-                    className="flex w-full items-center gap-[0.7rem] font-semibold leading-snug [&_svg]:size-[1.125rem]"
+              {showHome ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={routeActive(homeLink.href)}
+                    size="lg"
+                    className={cn(
+                      "group/nav h-[2.75rem] rounded-[calc(0.8125rem)] text-[0.95rem]",
+                      linkButtonClass(routeActive(homeLink.href)),
+                    )}
                   >
-                    <HomeIcon className="shrink-0" aria-hidden />
-                    <span className="min-w-0 flex-1 truncate">
-                      {s(homeLink.titleKey)}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+                    <Link
+                      to={homeLink.href}
+                      className="flex w-full items-center gap-[0.7rem] font-semibold leading-snug [&_svg]:size-[1.125rem]"
+                    >
+                      <HomeIcon className="shrink-0" aria-hidden />
+                      <span className="min-w-0 flex-1 truncate">
+                        {s(homeLink.titleKey)}
+                      </span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
 
-              {DASHBOARD_NAV_GROUPS.map((group) => {
+              {visibleGroups.map((group) => {
                 const Icon = group.icon
                 const isOpen = openGroups[group.id]
                 const activeInGroup = group.links.some((l) =>
@@ -272,69 +297,121 @@ export function AppSidebar() {
                 )
               })}
 
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={routeActive(consultationLink.href)}
-                  size="lg"
-                  className={cn(
-                    "group/nav h-[2.75rem] rounded-[calc(0.8125rem)] text-[0.95rem]",
-                    linkButtonClass(routeActive(consultationLink.href)),
-                  )}
-                >
-                  <Link
-                    to={consultationLink.href}
-                    className="flex w-full items-center gap-[0.7rem] font-semibold leading-snug [&_svg]:size-[1.125rem]"
+              {showConsultation ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={routeActive(consultationLink.href)}
+                    size="lg"
+                    className={cn(
+                      "group/nav h-[2.75rem] rounded-[calc(0.8125rem)] text-[0.95rem]",
+                      linkButtonClass(routeActive(consultationLink.href)),
+                    )}
                   >
-                    <ConsultationIcon className="shrink-0" aria-hidden />
-                    <span className="min-w-0 flex-1 truncate">
-                      {s(consultationLink.titleKey)}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={routeActive(usersLink.href)}
-                  size="lg"
-                  className={cn(
-                    "group/nav h-[2.75rem] rounded-[calc(0.8125rem)] text-[0.95rem]",
-                    linkButtonClass(routeActive(usersLink.href)),
-                  )}
-                >
-                  <Link
-                    to={usersLink.href}
-                    className="flex w-full items-center gap-[0.7rem] font-semibold leading-snug [&_svg]:size-[1.125rem]"
+                    <Link
+                      to={consultationLink.href}
+                      className="flex w-full items-center gap-[0.7rem] font-semibold leading-snug [&_svg]:size-[1.125rem]"
+                    >
+                      <ConsultationIcon className="shrink-0" aria-hidden />
+                      <span className="min-w-0 flex-1 truncate">
+                        {s(consultationLink.titleKey)}
+                      </span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
+              {showUsers ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={routeActive(usersLink.href)}
+                    size="lg"
+                    className={cn(
+                      "group/nav h-[2.75rem] rounded-[calc(0.8125rem)] text-[0.95rem]",
+                      linkButtonClass(routeActive(usersLink.href)),
+                    )}
                   >
-                    <UsersIcon className="shrink-0" aria-hidden />
-                    <span className="min-w-0 flex-1 truncate">
-                      {s(usersLink.titleKey)}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={routeActive(settingsLink.href)}
-                  size="lg"
-                  className={cn(
-                    "group/nav h-[2.75rem] rounded-[calc(0.8125rem)] text-[0.95rem]",
-                    linkButtonClass(routeActive(settingsLink.href)),
-                  )}
-                >
-                  <Link
-                    to={settingsLink.href}
-                    className="flex w-full items-center gap-[0.7rem] font-semibold leading-snug [&_svg]:size-[1.125rem]"
+                    <Link
+                      to={usersLink.href}
+                      className="flex w-full items-center gap-[0.7rem] font-semibold leading-snug [&_svg]:size-[1.125rem]"
+                    >
+                      <UsersIcon className="shrink-0" aria-hidden />
+                      <span className="min-w-0 flex-1 truncate">
+                        {s(usersLink.titleKey)}
+                      </span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
+              {showTeam ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={routeActive(teamLink.href)}
+                    size="lg"
+                    className={cn(
+                      "group/nav h-[2.75rem] rounded-[calc(0.8125rem)] text-[0.95rem]",
+                      linkButtonClass(routeActive(teamLink.href)),
+                    )}
                   >
-                    <SettingsIcon className="shrink-0" aria-hidden />
-                    <span className="min-w-0 flex-1 truncate">
-                      {s(settingsLink.titleKey)}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+                    <Link
+                      to={teamLink.href}
+                      className="flex w-full items-center gap-[0.7rem] font-semibold leading-snug [&_svg]:size-[1.125rem]"
+                    >
+                      <TeamIcon className="shrink-0" aria-hidden />
+                      <span className="min-w-0 flex-1 truncate">
+                        {s(teamLink.titleKey)}
+                      </span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
+              {showRoles ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={routeActive(rolesLink.href)}
+                    size="lg"
+                    className={cn(
+                      "group/nav h-[2.75rem] rounded-[calc(0.8125rem)] text-[0.95rem]",
+                      linkButtonClass(routeActive(rolesLink.href)),
+                    )}
+                  >
+                    <Link
+                      to={rolesLink.href}
+                      className="flex w-full items-center gap-[0.7rem] font-semibold leading-snug [&_svg]:size-[1.125rem]"
+                    >
+                      <RolesIcon className="shrink-0" aria-hidden />
+                      <span className="min-w-0 flex-1 truncate">
+                        {s(rolesLink.titleKey)}
+                      </span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
+              {showSettings ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={routeActive(settingsLink.href)}
+                    size="lg"
+                    className={cn(
+                      "group/nav h-[2.75rem] rounded-[calc(0.8125rem)] text-[0.95rem]",
+                      linkButtonClass(routeActive(settingsLink.href)),
+                    )}
+                  >
+                    <Link
+                      to={settingsLink.href}
+                      className="flex w-full items-center gap-[0.7rem] font-semibold leading-snug [&_svg]:size-[1.125rem]"
+                    >
+                      <SettingsIcon className="shrink-0" aria-hidden />
+                      <span className="min-w-0 flex-1 truncate">
+                        {s(settingsLink.titleKey)}
+                      </span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

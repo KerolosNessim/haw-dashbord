@@ -1,4 +1,5 @@
 import { exportBlogsByIds } from "@/features/backup-export/services/content-backup-service";
+import { getHttpErrorMessage } from "@/lib/http-error-message";
 import { downloadWorkbook, workbookFromSheets } from "@/lib/excel-io";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -14,6 +15,6 @@ export function useExportBlog() {
       downloadWorkbook(wb, `howeyah-blog-${blogId}.xlsx`);
     },
     onSuccess: () => toast.success(t("export_success")),
-    onError: (e: Error) => toast.error(e.message || t("export_error")),
+    onError: (e: Error) => toast.error(getHttpErrorMessage(e, { default: t("export_error") })),
   });
 }

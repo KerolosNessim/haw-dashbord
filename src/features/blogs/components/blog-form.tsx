@@ -43,6 +43,7 @@ import type { BlogFormValues } from "@/features/blogs/blog-form-schema";
 import { BlogTagsField } from "@/features/blogs/components/blog-tags-field";
 import { useCreateBlog } from "@/features/blogs/hooks/useCreateBlog";
 import { useUpdateBlog } from "@/features/blogs/hooks/useUpdateBlog";
+import { BLOG_SLUG_REDIRECT_CODES } from "@/lib/http-redirect-codes";
 
 type Mode = "create" | "edit";
 
@@ -80,6 +81,7 @@ const DEFAULT_VALUES: BlogFormValues = {
   status: "draft",
   published_at: "",
   slug: { ar: "", en: "" },
+  slug_redirect_code: { ar: "", en: "" },
   canonical_url: "",
   meta_title: { ar: "", en: "" },
   meta_description: { ar: "", en: "" },
@@ -100,6 +102,8 @@ function firstResolvedBlogValidationMessage(
   const candidates = [
     errors.slug?.ar?.message,
     errors.slug?.en?.message,
+    errors.slug_redirect_code?.ar?.message,
+    errors.slug_redirect_code?.en?.message,
     errors.category_id?.message as string | undefined,
     errors.publisher_name?.message as string | undefined,
     errors.title?.ar?.message,
@@ -654,42 +658,76 @@ export default function BlogForm({
             </div>
 
             <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-2 md:*:min-w-0">
-              <SmartSlugField<BlogFormValues>
-                control={control}
-                name="slug.ar"
-                slugLocale="ar"
-                titleEn={watchTitleAr ?? ""}
-                trigger={trigger}
-                label={
-                  <span className="flex items-center gap-2">
-                    {t("slug_label_ar")}
-                    <LinkIcon className="h-3 w-3 shrink-0 opacity-60" />
-                  </span>
-                }
-                slugPrefix={<span className="hidden sm:inline">{t("slug_prefix")}</span>}
-                placeholder={t("slug_placeholder_ar")}
-                errorMessage={
-                  errors.slug?.ar?.message ? commonT(errors.slug.ar.message) : undefined
-                }
-              />
-              <SmartSlugField<BlogFormValues>
-                control={control}
-                name="slug.en"
-                slugLocale="en"
-                titleEn={watchTitleEn ?? ""}
-                trigger={trigger}
-                label={
-                  <span className="flex items-center gap-2">
-                    {t("slug_label_en")}
-                    <LinkIcon className="h-3 w-3 shrink-0 opacity-60" />
-                  </span>
-                }
-                slugPrefix={<span className="hidden sm:inline">{t("slug_prefix")}</span>}
-                placeholder={t("slug_placeholder")}
-                errorMessage={
-                  errors.slug?.en?.message ? commonT(errors.slug.en.message) : undefined
-                }
-              />
+              {(["ar", "en"] as const).map((lang) => (
+                <div key={lang} className="space-y-4">
+                  <SmartSlugField<BlogFormValues>
+                    control={control}
+                    name={lang === "ar" ? "slug.ar" : "slug.en"}
+                    slugLocale={lang}
+                    titleEn={lang === "ar" ? (watchTitleAr ?? "") : (watchTitleEn ?? "")}
+                    trigger={trigger}
+                    label={
+                      <span className="flex items-center gap-2">
+                        {lang === "ar" ? t("slug_label_ar") : t("slug_label_en")}
+                        <LinkIcon className="h-3 w-3 shrink-0 opacity-60" />
+                      </span>
+                    }
+                    slugPrefix={<span className="hidden sm:inline">{t("slug_prefix")}</span>}
+                    placeholder={
+                      lang === "ar" ? t("slug_placeholder_ar") : t("slug_placeholder")
+                    }
+                    errorMessage={
+                      lang === "ar" && errors.slug?.ar?.message
+                        ? commonT(errors.slug.ar.message)
+                        : lang === "en" && errors.slug?.en?.message
+                          ? commonT(errors.slug.en.message)
+                          : undefined
+                    }
+                  />
+                  <Controller
+                    name={lang === "ar" ? "slug_redirect_code.ar" : "slug_redirect_code.en"}
+                    control={control}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel className="text-xs">{t("slug_redirect_code_label")}</FieldLabel>
+                        <p className="mb-2 text-[10px] leading-relaxed text-muted-foreground">
+                          {t("slug_redirect_code_hint")}
+                        </p>
+                        <Select
+                          value={field.value === "" ? "__none__" : field.value}
+                          onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                        >
+                          <SelectTrigger className="h-10 text-sm">
+                            <SelectValue placeholder={t("slug_redirect_code_none")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">{t("slug_redirect_code_none")}</SelectItem>
+                            {BLOG_SLUG_REDIRECT_CODES.map((code) => (
+                              <SelectItem key={code} value={code}>
+                                {t(`slug_redirect_code_${code}`, {
+                                  defaultValue: `${code} — ${code}`,
+                                })}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FieldError
+                          errors={[
+                            {
+                              message:
+                                lang === "ar" && errors.slug_redirect_code?.ar?.message
+                                  ? commonT(errors.slug_redirect_code.ar.message)
+                                  : lang === "en" && errors.slug_redirect_code?.en?.message
+                                    ? commonT(errors.slug_redirect_code.en.message)
+                                    : undefined,
+                            },
+                          ]}
+                        />
+                      </Field>
+                    )}
+                  />
+                </div>
+              ))}
 
               {(["ar", "en"] as const).map((lang) => (
                 <div key={lang} className="space-y-4 rounded-2xl border bg-muted/5 p-5">

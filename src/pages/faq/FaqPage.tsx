@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Info, List } from "lucide-react";
 import { useFaqGeneral } from "@/features/faq/hooks/useFaqGeneral";
+import { Can } from "@/features/permissions/components/PermissionGate";
 
 export default function FaqPage() {
   const { t } = useTranslation("translation", { keyPrefix: "faq" });
@@ -23,15 +24,17 @@ export default function FaqPage() {
           <p className="text-muted-foreground mt-1">{t("description")}</p>
         </div>
 
-        <Link to="/faq/create">
-          <Button
-            size="lg"
-            className="rounded-full px-8 shadow-lg shadow-primary/20 hover:shadow-xl transition-all duration-300 active:scale-95"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            {t("add_faq")}
-          </Button>
-        </Link>
+        <Can permission="faq.create">
+          <Link to="/faq/create">
+            <Button
+              size="lg"
+              className="rounded-full px-8 shadow-lg shadow-primary/20 hover:shadow-xl transition-all duration-300 active:scale-95"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              {t("add_faq")}
+            </Button>
+          </Link>
+        </Can>
       </div>
 
       <Tabs defaultValue="general" className="w-full">

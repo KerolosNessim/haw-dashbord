@@ -1,19 +1,26 @@
 import { api } from "@/lib/api";
+import {
+  assertApiEnvelopeSuccess,
+  unwrapDataArray,
+  unwrapShowResource,
+} from "@/lib/api-payload";
 import { normalizeService } from "../utils/service-mapper";
 import type { GetServiceResponse, GetServicesResponse } from "../type";
 
 export const getAdminServicesApi = (): Promise<GetServicesResponse> => {
   return api.get<GetServicesResponse>("/v1/admin/services").then((res) => {
+    assertApiEnvelopeSuccess(res.data);
+    const rawList = unwrapDataArray(res.data.data ?? res.data);
     const payload = res.data.data;
-    const rawList = Array.isArray(payload) ? payload : payload?.data ?? [];
-    const meta = Array.isArray(payload) ? undefined : payload?.meta;
+    const meta =
+      payload && typeof payload === "object" && !Array.isArray(payload)
+        ? (payload as { meta?: GetServicesResponse["data"]["meta"] }).meta
+        : undefined;
 
     return {
       ...res.data,
       data: {
-        data: rawList.map((item) =>
-          normalizeService(item as unknown as Record<string, unknown>),
-        ),
+        data: rawList.map((item) => normalizeService(item)),
         meta,
       },
     };
@@ -21,10 +28,14 @@ export const getAdminServicesApi = (): Promise<GetServicesResponse> => {
 };
 
 export const getAdminServiceByIdApi = (id: number | string): Promise<GetServiceResponse> => {
-  return api.get<GetServiceResponse>(`/v1/admin/services/${id}`).then((res) => ({
-    ...res.data,
-    data: normalizeService(res.data.data as unknown as Record<string, unknown>),
-  }));
+  return api.get<GetServiceResponse>(`/v1/admin/services/${id}`).then((res) => {
+    assertApiEnvelopeSuccess(res.data);
+    const record = unwrapShowResource(res.data);
+    return {
+      ...res.data,
+      data: normalizeService(record),
+    };
+  });
 };
 
 export const deleteAdminServiceApi = (id: number | string) => {

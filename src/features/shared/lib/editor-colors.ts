@@ -1,4 +1,4 @@
-import type { HeadingTagType } from "@lexical/rich-text";
+import type { HeadingTagType } from "./heading-types";
 
 /** Default heading colors (saved inline in HTML when a heading is applied). */
 export const DEFAULT_HEADING_COLORS: Record<HeadingTagType, string> = {

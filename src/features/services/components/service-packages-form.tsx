@@ -1,12 +1,22 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { BilingualSectionImageUpload } from "@/components/form/bilingual-section-image-upload";
+import { bilingualSectionImageFromApi } from "@/lib/bilingual-section-image";
+import { forwardRef, useImperativeHandle } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Package, ListChecks, ImagePlus, X } from "lucide-react";
+import { Plus, Trash2, Package, ListChecks } from "lucide-react";
 import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { LocalizedDescriptionFields } from "@/features/shared/components/localized-description-fields";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { packageCurrencyOptions } from "@/features/services/constants/package-currencies";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -97,7 +107,7 @@ const ServicePackagesForm = forwardRef<
         {
           title: { ar: "", en: "" },
           description: { ar: null, en: null },
-          image: null,
+          image: { ar: null, en: null },
           image_alt: { ar: "", en: "" },
           price: 0,
           currency: "OMR",
@@ -210,7 +220,7 @@ const ServicePackagesForm = forwardRef<
               append({
                 title: { ar: "", en: "" },
                 description: { ar: null, en: null },
-                image: null,
+                image: { ar: null, en: null },
                 image_alt: { ar: "", en: "" },
                 price: 0,
                 currency: "OMR",
@@ -253,32 +263,6 @@ function PackageItem({
 
   const translateError = (message?: string) =>
     message?.includes("validation.") ? t(message) : message;
-
-  const imageValue = watch(`items.${index}.image`);
-  const [preview, setPreview] = useState<string | null>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (imageValue instanceof File) return;
-    setPreview(typeof imageValue === "string" && imageValue ? imageValue : null);
-  }, [imageValue]);
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setValue(`items.${index}.image`, file);
-
-    const reader = new FileReader();
-    reader.onloadend = () => setPreview(reader.result as string);
-    reader.readAsDataURL(file);
-  };
-
-  const removeImage = () => {
-    setValue(`items.${index}.image`, null);
-    setPreview(null);
-    if (imageInputRef.current) imageInputRef.current.value = "";
-  };
 
   const { fields: arFeatures, append: appendAr, remove: removeAr } = useFieldArray({
     control,
@@ -373,12 +357,34 @@ function PackageItem({
             <Controller
               name={`items.${index}.currency`}
               control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>{t("currency")}</FieldLabel>
-                  <Input {...field} className="h-11 rounded-xl bg-muted/5" />
-                </Field>
-              )}
+              render={({ field }) => {
+                const currencyValue = String(field.value ?? "").trim() || "OMR";
+                const options = packageCurrencyOptions(currencyValue);
+                return (
+                  <Field>
+                    <FieldLabel htmlFor={`package-currency-${index}`}>{t("currency")}</FieldLabel>
+                    <Select
+                      value={currencyValue}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger
+                        id={`package-currency-${index}`}
+                        dir="ltr"
+                        className="h-11 w-full rounded-xl bg-muted/5 font-semibold uppercase"
+                      >
+                        <SelectValue placeholder="OMR" />
+                      </SelectTrigger>
+                      <SelectContent position="popper" align="start" className="rounded-xl">
+                        {options.map((code) => (
+                          <SelectItem key={code} value={code} textValue={code}>
+                            {code}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                );
+              }}
             />
           </div>
         </div>
@@ -437,46 +443,17 @@ function PackageItem({
 
       <div className="space-y-6 border-t pt-6">
         <p className="text-sm font-bold opacity-60">{t("package_image")}</p>
-        <div
-          className={cn(
-            "relative mx-auto flex aspect-video max-w-md cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-all",
-            preview
-              ? "border-primary/20"
-              : "border-border hover:border-primary/40",
+        <Controller
+          name={`items.${index}.image`}
+          control={control}
+          render={({ field }) => (
+            <BilingualSectionImageUpload
+              value={field.value ?? { ar: null, en: null }}
+              onChange={field.onChange}
+              required={false}
+            />
           )}
-          onClick={() => !preview && imageInputRef.current?.click()}
-        >
-          {preview ? (
-            <>
-              <img src={preview} alt="" className="h-full w-full object-cover" />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-all hover:opacity-100">
-                <Button
-                  type="button"
-                  size="icon"
-                  className="h-9 w-9 rounded-full bg-red-500 text-white shadow-xl"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeImage();
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center gap-2 p-6">
-              <ImagePlus className="h-8 w-8 opacity-20" />
-              <p className="text-[10px] font-bold opacity-30">{t("upload_cover")}</p>
-            </div>
-          )}
-          <input
-            type="file"
-            ref={imageInputRef}
-            className="hidden"
-            accept="image/*"
-            onChange={handleImageChange}
-          />
-        </div>
+        />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Controller
             name={`items.${index}.image_alt.ar`}

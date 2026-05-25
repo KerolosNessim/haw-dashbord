@@ -8,6 +8,7 @@ import { useAuthStore } from "../store/user-store";
 import type { AxiosError } from "axios";
 import type { LoginResponse } from "../types";
 import { extractAuthToken } from "../utils/extract-auth-token";
+import { normalizeAuthUser } from "../utils/normalize-auth-user";
 
 export const useLogin = () => {
   const { t } = useTranslation();
@@ -23,9 +24,9 @@ export const useLogin = () => {
           toast.error(t("toasts.login_error"));
           return;
         }
-        const { accessToken: _a, token: _t, ...user } = data.data;
-        setAuth(user);
         localStorage.setItem("token", token);
+        const normalized = normalizeAuthUser(data.data);
+        if (normalized) setAuth(normalized);
       }
       toast.success(data?.message || t("toasts.login_success"));
       navigate("/");

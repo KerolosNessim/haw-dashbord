@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Can } from "@/features/permissions/components/PermissionGate";
 import { useState } from "react";
 
 type ServiceCardProps = {
@@ -101,13 +102,15 @@ export default function ServiceCard({ service }: ServiceCardProps) {
 
       {/* Actions */}
       <div className="flex items-center gap-2 p-5 pt-0">
-        <Link
-          to={`/services/edit/${service?.id}`}
-          className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition hover:bg-gray-100"
-        >
-          <Pencil size={16} />
-          {t("edit_service")}
-        </Link>
+        <Can permission="services.update">
+          <Link
+            to={`/services/edit/${service?.id}`}
+            className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition hover:bg-gray-100"
+          >
+            <Pencil size={16} />
+            {t("edit_service")}
+          </Link>
+        </Can>
 
         <button
           type="button"
@@ -119,6 +122,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
           {t("export_excel")}
         </button>
 
+        <Can permission="services.delete">
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogTrigger asChild>
             <button className="flex items-center gap-2 rounded-lg bg-red-500 px-3 py-1.5 text-sm text-white transition hover:bg-red-600">
@@ -154,6 +158,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        </Can>
       </div>
     </div>
   );

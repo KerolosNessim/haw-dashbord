@@ -4,7 +4,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useAllSolutionCategories } from "@/features/solution-categories/hooks/useAllSolutionCategories";
+import { pickSolutionCategoryId } from "@/features/solutions/lib/solution-category-utils";
 import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { useCreateSolutionSingle } from "@/features/solutions/hooks/useCreateSolutionSingle";
 import { useUpdateSolutionSingle } from "@/features/solutions/hooks/useUpdateSolutionSingle";
@@ -24,6 +33,7 @@ const schema = z.object({
   des_en: z.string().optional().default(""),
   slug_ar: z.string().min(1, { message: "validation.required" }),
   slug_en: z.string().optional().default(""),
+  category_id: z.string().min(1, { message: "validation.required" }),
   is_active: z.boolean(),
   image: z.any().optional(),
 });
@@ -51,17 +61,20 @@ type SolutionSingleFormProps = {
 export default function SolutionSingleForm({ mode, initial = null, onSaved }: SolutionSingleFormProps) {
   const { t } = useTranslation("translation", { keyPrefix: "solutions.dialog" });
   const { t: contentT } = useTranslation("translation", { keyPrefix: "solutions.content" });
-  const { t: commonT } = useTranslation("translation");
+  const { t: commonT, i18n } = useTranslation("translation");
   const { createMutation, isPending: isCreating } = useCreateSolutionSingle();
   const { updateMutation, isPending: isUpdating } = useUpdateSolutionSingle();
+  const { data: categoryRows = [], isLoading: categoriesLoading } = useAllSolutionCategories();
   const isPending = isCreating || isUpdating;
   const [imageAlt, setImageAlt] = useState<BilingualImageAlt>(emptyBilingualImageAlt);
+  const isRtl = i18n.language.startsWith("ar");
 
   const {
     control,
     handleSubmit,
     reset,
     watch,
+    setValue,
     trigger,
     formState: { errors },
   } = useForm<SolutionSingleFormValues>({
@@ -73,10 +86,16 @@ export default function SolutionSingleForm({ mode, initial = null, onSaved }: So
       des_en: "",
       slug_ar: "",
       slug_en: "",
+      category_id: "",
       is_active: true,
       image: null,
     },
   });
+
+  const categoryItems = categoryRows.map((c) => ({
+    id: c.id,
+    label: isRtl ? c.nameAr || c.nameEn : c.nameEn || c.nameAr,
+  }));
 
   const watchTitleAr = watch("title_ar");
   const watchTitleEn = watch("title_en");
@@ -91,6 +110,7 @@ export default function SolutionSingleForm({ mode, initial = null, onSaved }: So
         des_en: initial.description?.en ?? "",
         slug_ar: slug.ar,
         slug_en: slug.en,
+        category_id: pickSolutionCategoryId(initial),
         is_active: initial.is_active !== false,
         image: initial.image ?? null,
       });
@@ -107,11 +127,19 @@ export default function SolutionSingleForm({ mode, initial = null, onSaved }: So
         des_en: "",
         slug_ar: "",
         slug_en: "",
+        category_id: "",
         is_active: true,
         image: null,
       });
     }
   }, [mode, initial, reset]);
+
+  useEffect(() => {
+    if (mode !== "edit" || !initial || categoriesLoading) return;
+    const id = pickSolutionCategoryId(initial);
+    if (!id) return;
+    setValue("category_id", id, { shouldDirty: false, shouldValidate: false });
+  }, [mode, initial, categoriesLoading, setValue]);
 
   const translateError = (msg: string | undefined) => (msg ? commonT(msg) : undefined);
 
@@ -120,6 +148,7 @@ export default function SolutionSingleForm({ mode, initial = null, onSaved }: So
       title: { ar: data.title_ar, en: data.title_en },
       description: { ar: data.des_ar, en: data.des_en },
       slug: { ar: data.slug_ar, en: data.slug_en },
+      category_id: data.category_id.trim(),
       is_active: data.is_active,
       image_alt: imageAlt,
     };
@@ -162,6 +191,33 @@ export default function SolutionSingleForm({ mode, initial = null, onSaved }: So
         </div>
 
         <div className="space-y-6 lg:col-span-8">
+          <Controller
+            name="category_id"
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel className="text-sm font-bold">{contentT("category")}</FieldLabel>
+                <Select
+                  value={field.value?.trim() || undefined}
+                  onValueChange={field.onChange}
+                  disabled={categoriesLoading && categoryItems.length === 0}
+                >
+                  <SelectTrigger className="h-11 rounded-xl">
+                    <SelectValue placeholder={contentT("category_placeholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categoryItems.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError errors={[{ message: translateError(errors.category_id?.message) }]} />
+              </Field>
+            )}
+          />
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Controller
               name="title_ar"

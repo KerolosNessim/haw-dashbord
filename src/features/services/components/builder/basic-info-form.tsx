@@ -1,4 +1,12 @@
 import { SmartSlugField } from "@/components/form/smart-slug-field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -40,6 +48,9 @@ import {
   normalizeOgType,
   normalizeTwitterCard,
 } from "../../constants/social-meta-options";
+import { BLOG_SLUG_REDIRECT_CODES } from "@/lib/http-redirect-codes";
+import { normalizeServiceTagsFromApi } from "../../lib/service-tags";
+import { ServiceTagsField } from "../service-tags-field";
 import { useAdminService } from "../../hooks/useAdminService";
 import { useServiceFormDraft } from "../../hooks/useServiceFormDraft";
 import { deserializeBasicInfoFromDraft } from "../../utils/service-draft-serializer";
@@ -67,13 +78,54 @@ const serviceImageSchema = z
     ar: z.any().nullable().optional(),
     en: z.any().nullable().optional(),
   })
-  .refine((val) => !!val.ar, {
-    message: "validation.cover_required",
+  .superRefine((val, ctx) => {
+    if (!val.ar) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "validation.cover_ar_required",
+        path: ["ar"],
+      });
+    }
+    if (!val.en) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "validation.cover_en_required",
+        path: ["en"],
+      });
+    }
   });
 
 const optionalLocalizedSchema = z.object({
   ar: z.string().optional(),
   en: z.string().optional(),
+});
+
+const optionalLocalizedEditorSchema = z.object({
+  ar: z.any().optional(),
+  en: z.any().optional(),
+});
+
+const serviceTagInputSchema = z.object({
+  name: z.string().default(""),
+  index: z.boolean().default(true),
+  follow: z.boolean().default(true),
+});
+
+const slugRedirectCodeOptional = z.object({
+  ar: z
+    .string()
+    .optional()
+    .default("")
+    .refine((v) => v === "" || (BLOG_SLUG_REDIRECT_CODES as readonly string[]).includes(v), {
+      message: "validation.invalid_redirect_code",
+    }),
+  en: z
+    .string()
+    .optional()
+    .default("")
+    .refine((v) => v === "" || (BLOG_SLUG_REDIRECT_CODES as readonly string[]).includes(v), {
+      message: "validation.invalid_redirect_code",
+    }),
 });
 
 /**
@@ -90,10 +142,21 @@ const sectionItemSchema = z.object({
 
 const basicInfoSchema = z.object({
   slug: localizedSchema,
+  slug_redirect_code: slugRedirectCodeOptional,
   country_ids: z.array(z.string()).min(1, { message: "validation.country_required" }),
   package_ids: z.array(z.string()).optional(),
   is_active: z.boolean(),
   title: localizedSchema,
+  single_page_title: optionalLocalizedEditorSchema.optional(),
+  tags: z
+    .array(serviceTagInputSchema)
+    .default([])
+    .transform((rows) =>
+      rows
+        .map((r) => ({ ...r, name: r.name.trim() }))
+        .filter((r) => r.name.length > 0),
+    ),
+  page_script: z.string().optional().default(""),
   description: localizedSchema,
   highlight_description: localizedEditorSchema,
   /**
@@ -269,6 +332,7 @@ interface BasicInfoFormProps {
 const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
   function BasicInfoForm({ initialId, embedded, onBasicDraftChange }, ref) {
     const { t, i18n } = useTranslation("translation", { keyPrefix: "services.form" });
+    const { t: commonT } = useTranslation("translation", { keyPrefix: "validation" });
     const [socialMetaOpen, setSocialMetaOpen] = useState(false);
     const { data: countriesData } = useAdminCountries();
     const countries = countriesData?.data ?? [];
@@ -296,10 +360,14 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
       resolver: zodResolver(basicInfoSchema),
       defaultValues: {
         slug: { ar: "", en: "" },
+        slug_redirect_code: { ar: "", en: "" },
         country_ids: [],
         is_active: true,
         show_footer: true,
         title: { ar: "", en: "" },
+        single_page_title: { ar: null, en: null },
+        tags: [],
+        page_script: "",
         description: { ar: "", en: "" },
         highlight_description: { ar: null, en: null },
         sections: [emptySectionItem()],
@@ -360,12 +428,28 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                 return [emptySectionItem()];
               })();
 
+        const rec = service as Record<string, unknown>;
+        const rawRedirect = rec.slug_redirect_code ?? rec.slugRedirectCode;
+        const slugRedirect = { ar: "", en: "" };
+        if (rawRedirect && typeof rawRedirect === "object") {
+          const o = rawRedirect as { ar?: unknown; en?: unknown };
+          slugRedirect.ar = String(o.ar ?? "").trim();
+          slugRedirect.en = String(o.en ?? "").trim();
+        }
+
         reset({
           slug: { ar: service.slug?.ar ?? "", en: service.slug?.en ?? "" },
+          slug_redirect_code: slugRedirect,
           country_ids: service.countries?.map((c: any) => String(c.id)) ?? [],
           is_active: service.is_active ?? true,
           show_footer: service.show_footer ?? true,
           title: { ar: service.title?.ar ?? "", en: service.title?.en ?? "" },
+          single_page_title: {
+            ar: pickLocalizedFromService(rec, "single_page_title").ar || null,
+            en: pickLocalizedFromService(rec, "single_page_title").en || null,
+          },
+          tags: normalizeServiceTagsFromApi(rec.tags ?? rec.article_tags),
+          page_script: String(rec.page_script ?? ""),
           description: {
             ar: service.description?.ar ?? "",
             en: service.description?.en ?? "",
@@ -484,6 +568,12 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
         ar: editorOnChangeToHtml(data.title?.ar),
         en: editorOnChangeToHtml(data.title?.en),
       },
+      single_page_title: data.single_page_title
+        ? {
+            ar: editorOnChangeToHtml(data.single_page_title.ar),
+            en: editorOnChangeToHtml(data.single_page_title.en),
+          }
+        : data.single_page_title,
       highlight_description: {
         ar: editorOnChangeToHtml(data.highlight_description?.ar),
         en: editorOnChangeToHtml(data.highlight_description?.en),
@@ -560,38 +650,116 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
             <h2 className="text-2xl font-bold">{t("basic_info")}</h2>
           </div>
 
-          {/* ── Slug + toggles ──────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2">
-            <SmartSlugField<BasicInfoValues>
-              control={control}
-              name="slug.ar"
-              slugLocale="ar"
-              titleEn={watchTitleAr ?? ""}
-              trigger={trigger}
-              label={
-                <span className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 opacity-40" /> {t("slug")} (AR)
-                </span>
-              }
-              placeholder={t("placeholders.slug")}
-              errorMessage={translateError(errors.slug?.ar)}
-              inputClassName="rounded-2xl bg-background border-border/50 text-right"
-            />
-            <SmartSlugField<BasicInfoValues>
-              control={control}
-              name="slug.en"
-              slugLocale="en"
-              titleEn={watchTitleEn ?? ""}
-              trigger={trigger}
-              label={
-                <span className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 opacity-40" /> {t("slug")} (EN)
-                </span>
-              }
-              placeholder={t("placeholders.slug")}
-              errorMessage={translateError(errors.slug?.en)}
-              inputClassName="rounded-2xl bg-background border-border/50"
-            />
+          {/* ── Slug + redirect codes ───────────────────────────────────── */}
+          <div className="grid grid-cols-1 gap-6 md:col-span-2 lg:grid-cols-2">
+            <div className="space-y-4">
+              <SmartSlugField<BasicInfoValues>
+                control={control}
+                name="slug.ar"
+                slugLocale="ar"
+                titleEn={watchTitleAr ?? ""}
+                trigger={trigger}
+                label={
+                  <span className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 opacity-40" /> {t("slug")} (AR)
+                  </span>
+                }
+                placeholder={t("placeholders.slug")}
+                errorMessage={translateError(errors.slug?.ar)}
+                inputClassName="rounded-2xl bg-background border-border/50 text-right"
+              />
+              <Controller
+                name="slug_redirect_code.ar"
+                control={control}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel className="text-xs">{t("slug_redirect_code_label")}</FieldLabel>
+                    <p className="mb-2 text-[10px] leading-relaxed text-muted-foreground">
+                      {t("slug_redirect_code_hint")}
+                    </p>
+                    <Select
+                      value={field.value === "" ? "__none__" : field.value}
+                      onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                    >
+                      <SelectTrigger className="h-10 text-sm">
+                        <SelectValue placeholder={t("slug_redirect_code_none")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">{t("slug_redirect_code_none")}</SelectItem>
+                        {BLOG_SLUG_REDIRECT_CODES.map((code) => (
+                          <SelectItem key={code} value={code}>
+                            {t(`slug_redirect_code_${code}`, { defaultValue: code })}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FieldError
+                      errors={[
+                        {
+                          message: errors.slug_redirect_code?.ar?.message
+                            ? commonT(errors.slug_redirect_code.ar.message)
+                            : undefined,
+                        },
+                      ]}
+                    />
+                  </Field>
+                )}
+              />
+            </div>
+            <div className="space-y-4">
+              <SmartSlugField<BasicInfoValues>
+                control={control}
+                name="slug.en"
+                slugLocale="en"
+                titleEn={watchTitleEn ?? ""}
+                trigger={trigger}
+                label={
+                  <span className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 opacity-40" /> {t("slug")} (EN)
+                  </span>
+                }
+                placeholder={t("placeholders.slug")}
+                errorMessage={translateError(errors.slug?.en)}
+                inputClassName="rounded-2xl bg-background border-border/50"
+              />
+              <Controller
+                name="slug_redirect_code.en"
+                control={control}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel className="text-xs">{t("slug_redirect_code_label")}</FieldLabel>
+                    <p className="mb-2 text-[10px] leading-relaxed text-muted-foreground">
+                      {t("slug_redirect_code_hint")}
+                    </p>
+                    <Select
+                      value={field.value === "" ? "__none__" : field.value}
+                      onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                    >
+                      <SelectTrigger className="h-10 text-sm">
+                        <SelectValue placeholder={t("slug_redirect_code_none")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">{t("slug_redirect_code_none")}</SelectItem>
+                        {BLOG_SLUG_REDIRECT_CODES.map((code) => (
+                          <SelectItem key={code} value={code}>
+                            {t(`slug_redirect_code_${code}`, { defaultValue: code })}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FieldError
+                      errors={[
+                        {
+                          message: errors.slug_redirect_code?.en?.message
+                            ? commonT(errors.slug_redirect_code.en.message)
+                            : undefined,
+                        },
+                      ]}
+                    />
+                  </Field>
+                )}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-1">
@@ -697,6 +865,26 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                   )}
                 />
                 <Controller
+                  name="single_page_title.ar"
+                  control={control}
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel>{t("single_page_title_ar")}</FieldLabel>
+                      <p className="mb-2 text-[10px] text-muted-foreground">
+                        {t("single_page_title_hint")}
+                      </p>
+                      <div className="min-h-[100px]">
+                        <RichTextEditor
+                          value={field.value}
+                          onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                          dir="rtl"
+                          placeholder={t("placeholders.single_page_title")}
+                        />
+                      </div>
+                    </Field>
+                  )}
+                />
+                <Controller
                   name="description.ar"
                   control={control}
                   render={({ field }) => (
@@ -744,6 +932,26 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                   )}
                 />
                 <Controller
+                  name="single_page_title.en"
+                  control={control}
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel>{t("single_page_title_en")}</FieldLabel>
+                      <p className="mb-2 text-[10px] text-muted-foreground">
+                        {t("single_page_title_hint")}
+                      </p>
+                      <div className="min-h-[100px]">
+                        <RichTextEditor
+                          value={field.value}
+                          onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                          dir="ltr"
+                          placeholder={t("placeholders.single_page_title")}
+                        />
+                      </div>
+                    </Field>
+                  )}
+                />
+                <Controller
                   name="description.en"
                   control={control}
                   render={({ field }) => (
@@ -765,6 +973,32 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                 />
               </div>
             </div>
+
+            <Controller
+              name="tags"
+              control={control}
+              render={({ field }) => (
+                <ServiceTagsField value={field.value ?? []} onChange={field.onChange} />
+              )}
+            />
+
+            <Controller
+              name="page_script"
+              control={control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>{t("page_script_label")}</FieldLabel>
+                  <p className="mb-2 text-[11px] text-muted-foreground">{t("page_script_hint")}</p>
+                  <Textarea
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    rows={6}
+                    placeholder={t("page_script_placeholder")}
+                    className="min-h-[120px] rounded-2xl border-border/40 font-mono text-xs"
+                  />
+                </Field>
+              )}
+            />
 
             {/* ── Highlight description ───────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-8">
@@ -949,11 +1183,20 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                         onChange={(e) => handleImageChange(locale, e)}
                       />
                     </div>
+                    <FieldError
+                      errors={[
+                        {
+                          message: translateError(
+                            (errors.image as { ar?: { message?: string } } | undefined)?.ar,
+                          ),
+                        },
+                      ]}
+                    />
                   </div>
                 );
               })}
             </div>
-            <FieldError errors={[{ message: translateError(errors.image) }]} />
+            <p className="text-xs text-muted-foreground">{t("cover_per_locale_hint")}</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Controller

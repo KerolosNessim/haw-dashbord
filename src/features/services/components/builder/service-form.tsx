@@ -1,3 +1,4 @@
+import { useResourcePermissions } from "@/features/permissions/hooks/useResourcePermissions";
 import { useTranslation } from "react-i18next";
 import SectionBuilder, {
   type SectionBuilderHandle,
@@ -32,6 +33,8 @@ const ServiceForm = forwardRef<ServiceFormHandle, ServiceFormProps>(function Ser
   const basicFormRef = useRef<BasicInfoFormHandle>(null);
   const sectionBuilderRef = useRef<SectionBuilderHandle>(null);
   const { saveServicePage, isPending } = useServicePageSave();
+  const servicesPerms = useResourcePermissions("services");
+  const canSave = serviceId ? servicesPerms.update : servicesPerms.create;
   const { queueSave, clearServiceDraft } = useServiceFormDraft(serviceId);
   const basicDraftRef = useRef<{
     basic: BasicInfoValues;
@@ -121,22 +124,24 @@ const ServiceForm = forwardRef<ServiceFormHandle, ServiceFormProps>(function Ser
         onSectionsDraftChange={handleSectionsDraftChange}
       />
 
-      <div className="flex justify-end sticky bottom-6 z-10">
-        <Button
-          type="button"
-          size="lg"
-          disabled={isPending}
-          onClick={handleSavePage}
-          className="h-12 rounded-full px-12 font-bold text-base gap-3 shadow-2xl shadow-primary/40"
-        >
-          {isPending ? (
-            <Loader2 className="size-5 animate-spin" />
-          ) : (
-            <Save className="size-5" />
-          )}
-          {t("save")}
-        </Button>
-      </div>
+      {canSave ? (
+        <div className="flex justify-end sticky bottom-6 z-10">
+          <Button
+            type="button"
+            size="lg"
+            disabled={isPending}
+            onClick={handleSavePage}
+            className="h-12 rounded-full px-12 font-bold text-base gap-3 shadow-2xl shadow-primary/40"
+          >
+            {isPending ? (
+              <Loader2 className="size-5 animate-spin" />
+            ) : (
+              <Save className="size-5" />
+            )}
+            {t("save")}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 });
