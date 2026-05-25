@@ -30,17 +30,14 @@ import {
   Activity,
   FileText,
   Globe,
-  GripVertical,
   ImagePlus,
   Layout,
   Monitor,
-  Plus,
   Search,
-  Trash2,
   X,
 } from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -199,117 +196,6 @@ function pickLocalizedFromService(
   return { ar: o.ar ?? "", en: o.en ?? "" };
 }
 
-function emptySectionItem(): SectionItem {
-  return { label: "", ar: null, en: null };
-}
-
-// ---------------------------------------------------------------------------
-// Repeatable section card
-// ---------------------------------------------------------------------------
-
-interface SectionCardProps {
-  index: number;
-  total: number;
-  control: ReturnType<typeof useForm<BasicInfoValues>>["control"];
-  onRemove: () => void;
-  translateError: (e: unknown) => string | undefined;
-  t: ReturnType<typeof useTranslation>["t"];
-}
-
-function SectionCard({ index, total, control, onRemove, translateError, t }: SectionCardProps) {
-  return (
-    <div className="group relative rounded-[20px] border border-dashed border-border bg-muted/5 transition-shadow hover:shadow-md">
-      {/* Card header */}
-      <div className="flex items-center gap-3 border-b border-dashed border-border/60 px-5 py-3">
-        <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-muted-foreground/40" />
-
-        <Controller
-          name={`sections.${index}.label`}
-          control={control}
-          render={({ field }) => (
-            <input
-              {...field}
-              value={field.value ?? ""}
-              placeholder={t("section_label_placeholder", {
-                defaultValue: `Section ${index + 1} — optional title`,
-              })}
-              className="flex-1 bg-transparent text-sm font-semibold text-gray-700 placeholder:font-normal placeholder:text-muted-foreground/50 focus:outline-none"
-            />
-          )}
-        />
-
-        <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
-          {index + 1} / {total}
-        </span>
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          disabled={total === 1}
-          onClick={onRemove}
-          className="h-7 w-7 shrink-0 rounded-full text-destructive/70 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive disabled:pointer-events-none disabled:opacity-0"
-          title={t("remove_section", { defaultValue: "Remove section" })}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-
-      {/* AR / EN editors side-by-side */}
-      <div className="grid grid-cols-1 gap-6 p-5 md:grid-cols-2">
-        <Controller
-          name={`sections.${index}.ar`}
-          control={control}
-          render={({ field }) => (
-            <Field>
-              <FieldLabel className="text-xs font-bold uppercase tracking-widest text-primary/50">
-                {t("arabic")}
-              </FieldLabel>
-              <div className="min-h-[180px]">
-                <RichTextEditor
-                  value={field.value}
-                  onChange={(val) => {
-                    const html = editorOnChangeToHtml(val);
-                    if (field.value !== html) field.onChange(html);
-                  }}
-                  dir="rtl"
-                  placeholder={t("placeholders.inside_desc", {
-                    defaultValue: "اكتب المحتوى هنا…",
-                  })}
-                />
-              </div>
-            </Field>
-          )}
-        />
-        <Controller
-          name={`sections.${index}.en`}
-          control={control}
-          render={({ field }) => (
-            <Field>
-              <FieldLabel className="text-xs font-bold uppercase tracking-widest text-primary/50">
-                {t("english")}
-              </FieldLabel>
-              <div className="min-h-[180px]">
-                <RichTextEditor
-                  value={field.value}
-                  onChange={(val) => {
-                    const html = editorOnChangeToHtml(val);
-                    if (field.value !== html) field.onChange(html);
-                  }}
-                  dir="ltr"
-                  placeholder={t("placeholders.inside_desc", {
-                    defaultValue: "Write content here…",
-                  })}
-                />
-              </div>
-            </Field>
-          )}
-        />
-      </div>
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Main form
 // ---------------------------------------------------------------------------
@@ -370,7 +256,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
         page_script: "",
         description: { ar: "", en: "" },
         highlight_description: { ar: null, en: null },
-        sections: [emptySectionItem()],
+        sections: [],
         meta_title: { ar: "", en: "" },
         meta_description: { ar: "", en: "" },
         image: { ar: null, en: null },
@@ -385,12 +271,6 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
         twitter_description: { ar: "", en: "" },
         twitter_image: null,
       },
-    });
-
-    // useFieldArray wires up the dynamic sections list
-    const { fields, append, remove } = useFieldArray({
-      control,
-      name: "sections",
     });
 
     // ---------------------------------------------------------------------------
@@ -425,7 +305,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                 const oldAr = (service as any).inside_desc?.ar ?? null;
                 const oldEn = (service as any).inside_desc?.en ?? null;
                 if (oldAr || oldEn) return [{ label: "", ar: oldAr, en: oldEn }];
-                return [emptySectionItem()];
+                return [];
               })();
 
         const rec = service as Record<string, unknown>;
@@ -1060,66 +940,6 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
               />
             </div>
 
-            {/* ── Repeatable sections ─────────────────────────────────── */}
-            <div className="space-y-4 border-t pt-8">
-              {/* Section group header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <FileText className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-base">
-                      {t("sections_title", { defaultValue: "Content Sections" })}
-                    </h3>
-                    <p className="text-[11px] text-muted-foreground">
-                      {t("sections_hint", {
-                        defaultValue:
-                          "Add as many sections as needed. Each section can have an optional title.",
-                      })}
-                    </p>
-                  </div>
-                </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-9 gap-2 rounded-xl border-dashed text-sm font-semibold"
-                  onClick={() => append(emptySectionItem())}
-                >
-                  <Plus className="h-4 w-4" />
-                  {t("add_section", { defaultValue: "Add Section" })}
-                </Button>
-              </div>
-
-              {/* Section cards */}
-              <div className="space-y-4">
-                {fields.map((field, index) => (
-                  <SectionCard
-                    key={field.id}
-                    index={index}
-                    total={fields.length}
-                    control={control}
-                    onRemove={() => remove(index)}
-                    translateError={translateError}
-                    t={t}
-                  />
-                ))}
-              </div>
-
-              {/* Add another — bottom shortcut when there are already multiple */}
-              {fields.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => append(emptySectionItem())}
-                  className="flex w-full items-center justify-center gap-2 rounded-[20px] border border-dashed border-border/60 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-                >
-                  <Plus className="h-4 w-4" />
-                  {t("add_section", { defaultValue: "Add Section" })}
-                </button>
-              )}
-            </div>
           </div>
 
           {/* ── Media ───────────────────────────────────────────────────── */}
