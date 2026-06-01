@@ -7,8 +7,8 @@ import {
   buildServicesOnlySheets,
   buildTemplateSheets,
   importBackupWorkbook,
-  type ImportResult,
 } from "@/features/backup-export/services/content-backup-service";
+import { showBackupImportToasts } from "@/features/backup-export/utils/import-summary";
 import { Download, FileSpreadsheet, Loader2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,32 +16,6 @@ import { toast } from "sonner";
 
 function formatDateStamp(): string {
   return new Date().toISOString().slice(0, 10);
-}
-
-function summarizeImport(result: ImportResult, t: (key: string, opts?: object) => string): string {
-  const parts = [
-    t("import_summary_blogs", {
-      created: result.blogs.created,
-      updated: result.blogs.updated,
-      failed: result.blogs.failed,
-    }),
-    t("import_summary_services", {
-      created: result.services.created,
-      updated: result.services.updated,
-      failed: result.services.failed,
-    }),
-    t("import_summary_legal", {
-      updated: result.legal.updated,
-      failed: result.legal.failed,
-    }),
-    t("import_summary_faq_items", {
-      created: result.faqItems.created,
-      updated: result.faqItems.updated,
-      failed: result.faqItems.failed,
-    }),
-  ];
-  if (result.faqGeneral) parts.push(t("import_summary_faq_general_ok"));
-  return parts.join(" · ");
 }
 
 export default function BackupExportPanel() {
@@ -75,11 +49,7 @@ export default function BackupExportPanel() {
     try {
       const sheets = await parseWorkbookFile(file);
       const result = await importBackupWorkbook(sheets);
-      toast.success(summarizeImport(result, t));
-      if (result.errors.length) {
-        console.warn("[backup import]", result.errors);
-        toast.warning(t("import_partial", { count: result.errors.length }));
-      }
+      showBackupImportToasts(result, t);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("import_error"));
     } finally {

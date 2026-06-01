@@ -45,6 +45,8 @@ export function mapFullSectionToSteps(data: Record<string, unknown>): ListSectio
   const items = (data.items as Array<Record<string, unknown>> | undefined)?.map(
     (item, index) => {
       const itemTitle = item.title as { ar?: unknown; en?: unknown } | undefined;
+      const itemLink = typeof item.link === "string" ? item.link.trim() : "";
+      const itemIcon = typeof item.icon === "string" ? item.icon.trim() : "";
       return {
         title: localizedEditorHtml(itemTitle) ?? (item.title as ListSectionData["items"][0]["title"]),
         description: {
@@ -52,6 +54,8 @@ export function mapFullSectionToSteps(data: Record<string, unknown>): ListSectio
           en: editorHtml((item.description as { en?: unknown })?.en ?? item.description),
         },
         sort_order: Number(item.sort_order ?? index),
+        ...(itemLink ? { link: itemLink } : {}),
+        ...(itemIcon ? { icon: itemIcon } : {}),
       };
     },
   );
@@ -75,6 +79,7 @@ export function mapFaqToPayload(data: Record<string, unknown>): FaqSectionData {
     (item, index) => {
       const answer = item.answer as { ar?: unknown; en?: unknown } | undefined;
       const question = item.question as { ar?: unknown; en?: unknown } | undefined;
+      const itemLink = typeof item.link === "string" ? item.link.trim() : "";
       return {
         question: question
           ? { ar: editorHtml(question.ar), en: editorHtml(question.en) }
@@ -83,6 +88,7 @@ export function mapFaqToPayload(data: Record<string, unknown>): FaqSectionData {
           ? { ar: editorHtml(answer.ar), en: editorHtml(answer.en) }
           : undefined,
         sort_order: index + 1,
+        ...(itemLink ? { link: itemLink } : {}),
       };
     },
   );
@@ -103,12 +109,16 @@ export function mapCardsToOfferings(data: Record<string, unknown>): ListSectionD
     (item, index) => {
       const desc = item.description as { ar?: unknown; en?: unknown } | undefined;
       const itemTitle = item.title as { ar?: unknown; en?: unknown } | undefined;
+      const itemLink = typeof item.link === "string" ? item.link.trim() : "";
+      const itemIcon = typeof item.icon === "string" ? item.icon.trim() : "";
       return {
         title: localizedEditorHtml(itemTitle) ?? (item.title as ListSectionData["items"][0]["title"]),
         description: desc
           ? { ar: editorHtml(desc.ar), en: editorHtml(desc.en) }
           : undefined,
         sort_order: index + 1,
+        ...(itemLink ? { link: itemLink } : {}),
+        ...(itemIcon ? { icon: itemIcon } : {}),
       };
     },
   );
@@ -168,6 +178,7 @@ export function mapPackagesToPayload(data: Record<string, unknown>): PackagesSec
     (item, index) => {
       const desc = item.description as { ar?: unknown; en?: unknown } | undefined;
       const itemTitle = item.title as { ar?: unknown; en?: unknown } | undefined;
+      const itemLink = typeof item.link === "string" ? item.link.trim() : "";
       return {
         title: localizedEditorHtml(itemTitle) ?? (item.title as PackagesSectionData["items"][0]["title"]),
         description: desc
@@ -179,6 +190,7 @@ export function mapPackagesToPayload(data: Record<string, unknown>): PackagesSec
         currency: String(item.currency ?? ""),
         features: item.features as PackagesSectionData["items"][0]["features"],
         sort_order: index + 1,
+        ...(itemLink ? { link: itemLink } : {}),
       };
     },
   );
@@ -197,6 +209,7 @@ export function mapAuditsToPayload(data: Record<string, unknown>): ListSectionDa
     (item, index) => {
       const itemTitle = item.title as { ar?: unknown; en?: unknown } | undefined;
       const buttonText = item.button_text as { ar?: unknown; en?: unknown } | undefined;
+      const itemLink = typeof item.link === "string" ? item.link.trim() : "";
       return {
         title: localizedEditorHtml(itemTitle) ?? (item.title as ListSectionData["items"][0]["title"]),
         description: {
@@ -205,6 +218,7 @@ export function mapAuditsToPayload(data: Record<string, unknown>): ListSectionDa
         },
         button_text: localizedEditorHtml(buttonText) ?? (item.button_text as ListSectionData["items"][0]["button_text"]),
         sort_order: index + 1,
+        ...(itemLink ? { link: itemLink } : {}),
       };
     },
   );

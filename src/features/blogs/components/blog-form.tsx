@@ -28,6 +28,7 @@ import {
   Share2,
   EyeOff,
   HelpCircle,
+  ListTree,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -43,6 +44,10 @@ import type { BlogFormValues } from "@/features/blogs/blog-form-schema";
 import { BlogTagsField } from "@/features/blogs/components/blog-tags-field";
 import { useCreateBlog } from "@/features/blogs/hooks/useCreateBlog";
 import { useUpdateBlog } from "@/features/blogs/hooks/useUpdateBlog";
+import {
+  BLOG_TOC_PLACEMENTS,
+  DEFAULT_BLOG_TOC_HTML,
+} from "@/features/blogs/lib/default-blog-toc";
 import { BLOG_SLUG_REDIRECT_CODES } from "@/lib/http-redirect-codes";
 
 type Mode = "create" | "edit";
@@ -72,6 +77,12 @@ const DEFAULT_VALUES: BlogFormValues = {
   description: { ar: "", en: "" },
   content: { ar: "", en: "" },
   faq: { ar: "", en: "" },
+  toc_enabled: false,
+  toc_placement: "before_body",
+  table_of_contents: {
+    ar: DEFAULT_BLOG_TOC_HTML.ar,
+    en: DEFAULT_BLOG_TOC_HTML.en,
+  },
   publisher_name: "",
   tags: [],
   category_id: "",
@@ -148,6 +159,11 @@ export default function BlogForm({
   );
 
   const [faqExpanded, setFaqExpanded] = useState(false);
+  const [tocExpanded, setTocExpanded] = useState(true);
+
+  const [tocLangTab, setTocLangTab] = useState<"ar" | "en">(() =>
+    i18n.language.startsWith("ar") ? "ar" : "en",
+  );
 
   const {
     control,
@@ -167,6 +183,7 @@ export default function BlogForm({
     const lang = i18n.language.startsWith("ar") ? "ar" : "en";
     setArticleLangTab(lang);
     setFaqLangTab(lang);
+    setTocLangTab(lang);
   }, [i18n.language]);
 
   const watchTitleAr = watch("title.ar");
@@ -178,6 +195,12 @@ export default function BlogForm({
   useEffect(() => {
     if (initialValues) {
       reset(initialValues);
+      const hasFaq = Boolean(
+        initialValues.faq?.ar?.replace(/<[^>]*>/g, "").trim() ||
+          initialValues.faq?.en?.replace(/<[^>]*>/g, "").trim(),
+      );
+      if (hasFaq) setFaqExpanded(true);
+      if (initialValues.toc_enabled) setTocExpanded(true);
     }
   }, [initialValues, reset]);
 
@@ -523,6 +546,133 @@ export default function BlogForm({
                 </TabsContent>
               ))}
             </Tabs>
+          </div>
+
+          {/* ── Table of contents ──────────────────────────────────────────── */}
+          <div
+            id="blog-toc-editor-anchor"
+            className="space-y-0 rounded-[32px] border bg-white shadow-sm overflow-hidden"
+          >
+            <button
+              type="button"
+              onClick={() => setTocExpanded((prev) => !prev)}
+              className="w-full flex items-center justify-between gap-3 p-8 text-start hover:bg-muted/5 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600">
+                  <ListTree className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">{t("toc_section_title")}</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("toc_section_hint")}</p>
+                </div>
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl border bg-muted/10 text-muted-foreground shrink-0">
+                {tocExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </div>
+            </button>
+
+            {tocExpanded && (
+              <div className="px-8 pb-8 space-y-6 border-t pt-6">
+                <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-muted/10 px-4 py-3">
+                  <div className="min-w-0 flex-1 space-y-0.5 text-start">
+                    <p className="text-sm font-semibold">{t("toc_enabled_label")}</p>
+                    <p className="text-xs text-muted-foreground">{t("toc_enabled_hint")}</p>
+                  </div>
+                  <Controller
+                    name="toc_enabled"
+                    control={control}
+                    render={({ field }) => (
+                      <Switch
+                        className="shrink-0"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    )}
+                  />
+                </div>
+
+                <Controller
+                  name="toc_placement"
+                  control={control}
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel>{t("toc_placement_label")}</FieldLabel>
+                      <p className="text-[11px] text-muted-foreground -mt-1 mb-2">
+                        {t("toc_placement_hint")}
+                      </p>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className="rounded-2xl">
+                          <SelectValue placeholder={t("toc_placement_label")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {BLOG_TOC_PLACEMENTS.map((placement) => (
+                            <SelectItem key={placement} value={placement}>
+                              {t(`toc_placement_${placement}`)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  )}
+                />
+
+                <Tabs
+                  value={tocLangTab}
+                  onValueChange={(v) => setTocLangTab(v === "en" ? "en" : "ar")}
+                  className="w-full"
+                  dir={i18n.language.startsWith("ar") ? "rtl" : "ltr"}
+                >
+                  <TabsList className="grid h-12 w-full grid-cols-2 rounded-2xl bg-muted/20">
+                    <TabsTrigger value="ar" className="rounded-xl font-bold">
+                      {t("tab_ar")}
+                    </TabsTrigger>
+                    <TabsTrigger value="en" className="rounded-xl font-bold">
+                      {t("tab_en")}
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {(["ar", "en"] as const).map((lang) => (
+                    <TabsContent key={lang} value={lang} className="mt-6 space-y-6">
+                      <Controller
+                        name={lang === "ar" ? "table_of_contents.ar" : "table_of_contents.en"}
+                        control={control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel>
+                              {lang === "ar" ? t("toc_label_ar") : t("toc_label_en")}
+                              {lang === "en" ? (
+                                <span className="ms-1 font-normal text-muted-foreground">
+                                  {t("optional_suffix")}
+                                </span>
+                              ) : null}
+                            </FieldLabel>
+                            <p className="text-[11px] text-muted-foreground -mt-1 mb-1">
+                              {lang === "ar" ? t("toc_hint_ar") : t("toc_hint_en")}
+                            </p>
+                            <RichTextEditor
+                              dir={lang === "ar" ? "rtl" : "ltr"}
+                              value={field.value}
+                              placeholder={
+                                lang === "ar" ? t("toc_placeholder_ar") : t("toc_placeholder_en")
+                              }
+                              onChange={(val: unknown) => {
+                                const html = (val as { html?: string })?.html ?? "";
+                                field.onChange(typeof html === "string" ? html : "");
+                              }}
+                            />
+                          </Field>
+                        )}
+                      />
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              </div>
+            )}
           </div>
 
           {/* ── FAQ Editor ─────────────────────────────────────────────────── */}

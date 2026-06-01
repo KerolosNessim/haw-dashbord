@@ -20,6 +20,10 @@ export type ListSectionItem = {
   button_text?: { ar: string; en: string };
   sort_order?: number;
   image?: BilingualSectionImage | File | string | null;
+  /** Per-card URL — applies to this item only (offerings / full section cards). */
+  link?: string;
+  /** Optional icon slug for the public card (e.g. `search`, `megaphone`). */
+  icon?: string;
 };
 
 export type ListSectionData = {
@@ -54,6 +58,8 @@ export type PackagesSectionItem = {
   currency?: string;
   sort_order?: number;
   features?: { ar: string[]; en: string[] };
+  /** Per-package URL on the public pricing cards. */
+  link?: string;
 };
 
 export type PackagesSectionData = {

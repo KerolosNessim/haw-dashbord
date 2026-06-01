@@ -49,8 +49,22 @@ function sectionId(apiKey: SectionApiKey, raw: unknown, index: number): string {
 function normalizeSectionBlockForForm(raw: unknown): Record<string, unknown> {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
   const o = raw as Record<string, unknown>;
+  const items = Array.isArray(o.items)
+    ? o.items.map((item) => {
+        if (!item || typeof item !== "object") return item;
+        const row = item as Record<string, unknown>;
+        const link = typeof row.link === "string" ? row.link.trim() : "";
+        const icon = typeof row.icon === "string" ? row.icon.trim() : "";
+        return {
+          ...row,
+          ...(link ? { link } : {}),
+          ...(icon ? { icon } : {}),
+        };
+      })
+    : o.items;
   return {
     ...o,
+    items,
     image: bilingualSectionImageFromApi(o.image, o.images),
     image_alt: pickServiceImageAlt(o.image_alt),
   };

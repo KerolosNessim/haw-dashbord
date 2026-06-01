@@ -1,3 +1,4 @@
+import type { DeleteSlugRedirectPayload } from "@/lib/delete-slug-redirect";
 import { api } from "@/lib/api";
 import {
   assertApiEnvelopeSuccess,
@@ -38,7 +39,11 @@ export const getAdminServiceByIdApi = (id: number | string): Promise<GetServiceR
   });
 };
 
-export const deleteAdminServiceApi = (id: number | string) => {
-  return api.delete(`/v1/admin/services/${id}`)
+export const deleteAdminServiceApi = (
+  id: number | string,
+  payload: DeleteSlugRedirectPayload,
+) => {
+  return api
+    .delete(`/v1/admin/services/${id}`, { data: payload })
     .then((res) => res.data);
 };

@@ -5,6 +5,7 @@ import {
   type SolutionCategoryFormValues,
 } from "@/features/solution-categories/services/taxonomy-categories-api";
 import { axiosResponseErrorSummary } from "@/lib/api-error-message";
+import { resolveApiToastMessage } from "@/lib/api-toast-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 
 export function useUpsertSolutionCategory() {
   const queryClient = useQueryClient();
+  const { t: tRoot } = useTranslation();
   const { t } = useTranslation("translation", { keyPrefix: "solution_categories.api" });
 
   const { mutateAsync: upsertMutation, isPending } = useMutation({
@@ -26,8 +28,8 @@ export function useUpsertSolutionCategory() {
       void queryClient.invalidateQueries({ queryKey: SOLUTION_TAXONOMY_CATEGORIES_KEY });
       void queryClient.invalidateQueries({ queryKey: SOLUTION_SINGLES_QUERY_KEY });
       const isUpdate = Boolean(vars.categoryId?.trim());
-      const msg = typeof (res as { message?: string })?.message === "string" ? (res as { message: string }).message : "";
-      toast.success(msg || (isUpdate ? t("update_success") : t("create_success")));
+      const fallback = isUpdate ? t("update_success") : t("create_success");
+      toast.success(resolveApiToastMessage(res, fallback, tRoot));
     },
     onError: (error: AxiosError<unknown>, vars) => {
       const isUpdate = Boolean(vars.categoryId?.trim());

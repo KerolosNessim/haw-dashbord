@@ -4,8 +4,17 @@ import {
   localizedHtmlForApi,
 } from "@/lib/localized-html-form";
 import type { BlogFormValues } from "@/features/blogs/blog-form-schema";
+import {
+  BLOG_TOC_PLACEMENTS,
+  DEFAULT_BLOG_TOC_HTML,
+  DEFAULT_BLOG_TOC_PLACEMENT,
+} from "@/features/blogs/lib/default-blog-toc";
 import { appendBlogTagsToFormData, normalizeBlogTagsFromApi } from "@/features/blogs/lib/blog-tags";
 import { assertApiEnvelopeSuccess, pickBilingualSlug, pickLocalized } from "@/lib/api-payload";
+import {
+  appendDeleteSlugRedirectToFormData,
+  type DeleteSlugRedirectPayload,
+} from "@/lib/delete-slug-redirect";
 import { normalizeSlugRedirectCodeInput } from "@/lib/http-redirect-codes";
 import { isAxiosError } from "axios";
 
@@ -72,6 +81,14 @@ export function blogValuesToFormData(
 
   fd.append("content[ar]", localizedHtmlForApi(values.content.ar));
   fd.append("content[en]", localizedHtmlForApi(values.content.en));
+
+  fd.append("faq[ar]", localizedHtmlForApi(values.faq.ar));
+  fd.append("faq[en]", localizedHtmlForApi(values.faq.en));
+
+  fd.append("toc_enabled", values.toc_enabled ? "1" : "0");
+  fd.append("toc_placement", values.toc_placement);
+  fd.append("table_of_contents[ar]", localizedHtmlForApi(values.table_of_contents.ar));
+  fd.append("table_of_contents[en]", localizedHtmlForApi(values.table_of_contents.en));
 
   fd.append("slug[ar]", (values.slug.ar ?? "").trim());
   fd.append("slug[en]", (values.slug.en ?? "").trim());
@@ -195,17 +212,24 @@ export async function fetchAdminBlogById(blogId: string | number) {
   }
 }
 
-export async function deleteBlog(blogId: string | number) {
-  const res = await api.delete(`${ADMIN_BLOGS_BASE}/${blogId}`);
+export async function deleteBlog(
+  blogId: string | number,
+  payload: DeleteSlugRedirectPayload,
+) {
+  const res = await api.delete(`${ADMIN_BLOGS_BASE}/${blogId}`, { data: payload });
   return res.data;
 }
 
 /** Bulk delete — Postman: `POST …/bulk-delete` with multipart `ids[0]`, `ids[1]`, … */
-export async function deleteBlogsBulk(ids: (string | number)[]) {
+export async function deleteBlogsBulk(
+  ids: (string | number)[],
+  payload: DeleteSlugRedirectPayload,
+) {
   const fd = new FormData();
   ids.forEach((id, index) => {
     fd.append(`ids[${index}]`, String(id));
   });
+  appendDeleteSlugRedirectToFormData(fd, payload);
   const res = await api.post(`${ADMIN_BLOGS_BASE}/bulk-delete`, fd);
   return res.data;
 }
@@ -262,6 +286,22 @@ function pickBlogFormCategoryId(rec: Record<string, unknown>): string {
   return "";
 }
 
+function parseBlogTocPlacement(rec: Record<string, unknown>): (typeof BLOG_TOC_PLACEMENTS)[number] {
+  const raw = rec.toc_placement ?? rec.tocPlacement;
+  const s = typeof raw === "string" ? raw.trim() : "";
+  if ((BLOG_TOC_PLACEMENTS as readonly string[]).includes(s)) {
+    return s as (typeof BLOG_TOC_PLACEMENTS)[number];
+  }
+  return DEFAULT_BLOG_TOC_PLACEMENT;
+}
+
+function parseBlogTocEnabled(rec: Record<string, unknown>): boolean {
+  const v = rec.toc_enabled ?? rec.tocEnabled;
+  if (v === true || v === 1 || v === "1") return true;
+  if (v === false || v === 0 || v === "0") return false;
+  return false;
+}
+
 function parseBlogIsSearchable(rec: Record<string, unknown>): boolean {
   const v = rec.is_searchable;
   if (v === true || v === 1 || v === "1") return true;
@@ -313,6 +353,16 @@ export function recordToBlogFormValues(raw: unknown): BlogFormValues | null {
     content: {
       ar: pickLocalized(rec.content, "ar"),
       en: pickLocalized(rec.content, "en"),
+    },
+    faq: {
+      ar: pickLocalized(rec.faq, "ar"),
+      en: pickLocalized(rec.faq, "en"),
+    },
+    toc_enabled: parseBlogTocEnabled(rec),
+    toc_placement: parseBlogTocPlacement(rec),
+    table_of_contents: {
+      ar: pickLocalized(rec.table_of_contents, "ar") || DEFAULT_BLOG_TOC_HTML.ar,
+      en: pickLocalized(rec.table_of_contents, "en") || DEFAULT_BLOG_TOC_HTML.en,
     },
     publisher_name: typeof rec.publisher_name === "string" ? rec.publisher_name : "",
     tags,

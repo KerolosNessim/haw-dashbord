@@ -1,3 +1,4 @@
+import type { DeleteSlugRedirectPayload } from "@/lib/delete-slug-redirect";
 import { API_BASE_URL } from "@/config/api";
 import { api } from "@/lib/api";
 import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
@@ -138,8 +139,8 @@ export async function updateServiceCatalog(
   return res.data;
 }
 
-export async function deleteServiceCatalog(id: string) {
-  const res = await api.delete(`${ADMIN_BASE}/${encodeURIComponent(id)}`);
+export async function deleteServiceCatalog(id: string, payload: DeleteSlugRedirectPayload) {
+  const res = await api.delete(`${ADMIN_BASE}/${encodeURIComponent(id)}`, { data: payload });
   assertApiEnvelopeSuccess(res.data);
   return res.data;
 }

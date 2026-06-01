@@ -7,6 +7,7 @@ import { Plus, Trash2, HelpCircle } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useEmbeddedSectionWatch } from "@/features/services/hooks/useEmbeddedSectionWatch";
+import { CardItemLinkField } from "../card-item-link-field";
 import type { SectionEmbeddedProps } from "../section-embedded-props";
 
 const localizedSchema = z.object({
@@ -22,10 +23,15 @@ const localizedOptionalSchema = z.object({
 const faqSchema = z.object({
   title: localizedSchema,
   description: localizedOptionalSchema,
-  items: z.array(z.object({
-    question: localizedSchema,
-    answer: localizedSchema,
-  })).min(1),
+  items: z
+    .array(
+      z.object({
+        question: localizedSchema,
+        answer: localizedSchema,
+        link: z.string().optional().default(""),
+      }),
+    )
+    .min(1),
 });
 
 type FAQValues = z.infer<typeof faqSchema>;
@@ -42,12 +48,14 @@ export default function FAQSection({
 }: FAQSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
 
-  const { control, watch, getValues, formState: { errors } } = useForm<FAQValues>({
+  const { control, watch, getValues, setValue, formState: { errors } } = useForm<FAQValues>({
     resolver: zodResolver(faqSchema),
     values: {
       title: initialData?.title || { ar: "", en: "" },
       description: initialData?.description || { ar: "", en: "" },
-      items: initialData?.items || [{ question: { ar: "", en: "" }, answer: { ar: "", en: "" } }],
+      items: initialData?.items || [
+        { question: { ar: "", en: "" }, answer: { ar: "", en: "" }, link: "" },
+      ],
     },
   });
 
@@ -192,6 +200,11 @@ export default function FAQSection({
                   </Button>
                 )}
               </div>
+
+              <CardItemLinkField
+                link={watch(`items.${index}.link`) ?? ""}
+                onLinkChange={(link) => setValue(`items.${index}.link`, link)}
+              />
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* Arabic Q&A */}
@@ -349,7 +362,7 @@ export default function FAQSection({
           size="sm"
           className="rounded-full gap-2 border-primary/20 hover:bg-primary/5 shadow-sm"
           onClick={() =>
-            append({ question: { ar: "", en: "" }, answer: { ar: "", en: "" } })
+            append({ question: { ar: "", en: "" }, answer: { ar: "", en: "" }, link: "" })
           }
         >
           <Plus className="w-4 h-4" /> {t("sections.fields.add_question")}

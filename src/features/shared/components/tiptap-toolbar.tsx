@@ -20,6 +20,7 @@ import {
   Heading4,
   Heading5,
   Heading6,
+  Captions,
   ImageIcon,
   Italic,
   Link2,
@@ -39,7 +40,10 @@ import {
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import type { BilingualImageAlt } from "@/lib/bilingual-image-alt";
+import {
+  bilingualImageAltFromNodeAttrs,
+  type BilingualImageAlt,
+} from "@/lib/bilingual-image-alt";
 import type { HeadingTagType } from "../lib/heading-types";
 import { insertTableWithSizing } from "../tiptap/table-utils";
 import { applyHeadingWithStyles, insertOrUpdateTableOfContents } from "../tiptap/toc-utils";
@@ -110,14 +114,20 @@ export default function TiptapToolbar({ onHeadingColorsChange }: TiptapToolbarPr
   const [linkInitial, setLinkInitial] = useState<EditorLinkValues | undefined>();
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [imageDialogMode, setImageDialogMode] = useState<"insert" | "edit">("insert");
   const [pendingImageSrc, setPendingImageSrc] = useState<string | null>(null);
+  const [imageDialogInitialAlt, setImageDialogInitialAlt] = useState<BilingualImageAlt | undefined>();
   const [tableDialogOpen, setTableDialogOpen] = useState(false);
   const [headingColorsOpen, setHeadingColorsOpen] = useState(false);
   const [inTable, setInTable] = useState(false);
+  const [inImage, setInImage] = useState(false);
 
   useEffect(() => {
     if (!editor) return;
-    const sync = () => setInTable(editor.isActive("table"));
+    const sync = () => {
+      setInTable(editor.isActive("table"));
+      setInImage(editor.isActive("image"));
+    };
     sync();
     editor.on("selectionUpdate", sync);
     editor.on("transaction", sync);
@@ -158,8 +168,27 @@ export default function TiptapToolbar({ onHeadingColorsChange }: TiptapToolbarPr
     setLinkOpen(false);
   };
 
+  const readImageFromSelection = (): { src: string; alt: BilingualImageAlt } | undefined => {
+    if (!editor.isActive("image")) return undefined;
+    const attrs = editor.getAttributes("image");
+    const src = attrs.src as string | undefined;
+    if (!src) return undefined;
+    return { src, alt: bilingualImageAltFromNodeAttrs(attrs) };
+  };
+
+  const openEditImageAltDialog = () => {
+    const selected = readImageFromSelection();
+    if (!selected) return;
+    setImageDialogMode("edit");
+    setImageDialogInitialAlt(selected.alt);
+    setPendingImageSrc(selected.src);
+    setImageDialogOpen(true);
+  };
+
   const handleImageFile = async (file: File) => {
     setUploadingImage(true);
+    setImageDialogMode("insert");
+    setImageDialogInitialAlt(undefined);
     setImageDialogOpen(true);
     setPendingImageSrc(null);
     try {
@@ -174,15 +203,25 @@ export default function TiptapToolbar({ onHeadingColorsChange }: TiptapToolbarPr
     }
   };
 
-  const insertImageWithAlt = (alt: BilingualImageAlt) => {
+  const imageAltAttrs = (alt: BilingualImageAlt) => ({
+    "data-alt-ar": alt.ar ?? "",
+    "data-alt-en": alt.en ?? "",
+  });
+
+  const handleImageDialogSubmit = ({ alt }: { alt: BilingualImageAlt }) => {
+    if (imageDialogMode === "edit") {
+      editor.chain().focus().updateAttributes("image", imageAltAttrs(alt)).run();
+      setPendingImageSrc(null);
+      setImageDialogInitialAlt(undefined);
+      return;
+    }
     if (!pendingImageSrc) return;
     editor
       .chain()
       .focus()
       .setImage({
         src: pendingImageSrc,
-        "data-alt-ar": alt.ar ?? "",
-        "data-alt-en": alt.en ?? "",
+        ...imageAltAttrs(alt),
       })
       .run();
     setPendingImageSrc(null);
@@ -217,11 +256,16 @@ export default function TiptapToolbar({ onHeadingColorsChange }: TiptapToolbarPr
         open={imageDialogOpen}
         onOpenChange={(open) => {
           setImageDialogOpen(open);
-          if (!open) setPendingImageSrc(null);
+          if (!open) {
+            setPendingImageSrc(null);
+            setImageDialogInitialAlt(undefined);
+          }
         }}
+        mode={imageDialogMode}
         imageSrc={pendingImageSrc}
+        initialAlt={imageDialogInitialAlt}
         isUploading={uploadingImage}
-        onSubmit={({ alt }) => insertImageWithAlt(alt)}
+        onSubmit={handleImageDialogSubmit}
       />
 
       <EditorTableDialog
@@ -293,6 +337,13 @@ export default function TiptapToolbar({ onHeadingColorsChange }: TiptapToolbarPr
             disabled={uploadingImage}
             onClick={() => imageInputRef.current?.click()}
           />
+          {inImage ? (
+            <ToolbarButton
+              title={t("edit_image_alt")}
+              icon={Captions}
+              onClick={openEditImageAltDialog}
+            />
+          ) : null}
           <ToolbarButton
             title={t("insert_table")}
             onClick={() => setTableDialogOpen(true)}

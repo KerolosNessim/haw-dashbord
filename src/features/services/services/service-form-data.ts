@@ -126,6 +126,14 @@ function appendListSectionBlock(
       "sort_order",
       item.sort_order ?? itemIndex + 1,
     );
+    const itemLink = typeof item.link === "string" ? item.link.trim() : "";
+    if (itemLink) {
+      appendSectionItemField(fd, prefix, index, itemIndex, "link", itemLink);
+    }
+    const itemIcon = typeof item.icon === "string" ? item.icon.trim() : "";
+    if (itemIcon) {
+      appendSectionItemField(fd, prefix, index, itemIndex, "icon", itemIcon);
+    }
     appendItemBilingualSectionImage(fd, prefix, index, itemIndex, item.image);
   });
 }
@@ -156,6 +164,10 @@ function appendFaqsSection(fd: FormData, index: number, data: FaqSectionData) {
       "sort_order",
       item.sort_order ?? itemIndex + 1,
     );
+    const itemLink = typeof item.link === "string" ? item.link.trim() : "";
+    if (itemLink) {
+      appendSectionItemField(fd, "faqs", index, itemIndex, "link", itemLink);
+    }
   });
 }
 
@@ -256,6 +268,10 @@ function appendPackagesSection(
       "sort_order",
       item.sort_order ?? itemIndex + 1,
     );
+    const pkgLink = typeof item.link === "string" ? item.link.trim() : "";
+    if (pkgLink) {
+      appendSectionItemField(fd, "packages", index, itemIndex, "link", pkgLink);
+    }
     item.features?.ar?.forEach((feature, fi) => {
       if (feature?.trim()) {
         fd.append(

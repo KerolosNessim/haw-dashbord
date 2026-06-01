@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ExcelImportButton } from "@/features/backup-export/components/excel-import-button";
 import { useExportServicesBulk } from "@/features/backup-export/hooks/use-export-services-bulk";
+import { useImportServicesBulk } from "@/features/backup-export/hooks/use-import-services-bulk";
 import ServiceCard from "@/features/services/components/services-card";
 import { useGetServices } from "@/features/services/hooks/useGetServices";
 import Loader from "@/features/shared/components/loader";
@@ -16,6 +18,7 @@ export default function ServicesPage() {
   const services = data?.data?.data ?? [];
   const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set());
   const { mutate: exportBulk, isPending: isExporting } = useExportServicesBulk();
+  const { mutate: importBulk, isPending: isImporting } = useImportServicesBulk();
 
   const allIds = useMemo(() => services.map((s) => s.id), [services]);
   const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
@@ -50,7 +53,7 @@ export default function ServicesPage() {
             type="button"
             variant="outline"
             size="lg"
-            disabled={isExporting || !someSelected}
+            disabled={isExporting || isImporting || !someSelected}
             className="rounded-xl font-semibold"
             onClick={() => exportIds([...selectedIds])}
           >
@@ -65,7 +68,7 @@ export default function ServicesPage() {
             type="button"
             variant="outline"
             size="lg"
-            disabled={isExporting || services.length === 0}
+            disabled={isExporting || isImporting || services.length === 0}
             className="rounded-xl font-semibold"
             onClick={() => exportIds(allIds)}
           >
@@ -76,6 +79,14 @@ export default function ServicesPage() {
             )}
             {t("export_all")}
           </Button>
+          </Can>
+          <Can permission="services.create">
+            <ExcelImportButton
+              label={t("import_excel")}
+              isPending={isImporting}
+              disabled={isExporting}
+              onFile={(file) => importBulk(file)}
+            />
           </Can>
           <Can permission="services.create">
             <Button asChild size="lg" className="rounded-xl">
@@ -110,14 +121,14 @@ export default function ServicesPage() {
             </Button>
           ) : null}
           <span className="text-sm text-muted-foreground">
-            {t("export_hint")}
+            {t("import_export_hint")}
           </span>
         </div>
       ) : null}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {services.map((service) => (
-          <div key={service.id} className="relative">
+          <div key={service.id} className="relative h-full">
             <div className="absolute start-3 top-3 z-10 rounded-lg bg-white/95 p-1 shadow-sm">
               <Checkbox
                 checked={selectedIds.has(service.id)}

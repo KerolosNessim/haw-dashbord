@@ -18,6 +18,7 @@ import { toast } from "sonner";
 export function useSaveBlogCategory(mode: "create" | "edit", categoryId?: string) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { t: tRoot } = useTranslation();
   const { t } = useTranslation("translation", { keyPrefix: "blog_categories.api" });
 
   const { mutateAsync: saveMutation, isPending } = useMutation({
@@ -27,7 +28,7 @@ export function useSaveBlogCategory(mode: "create" | "edit", categoryId?: string
         : updateBlogCategory(categoryId as string, values),
     onSuccess: (data) => {
       const fallback = mode === "create" ? t("create_success") : t("update_success");
-      toast.success(resolveApiToastMessage(data, fallback));
+      toast.success(resolveApiToastMessage(data, fallback, tRoot));
       void queryClient.invalidateQueries({ queryKey: BLOG_CATEGORIES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: BLOG_CATEGORIES_PAGED_QUERY_KEY });
       navigate("/blog-categories");

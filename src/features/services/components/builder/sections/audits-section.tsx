@@ -9,6 +9,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useEmbeddedSectionWatch } from "@/features/services/hooks/useEmbeddedSectionWatch";
+import { CardItemLinkField } from "../card-item-link-field";
 import type { SectionEmbeddedProps } from "../section-embedded-props";
 
 const localizedSchema = z.object({
@@ -25,6 +26,7 @@ const auditsSchema = z.object({
         title: localizedSchema,
         description: localizedSchema,
         button_text: localizedSchema,
+        link: z.string().optional().default(""),
       }),
     )
     .min(1),
@@ -44,7 +46,7 @@ export default function AuditsSection({
 }: AuditsSectionProps) {
   const { t } = useTranslation("translation", { keyPrefix: "services.form" });
 
-  const { control, watch, getValues, formState: { errors } } = useForm<AuditsValues>({
+  const { control, watch, getValues, setValue, formState: { errors } } = useForm<AuditsValues>({
     resolver: zodResolver(auditsSchema),
     values: {
       title: (initialData?.title as AuditsValues["title"]) || { ar: "", en: "" },
@@ -57,6 +59,7 @@ export default function AuditsSection({
           title: { ar: "", en: "" },
           description: { ar: "", en: "" },
           button_text: { ar: "", en: "" },
+          link: "",
         },
       ],
     },
@@ -118,6 +121,10 @@ export default function AuditsSection({
                 </Button>
               )}
             </div>
+            <CardItemLinkField
+              link={watch(`items.${index}.link`) ?? ""}
+              onLinkChange={(link) => setValue(`items.${index}.link`, link)}
+            />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {(["ar", "en"] as const).map((locale) => (
                 <div key={locale} className="space-y-4">
@@ -167,6 +174,7 @@ export default function AuditsSection({
               title: { ar: "", en: "" },
               description: { ar: "", en: "" },
               button_text: { ar: "", en: "" },
+              link: "",
             })
           }
         >

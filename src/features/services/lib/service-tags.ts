@@ -12,6 +12,40 @@ function parseBool(v: unknown, fallback: boolean): boolean {
   return fallback;
 }
 
+function hasExplicitFollowField(rec: Record<string, unknown>): boolean {
+  return (
+    rec.follow !== undefined ||
+    rec.is_followable !== undefined ||
+    rec.allow_follow !== undefined
+  );
+}
+
+function parseTagIndexAndFollow(rec: Record<string, unknown>): { index: boolean; follow: boolean } {
+  if (rec.is_searchable !== undefined) {
+    const searchable = parseBool(rec.is_searchable, true);
+    return { index: searchable, follow: searchable };
+  }
+
+  const noIndex = rec.no_index ?? rec.noindex ?? rec.is_noindex;
+  let index: boolean;
+  if (noIndex === true || noIndex === 1 || noIndex === "1") {
+    index = false;
+  } else if (rec.allow_indexing === false || rec.indexable === false) {
+    index = false;
+  } else {
+    index = parseBool(rec.index ?? rec.is_indexable ?? rec.allow_index, true);
+  }
+
+  if (hasExplicitFollowField(rec)) {
+    return {
+      index,
+      follow: parseBool(rec.follow ?? rec.is_followable ?? rec.allow_follow, true),
+    };
+  }
+
+  return { index, follow: index };
+}
+
 /** Normalizes API / legacy comma-separated values into form tag rows. */
 export function normalizeServiceTagsFromApi(raw: unknown): ServiceTagFormValue[] {
   if (raw == null) return [];
@@ -38,17 +72,8 @@ export function normalizeServiceTagsFromApi(raw: unknown): ServiceTagFormValue[]
     const name = String(rec.name ?? rec.label ?? rec.tag ?? "").trim();
     if (!name) continue;
 
-    if (rec.is_searchable !== undefined) {
-      const searchable = parseBool(rec.is_searchable, true);
-      out.push({ name, index: searchable, follow: searchable });
-      continue;
-    }
-
-    out.push({
-      name,
-      index: parseBool(rec.index ?? rec.is_indexable ?? rec.allow_index, true),
-      follow: parseBool(rec.follow ?? rec.is_followable ?? rec.allow_follow, true),
-    });
+    const { index, follow } = parseTagIndexAndFollow(rec);
+    out.push({ name, index, follow });
   }
   return out;
 }

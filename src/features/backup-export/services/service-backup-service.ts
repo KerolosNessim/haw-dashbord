@@ -12,6 +12,7 @@ import {
   serviceToBasicInfoValues,
   serviceToSectionsPayload,
 } from "@/features/services/utils/service-api-mappers";
+import { formatImportRowError } from "@/features/backup-export/utils/import-summary";
 import { cellBoolean, cellString } from "@/lib/excel-io";
 import type { ExcelSheetInput } from "@/lib/excel-io";
 
@@ -159,9 +160,7 @@ export async function importServiceRows(
       else out.created += 1;
     } catch (e) {
       out.failed += 1;
-      out.errors.push(
-        `Service ${label}: ${e instanceof Error ? e.message : "failed"}`,
-      );
+      out.errors.push(formatImportRowError(label, e, "Service"));
     }
   }
 

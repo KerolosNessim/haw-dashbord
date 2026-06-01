@@ -70,7 +70,9 @@ export function BlogTagsField({ value, onChange }: BlogTagsFieldProps) {
                 <Switch
                   dir="ltr"
                   checked={tag.index}
-                  onCheckedChange={(checked) => updateAt(index, { index: checked })}
+                  onCheckedChange={(checked) =>
+                    updateAt(index, checked ? { index: true } : { index: false, follow: false })
+                  }
                 />
               </div>
               <div className="flex items-center justify-between rounded-xl border border-orange-100 bg-orange-50/40 px-3 py-2.5">

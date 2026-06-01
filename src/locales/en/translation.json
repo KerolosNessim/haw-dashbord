@@ -57,6 +57,9 @@
     "link_apply": "Apply",
     "cancel": "Cancel",
     "image_dialog_title": "Insert image",
+    "image_edit_dialog_title": "Edit image alt text",
+    "image_save_alt": "Save alt text",
+    "edit_image_alt": "Edit image alt text",
     "image_insert": "Insert image",
     "image_uploading": "Uploading image…",
     "image_alt_ar": "Alt text (Arabic)",
@@ -77,6 +80,10 @@
     "logout_error": "Logout failed! Please try again.",
     "generic_updated": "Updated successfully",
     "generic_update_failed": "Failed to update",
+    "category_updated_successfully": "Category updated successfully",
+    "category_created_successfully": "Category created successfully",
+    "blog_category_updated_successfully": "Blog category updated successfully",
+    "blog_category_created_successfully": "Blog category created successfully",
     "faq_created": "FAQ created successfully",
     "faq_create_failed": "Failed to create FAQ",
     "faq_updated": "FAQ updated successfully",
@@ -219,10 +226,18 @@
     "clear_selection": "Clear selection",
     "select_service": "Select service",
     "export_hint": "Selected rows go into one Excel file (services sheet).",
+    "import_export_hint": "Export selected rows to Excel, or import a file with a services sheet (rows with id update; empty id creates new).",
+    "import_excel": "Import Excel",
+    "import_bulk_success": "Import done: {{created}} created, {{updated}} updated",
+    "import_bulk_error": "Import failed",
+    "import_empty_sheet": "No services sheet or no rows found in the file",
+    "import_partial": "{{count}} row(s) failed — see console for details",
+    "import_all_failed": "Import failed — {{count}} row(s) could not be saved",
+    "import_partial_detail": "Partial import: {{created}} created, {{updated}} updated, but {{failed}} failed",
     "edit_service": "Edit",
     "delete_service": "Delete",
     "delete_confirm": "Are you sure you want to delete this service?",
-    "delete_confirm_description": "This action cannot be undone. The service and all its data will be permanently deleted.",
+    "delete_confirm_description": "This action cannot be undone. Choose how old service URLs should respond after deletion.",
     "delete_success": "Service deleted successfully",
     "delete_error": "An error occurred while deleting the service",
     "no_cover": "No cover image",
@@ -311,7 +326,7 @@
       "page_script_hint": "HTML or JavaScript run on the public service page only when a visitor opens this service.",
       "page_script_placeholder": "<script>...</script>",
       "slug_redirect_code_label": "Old slug redirect (HTTP status)",
-      "slug_redirect_code_hint": "When you change this slug, the previous URL can respond with this status. Leave as “None” for a normal page.",
+      "slug_redirect_code_hint": "When you change or delete this slug, the previous URL can respond with this HTTP status.",
       "slug_redirect_code_none": "None — normal page",
       "slug_redirect_code_301": "301 — Moved permanently",
       "slug_redirect_code_302": "302 — Found (temporary)",
@@ -385,7 +400,21 @@
           "add_question": "Add New Question",
           "items_list": "Additional Items List",
           "faq_list": "Questions & Answers List",
-          "features": "Features"
+          "features": "Features",
+          "card_link_label": "Card link (optional)",
+          "card_link_hint": "Makes this card clickable. Does not affect other cards in the section.",
+          "card_link_placeholder": "https://example.com or /contact",
+          "card_icon_label": "Card icon (optional)",
+          "card_icon_hint": "Shows an icon above the card title on the public site.",
+          "card_icon_none": "No icon",
+          "card_icon_search": "Search",
+          "card_icon_megaphone": "Megaphone",
+          "card_icon_users": "Users",
+          "card_icon_store": "Store",
+          "card_icon_file_image": "Image",
+          "card_icon_monitor_play": "Video",
+          "card_icon_code_xml": "Code",
+          "card_icon_badge_dollar": "Pricing"
         }
       },
       "errors": {
@@ -583,6 +612,8 @@
   "login_button": "Sign In",
   "validation": {
     "email_invalid": "Invalid email address",
+    "invalid_email": "Invalid email address",
+    "max_length_50": "Maximum 50 characters allowed",
     "email_required": "Email is required",
     "password_required": "Password is required",
     "required": "This field is required",
@@ -659,6 +690,13 @@
     "export_all_success": "All articles exported",
     "export_bulk_error": "Export failed",
     "export_none_selected": "Select at least one article",
+    "import_excel": "Import Excel",
+    "import_bulk_success": "Import done: {{created}} created, {{updated}} updated",
+    "import_bulk_error": "Import failed",
+    "import_empty_sheet": "No blogs sheet or no rows found in the file",
+    "import_partial": "{{count}} row(s) failed — see console for details",
+    "import_all_failed": "Import failed — {{count}} row(s) could not be saved",
+    "import_partial_detail": "Partial import: {{created}} created, {{updated}} updated, but {{failed}} failed",
     "all_blogs": "All Blogs",
     "active_blogs": "Published",
     "inactive_blogs": "Draft",
@@ -751,7 +789,7 @@
       "slug_placeholder": "how-to-fix-things",
       "slug_placeholder_ar": "مثال-مقال-هنا",
       "slug_redirect_code_label": "Old slug redirect (HTTP status)",
-      "slug_redirect_code_hint": "When you change this slug, the previous URL can respond with this status. Leave as “None” for a normal page.",
+      "slug_redirect_code_hint": "When you change or delete this slug, the previous URL can respond with this HTTP status.",
       "slug_redirect_code_none": "None — normal page",
       "slug_redirect_code_301": "301 — Moved permanently",
       "slug_redirect_code_302": "302 — Found (temporary)",
@@ -772,7 +810,31 @@
       "social_preview_note": "Social previews use your title, meta description, and thumbnail when available.",
       "is_active_short": "Published on site",
       "published_at": "Publish date & time",
-      "published_at_hint": "Use for scheduled posts. Sent as Y-m-d H:i:s (optional if empty)."
+      "published_at_hint": "Use for scheduled posts. Sent as Y-m-d H:i:s (optional if empty).",
+      "faq_section_title": "FAQ",
+      "faq_section_hint": "Frequently asked questions — supports rich formatting",
+      "faq_label_ar": "FAQ (Arabic)",
+      "faq_label_en": "FAQ (English)",
+      "faq_hint_ar": "Use headings for questions and paragraphs for answers.",
+      "faq_hint_en": "Use headings for questions and paragraphs for answers.",
+      "faq_placeholder_ar": "Add questions and answers here…",
+      "faq_placeholder_en": "Add questions and answers here…",
+      "toc_section_title": "Table of contents",
+      "toc_section_hint": "Optional navigation block for this article — placement and visibility are controlled below.",
+      "toc_enabled_label": "Show table of contents",
+      "toc_enabled_hint": "When off, the TOC is hidden on the public blog page (content is still saved).",
+      "toc_placement_label": "Placement on page",
+      "toc_placement_hint": "Where visitors see the table of contents on the single post.",
+      "toc_placement_after_meta": "After author & date",
+      "toc_placement_before_body": "Before article body",
+      "toc_placement_after_body": "After article body",
+      "toc_placement_before_faq": "Before FAQ",
+      "toc_label_ar": "Table of contents (Arabic)",
+      "toc_label_en": "Table of contents (English)",
+      "toc_hint_ar": "Use links like #section-1 that match heading ids in the article content.",
+      "toc_hint_en": "Use links like #section-1 that match heading ids in the article content.",
+      "toc_placeholder_ar": "Edit the default structure or add your own links…",
+      "toc_placeholder_en": "Edit the default structure or add your own links…"
     },
     "api": {
       "create_success": "Article created successfully",
@@ -787,7 +849,7 @@
       "delete_success": "Article deleted",
       "delete_error": "Could not delete the article",
       "delete_confirm_title": "Delete article",
-      "delete_confirm": "Delete this article? This action cannot be undone.",
+      "delete_confirm": "Delete this article? Choose how old article URLs should respond after deletion.",
       "cancel": "Cancel",
       "delete": "Delete",
       "bulk_delete_success": "Selected articles deleted",
@@ -869,8 +931,8 @@
       "loading": "Loading…"
     },
     "api": {
-      "create_success": "Category created",
-      "update_success": "Category updated",
+      "create_success": "Category created successfully",
+      "update_success": "Category updated successfully",
       "save_error": "Could not save category",
       "delete_success": "Category deleted",
       "delete_error": "Could not delete category",
@@ -931,7 +993,7 @@
     "load_error": "Could not load services.",
     "empty": "No services yet.",
     "delete_confirm": "Delete this service?",
-    "delete_confirm_description": "This action cannot be undone.",
+    "delete_confirm_description": "This action cannot be undone. Choose how old catalog URLs should respond after deletion.",
     "table": {
       "title": "Title",
       "subtitle": "Subtitle",
@@ -1023,8 +1085,8 @@
       "loading": "Loading…"
     },
     "api": {
-      "create_success": "Category created",
-      "update_success": "Category updated",
+      "create_success": "Category created successfully",
+      "update_success": "Category updated successfully",
       "save_error": "Could not save category",
       "delete_success": "Category deleted",
       "delete_error": "Could not delete category",
@@ -1224,6 +1286,8 @@
     "import_button": "Choose file & import",
     "import_error": "Import failed",
     "import_partial": "{{count}} row(s) failed — see console for details",
+    "import_all_failed": "Import failed — {{count}} row(s) could not be saved",
+    "import_partial_detail": "Partial import: {{created}} created, {{updated}} updated, but {{failed}} failed",
     "import_summary_blogs": "Blogs: {{created}} created, {{updated}} updated, {{failed}} failed",
     "import_summary_legal": "Legal: {{updated}} updated, {{failed}} failed",
     "import_summary_faq_general_ok": "FAQ page updated",
@@ -1282,9 +1346,16 @@
       "number": "Phone Number",
       "type": "Communication Type",
       "phone_type": "Phone",
+      "mobile_type": "Mobile",
       "whatsapp_type": "WhatsApp",
       "phone": "Mobile Number",
       "email": "Email Address",
+      "courses_phone_section": "Courses",
+      "courses_phone": "Courses contact number",
+      "courses_phone_hint": "Used for the course enrollment WhatsApp button (max 50 characters).",
+      "addresses_section": "Site address",
+      "address_ar": "Address (Arabic)",
+      "address_en": "Address (English)",
       "save_changes": "Save Changes"
     },
     "offices": {
@@ -1434,6 +1505,25 @@
       "description": "Manage the main title and description of the Why Choose Us section.",
       "sec_title": "Section Title",
       "sec_des": "Section Description",
+      "section_cover": "Section illustration (AR / EN)",
+      "section_cover_hint": "Main image shown beside the text on the homepage. Upload a separate file for Arabic and English if needed.",
+      "gallery_images": "Gallery images",
+      "gallery_hint": "Add multiple supporting images (logos, badges, illustrations). Each image can have Arabic and English alt text.",
+      "add_gallery_images": "Add images",
+      "image_alt": "Alt text",
+      "image_alt_ar": "Alt text (Arabic)",
+      "image_alt_en": "Alt text (English)",
+      "image_alt_placeholder": "Describe the image for accessibility",
+      "new_image_badge": "New",
+      "cover_ar": "Cover image (Arabic)",
+      "cover_en": "Cover image (English)",
+      "cover_per_locale_hint": "Upload a separate image per language when the artwork differs between Arabic and English.",
+      "sections": {
+        "fields": {
+          "image": "Image"
+        }
+      },
+      "upload_image": "Upload image",
       "save": "Save Changes"
     },
     "content": {
@@ -1444,6 +1534,17 @@
       "feature_description": "Feature Description",
       "image": "Feature Icon/Image",
       "upload_image": "Upload Image",
+      "cover_ar": "Image (Arabic)",
+      "cover_en": "Image (English)",
+      "cover_per_locale_hint": "Upload a separate icon or image per language when needed.",
+      "image_alt_ar": "Alt text (Arabic)",
+      "image_alt_en": "Alt text (English)",
+      "image_alt_placeholder": "Describe the image for accessibility",
+      "sections": {
+        "fields": {
+          "image": "Feature image"
+        }
+      },
       "save": "Save Content"
     }
   },
@@ -1541,9 +1642,9 @@
     },
     "api": {
       "load_error": "Could not load categories.",
-      "create_success": "Category created.",
+      "create_success": "Category created successfully",
       "create_error": "Could not create category.",
-      "update_success": "Category updated.",
+      "update_success": "Category updated successfully",
       "update_error": "Could not update category."
     },
     "dialog": {
@@ -1556,6 +1657,18 @@
       "description": "Description",
       "meta_title": "Meta title",
       "meta_description": "Meta description",
+      "sections": {
+        "fields": {
+          "image": "Category image"
+        }
+      },
+      "cover_ar": "Image (Arabic)",
+      "cover_en": "Image (English)",
+      "upload_image": "Upload image",
+      "cover_per_locale_hint": "Optional cover images per language for the public clients page.",
+      "image_alt_ar": "Image alt (Arabic)",
+      "image_alt_en": "Image alt (English)",
+      "image_alt_placeholder": "Describe the image for accessibility",
       "save": "Save",
       "cancel": "Cancel"
     }

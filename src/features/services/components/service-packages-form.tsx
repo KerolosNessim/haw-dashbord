@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CardItemLinkField } from "@/features/services/components/builder/card-item-link-field";
 import { packageCurrencyOptions } from "@/features/services/constants/package-currencies";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -59,6 +60,7 @@ const packageItemSchema = z.object({
     ar: z.array(z.string()).min(1),
     en: z.array(z.string()).optional().default([]),
   }),
+  link: z.string().optional().default(""),
 });
 
 const packagesSchema = z.object({
@@ -112,6 +114,7 @@ const ServicePackagesForm = forwardRef<
           price: 0,
           currency: "OMR",
           features: { ar: [""], en: [""] },
+          link: "",
         },
       ],
     },
@@ -225,6 +228,7 @@ const ServicePackagesForm = forwardRef<
                 price: 0,
                 currency: "OMR",
                 features: { ar: [""], en: [""] },
+                link: "",
               })
             }
           >
@@ -292,6 +296,11 @@ function PackageItem({
           </Button>
         )}
       </div>
+
+      <CardItemLinkField
+        link={watch(`items.${index}.link`) ?? ""}
+        onLinkChange={(link) => setValue(`items.${index}.link`, link)}
+      />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <div className="space-y-4">

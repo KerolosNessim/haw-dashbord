@@ -6,6 +6,16 @@ export function emptyBilingualImageAlt(): BilingualImageAlt {
   return { ar: "", en: "" };
 }
 
+/** Reads bilingual alt from TipTap image node attributes (falls back to legacy `alt`). */
+export function bilingualImageAltFromNodeAttrs(attrs: Record<string, unknown>): BilingualImageAlt {
+  const ar = String(attrs["data-alt-ar"] ?? "");
+  const en = String(attrs["data-alt-en"] ?? "");
+  if (ar || en) return { ar, en };
+  const legacy = String(attrs.alt ?? "").trim();
+  if (legacy) return { ar: legacy, en: legacy };
+  return { ar: "", en: "" };
+}
+
 /** Maps GET `image_alt` (string, `{ ar, en }`, or null) to form values. */
 export function bilingualImageAltFromApi(raw: unknown): BilingualImageAlt {
   if (raw == null) return emptyBilingualImageAlt();

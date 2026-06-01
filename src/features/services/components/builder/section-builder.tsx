@@ -271,15 +271,20 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
             renderHeaderLabel={(section) => sectionTypeLabel(section)}
             renderContent={(section, index) => (
               <div className="space-y-0">
-                <SectionLinkField
-                  value={String(sectionDataById[section.id]?.link ?? "")}
-                  onChange={(link) =>
-                    handleSectionDataChange(section.id, {
-                      ...(sectionDataById[section.id] ?? {}),
-                      link,
-                    })
-                  }
-                />
+                {section.type !== "cards" &&
+                section.type !== "full_section" &&
+                section.type !== "faq" &&
+                section.type !== "audits" ? (
+                  <SectionLinkField
+                    value={String(sectionDataById[section.id]?.link ?? "")}
+                    onChange={(link) =>
+                      handleSectionDataChange(section.id, {
+                        ...(sectionDataById[section.id] ?? {}),
+                        link,
+                      })
+                    }
+                  />
+                ) : null}
                 {renderSectionContent(section, index)}
               </div>
             )}

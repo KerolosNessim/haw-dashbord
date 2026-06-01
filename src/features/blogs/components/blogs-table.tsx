@@ -1,14 +1,5 @@
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { DeleteWithSlugRedirectDialog } from "@/components/delete-with-slug-redirect-dialog";
+import type { DeleteSlugRedirectPayload } from "@/lib/delete-slug-redirect";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,8 +21,14 @@ import { useDeleteBlog } from "@/features/blogs/hooks/useDeleteBlog";
 import { useDeleteBlogsBulk } from "@/features/blogs/hooks/useDeleteBlogsBulk";
 import { getHttpErrorMessage } from "@/lib/http-error-message";
 import { cn } from "@/lib/utils";
+import {
+  ExcelImportButton,
+  ExcelImportIconButton,
+} from "@/features/backup-export/components/excel-import-button";
 import { useExportBlog } from "@/features/backup-export/hooks/use-export-blog";
 import { useExportBlogsBulk } from "@/features/backup-export/hooks/use-export-blogs-bulk";
+import { useImportBlog } from "@/features/backup-export/hooks/use-import-blog";
+import { useImportBlogsBulk } from "@/features/backup-export/hooks/use-import-blogs-bulk";
 import { Download, Loader2, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -47,6 +44,7 @@ export default function BlogsTable() {
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [pendingDeleteBlogId, setPendingDeleteBlogId] = useState<string | null>(null);
 
   const { blogs, meta, isLoading, isFetching, isError, error } = useAdminBlogs({ page });
   const { deleteBlogMutation, isPending: isDeleting } = useDeleteBlog();
@@ -54,7 +52,10 @@ export default function BlogsTable() {
   const { mutate: exportBlog, isPending: isExportingOne } = useExportBlog();
   const { exportSelected, exportAll, isExporting: isExportingBulk } =
     useExportBlogsBulk();
+  const { mutate: importBlog, isPending: isImportingOne } = useImportBlog();
+  const { importFromFile, isImporting: isImportingBulk } = useImportBlogsBulk();
   const isExporting = isExportingOne || isExportingBulk;
+  const isImporting = isImportingOne || isImportingBulk;
   const { data: categoryRows = [] } = useBlogCategories();
 
   useEffect(() => {
@@ -139,12 +140,18 @@ export default function BlogsTable() {
     });
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = async (redirect: DeleteSlugRedirectPayload) => {
     const ids = [...selectedIds];
     if (ids.length === 0) return;
-    await deleteBlogsBulkMutation(ids);
+    await deleteBlogsBulkMutation({ ids, redirect });
     setSelectedIds(new Set());
     setBulkDialogOpen(false);
+  };
+
+  const handleSingleDeleteConfirm = async (redirect: DeleteSlugRedirectPayload) => {
+    if (!pendingDeleteBlogId) return;
+    await deleteBlogMutation({ blogId: pendingDeleteBlogId, redirect });
+    setPendingDeleteBlogId(null);
   };
 
   return (
@@ -181,7 +188,7 @@ export default function BlogsTable() {
             variant="outline"
             size="lg"
             className="rounded-xl shrink-0 font-bold"
-            disabled={isExporting || selectedCount === 0}
+            disabled={isExporting || isImporting || selectedCount === 0}
             onClick={() => exportSelected.mutate([...selectedIds])}
           >
             {isExportingBulk ? (
@@ -196,7 +203,7 @@ export default function BlogsTable() {
             variant="outline"
             size="lg"
             className="rounded-xl shrink-0 font-bold"
-            disabled={isExporting || isLoading}
+            disabled={isExporting || isImporting || isLoading}
             onClick={() => exportAll.mutate()}
           >
             {isExportingBulk ? (
@@ -206,6 +213,15 @@ export default function BlogsTable() {
             )}
             {t("export_all_blogs")}
           </Button>
+          <Can permission="blogs.create">
+            <ExcelImportButton
+              label={t("import_excel")}
+              className="rounded-xl shrink-0 font-bold"
+              isPending={isImportingBulk}
+              disabled={isExporting}
+              onFile={(file) => importFromFile.mutate(file)}
+            />
+          </Can>
           <BlogsTableSearch value={search} onChange={setSearch} />
         </div>
       </div>
@@ -323,12 +339,21 @@ export default function BlogsTable() {
                           variant="ghost"
                           size="icon"
                           title={t("export_excel")}
-                          disabled={isExporting}
+                          disabled={isExporting || isImporting}
                           className="w-9 h-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all"
                           onClick={() => exportBlog(blog.id)}
                         >
                           <Download className="w-4 h-4" />
                         </Button>
+                        <Can permission="blogs.create">
+                          <ExcelImportIconButton
+                            title={t("import_excel")}
+                            disabled={isExporting || isImporting}
+                            isPending={isImportingOne}
+                            className="w-9 h-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all"
+                            onFile={(file) => importBlog({ file, blogId: blog.id })}
+                          />
+                        </Can>
                         <Can permission="blogs.update">
                           <Button
                             type="button"
@@ -343,34 +368,16 @@ export default function BlogsTable() {
                           </Button>
                         </Can>
                         <Can permission="blogs.delete">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              disabled={isDeleting}
-                              className="w-9 h-9 rounded-xl text-muted-foreground hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>{apiT("delete_confirm_title")}</AlertDialogTitle>
-                              <AlertDialogDescription>{apiT("delete_confirm")}</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>{apiT("cancel")}</AlertDialogCancel>
-                              <AlertDialogAction
-                                variant="destructive"
-                                onClick={() => void deleteBlogMutation(blog.id)}
-                              >
-                                {apiT("delete")}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            disabled={isDeleting}
+                            className="w-9 h-9 rounded-xl text-muted-foreground hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all"
+                            onClick={() => setPendingDeleteBlogId(String(blog.id))}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </Can>
                       </div>
                     </TableCell>
@@ -397,6 +404,20 @@ export default function BlogsTable() {
           isRtl={isRtl}
         />
       </div>
+
+      <DeleteWithSlugRedirectDialog
+        open={pendingDeleteBlogId !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteBlogId(null);
+        }}
+        title={apiT("delete_confirm_title")}
+        description={apiT("delete_confirm")}
+        redirectLabelKeyPrefix="blogs.form"
+        cancelLabel={apiT("cancel")}
+        deleteLabel={apiT("delete")}
+        isPending={isDeleting}
+        onConfirm={handleSingleDeleteConfirm}
+      />
     </div>
   );
 }

@@ -1,11 +1,22 @@
+import { appendRootBilingualSectionImageFilesOnly } from "@/features/services/utils/append-bilingual-section-image";
+import { appendLocalized } from "@/features/services/utils/form-data-helpers";
 import { api } from "@/lib/api";
-import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import {
   pickBilingualSlug,
   pickLocalized,
   readId,
   unwrapDataArray,
 } from "@/lib/api-payload";
+import {
+  appendBilingualImageAlt,
+  bilingualImageAltFromApi,
+  emptyBilingualImageAlt,
+} from "@/lib/bilingual-image-alt";
+import {
+  bilingualSectionImageFromApi,
+  emptyBilingualSectionImage,
+} from "@/lib/bilingual-section-image";
+import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import type {
   SolutionCategoryFormValues,
   SolutionCategoryListParams,
@@ -209,7 +220,32 @@ function valuesToDedicatedJson(values: SolutionCategoryFormValues) {
       ar: values.meta_description.ar ?? "",
       en: values.meta_description.en ?? "",
     },
+    image_alt: {
+      ar: (values.image_alt.ar ?? "").trim(),
+      en: (values.image_alt.en ?? "").trim(),
+    },
   };
+}
+
+function valuesToDedicatedFormData(
+  values: SolutionCategoryFormValues,
+  mode: "create" | "update",
+): FormData {
+  const fd = new FormData();
+  if (mode === "update") {
+    fd.append("_method", "PUT");
+  }
+  fd.append("title[ar]", values.name.ar.trim());
+  fd.append("title[en]", values.name.en.trim());
+  fd.append("slug[ar]", (values.slug.ar ?? "").trim());
+  fd.append("slug[en]", (values.slug.en ?? "").trim());
+  appendLocalizedDescriptionHtml(fd, "description", values.description.ar, values.description.en);
+  appendLocalized(fd, "meta_title", values.meta_title);
+  appendLocalized(fd, "meta_description", values.meta_description);
+  appendBilingualImageAlt(fd, "image_alt", values.image_alt);
+  appendRootBilingualSectionImageFilesOnly(fd, "image", values.image);
+  fd.append("is_active", "1");
+  return fd;
 }
 
 export function valuesToUpsertFormData(values: SolutionCategoryFormValues, categoryId?: string | null) {
@@ -227,17 +263,97 @@ export function valuesToUpsertFormData(values: SolutionCategoryFormValues, categ
   fd.append("meta_title[en]", values.meta_title.en ?? "");
   fd.append("meta_description[ar]", values.meta_description.ar ?? "");
   fd.append("meta_description[en]", values.meta_description.en ?? "");
+  appendBilingualImageAlt(fd, "image_alt", values.image_alt);
+  appendRootBilingualSectionImageFilesOnly(fd, "image", values.image);
   return fd;
+}
+
+/** API returns images under `media.image` / `media.image_alt` (with legacy root fallbacks). */
+function pickCategoryMediaFromRecord(r: Record<string, unknown>): {
+  image: ReturnType<typeof bilingualSectionImageFromApi>;
+  image_alt: ReturnType<typeof bilingualImageAltFromApi>;
+} {
+  const media = asRecord(r.media);
+  const imageRaw = media?.image ?? r.image;
+  const imagesRaw = media?.images ?? r.images;
+  const imageAltRaw = media?.image_alt ?? r.image_alt;
+  return {
+    image: bilingualSectionImageFromApi(imageRaw, imagesRaw),
+    image_alt: bilingualImageAltFromApi(imageAltRaw),
+  };
+}
+
+function recordToFormValues(r: Record<string, unknown>): SolutionCategoryFormValues {
+  const slug = pickBilingualSlug(r.slug);
+  const { image, image_alt } = pickCategoryMediaFromRecord(r);
+  return {
+    name: { ar: pickCategoryName(r, "ar"), en: pickCategoryName(r, "en") },
+    slug,
+    description: {
+      ar: pickLocalized(r.description, "ar"),
+      en: pickLocalized(r.description, "en"),
+    },
+    meta_title: {
+      ar: pickLocalized(r.meta_title, "ar"),
+      en: pickLocalized(r.meta_title, "en"),
+    },
+    meta_description: {
+      ar: pickLocalized(r.meta_description, "ar"),
+      en: pickLocalized(r.meta_description, "en"),
+    },
+    image,
+    image_alt,
+  };
+}
+
+/** Full category record for edit form (admin show). */
+export async function fetchSolutionCategoryById(id: string): Promise<SolutionCategoryFormValues | null> {
+  try {
+    const res = await api.get<unknown>(`${ADMIN_SOLUTION_CATEGORIES}/${id.trim()}`);
+    assertApiEnvelopeSuccess(res.data);
+    const root = asRecord(res.data);
+    const data = asRecord(root?.data) ?? root;
+    if (!data || !readId(data)) return null;
+    return recordToFormValues(data);
+  } catch {
+    return null;
+  }
+}
+
+function hasNewCategoryImageFiles(values: SolutionCategoryFormValues): boolean {
+  return values.image.ar instanceof File || values.image.en instanceof File;
 }
 
 export async function upsertSolutionCategory(
   values: SolutionCategoryFormValues,
   categoryId?: string | null,
 ) {
+  const id = categoryId?.trim() ?? "";
+  const mode = id ? "update" : "create";
+
+  if (hasNewCategoryImageFiles(values)) {
+    const fd = valuesToDedicatedFormData(values, mode);
+    try {
+      if (id) {
+        const res = await api.post(`${ADMIN_SOLUTION_CATEGORIES}/${id}`, fd);
+        assertApiEnvelopeSuccess(res.data);
+        return res.data;
+      }
+      const res = await api.post(ADMIN_SOLUTION_CATEGORIES, fd);
+      assertApiEnvelopeSuccess(res.data);
+      return res.data;
+    } catch {
+      const legacyFd = valuesToUpsertFormData(values, categoryId);
+      const res = await api.post(ADMIN_TAXONOMY_CATEGORIES, legacyFd);
+      assertApiEnvelopeSuccess(res.data);
+      return res.data;
+    }
+  }
+
   const body = valuesToDedicatedJson(values);
   try {
-    if (categoryId?.trim()) {
-      const res = await api.put(`${ADMIN_SOLUTION_CATEGORIES}/${categoryId.trim()}`, body);
+    if (id) {
+      const res = await api.put(`${ADMIN_SOLUTION_CATEGORIES}/${id}`, body);
       assertApiEnvelopeSuccess(res.data);
       return res.data;
     }
@@ -259,5 +375,19 @@ export function rowToFormValues(row: SolutionCategoryRow): SolutionCategoryFormV
     description: { ar: "", en: "" },
     meta_title: { ar: "", en: "" },
     meta_description: { ar: "", en: "" },
+    image: emptyBilingualSectionImage(),
+    image_alt: emptyBilingualImageAlt(),
+  };
+}
+
+export function emptySolutionCategoryFormValues(): SolutionCategoryFormValues {
+  return {
+    name: { ar: "", en: "" },
+    slug: { ar: "", en: "" },
+    description: { ar: "", en: "" },
+    meta_title: { ar: "", en: "" },
+    meta_description: { ar: "", en: "" },
+    image: emptyBilingualSectionImage(),
+    image_alt: emptyBilingualImageAlt(),
   };
 }

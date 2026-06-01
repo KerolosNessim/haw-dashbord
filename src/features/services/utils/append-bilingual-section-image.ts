@@ -1,5 +1,43 @@
 import type { BilingualSectionImage } from "@/lib/bilingual-section-image";
 
+/** Appends root-level `image[ar]` / `image[en]` (e.g. solution categories, service basic info). */
+export function appendRootBilingualSectionImage(
+  fd: FormData,
+  field: string,
+  image?: BilingualSectionImage | null,
+): void {
+  if (!image) return;
+  const { ar, en } = image;
+  if (ar instanceof File) {
+    fd.append(`${field}[ar]`, ar);
+  } else if (typeof ar === "string" && ar.trim()) {
+    fd.append(`${field}[ar]`, ar.trim());
+  }
+  if (en instanceof File) {
+    fd.append(`${field}[en]`, en);
+  } else if (typeof en === "string" && en.trim()) {
+    fd.append(`${field}[en]`, en.trim());
+  }
+}
+
+/**
+ * Multipart uploads where the API validates `image.*` as uploaded files (Laravel `image` rule).
+ * Do not send existing URL strings — omit a locale to keep the stored file on update.
+ */
+export function appendRootBilingualSectionImageFilesOnly(
+  fd: FormData,
+  field: string,
+  image?: BilingualSectionImage | null,
+): void {
+  if (!image) return;
+  if (image.ar instanceof File) {
+    fd.append(`${field}[ar]`, image.ar);
+  }
+  if (image.en instanceof File) {
+    fd.append(`${field}[en]`, image.en);
+  }
+}
+
 /** Appends `benefits[0][image][ar]` / `[en]` (and legacy single `image` when only one locale). */
 export function appendIndexedBilingualSectionImage(
   fd: FormData,
@@ -39,6 +77,30 @@ export function appendIndexedBilingualSectionImage(
     if (fallback && !fd.has(`${prefix}[${index}][image][ar]`) && !fd.has(`${prefix}[${index}][image][en]`)) {
       fd.append(`${prefix}[${index}][image]`, fallback);
     }
+  }
+}
+
+/** Same as indexed append, but only `File` uploads (Laravel `image` validation on items). */
+export function appendIndexedBilingualSectionImageFilesOnly(
+  fd: FormData,
+  prefix: string,
+  index: number,
+  image?: BilingualSectionImage | File | string | null,
+) {
+  if (!image) return;
+
+  if (image instanceof File) {
+    fd.append(`${prefix}[${index}][image]`, image);
+    return;
+  }
+
+  if (typeof image !== "object") return;
+
+  if (image.ar instanceof File) {
+    fd.append(`${prefix}[${index}][image][ar]`, image.ar);
+  }
+  if (image.en instanceof File) {
+    fd.append(`${prefix}[${index}][image][en]`, image.en);
   }
 }
 

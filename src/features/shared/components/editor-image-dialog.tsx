@@ -25,6 +25,8 @@ type EditorImageDialogProps = {
   initialAlt?: BilingualImageAlt;
   onSubmit: (values: EditorImageDialogValues) => void;
   isUploading?: boolean;
+  /** `insert` = new upload; `edit` = update alt on selected image */
+  mode?: "insert" | "edit";
 };
 
 export function EditorImageDialog({
@@ -34,6 +36,7 @@ export function EditorImageDialog({
   initialAlt,
   onSubmit,
   isUploading = false,
+  mode = "insert",
 }: EditorImageDialogProps) {
   const { t } = useTranslation("translation", { keyPrefix: "editor" });
   const [alt, setAlt] = useState<BilingualImageAlt>(emptyBilingualImageAlt());
@@ -43,7 +46,9 @@ export function EditorImageDialog({
     setAlt(initialAlt ?? emptyBilingualImageAlt());
   }, [open, initialAlt]);
 
-  const handleInsert = () => {
+  const isEdit = mode === "edit";
+
+  const handleSave = () => {
     if (!imageSrc) return;
     onSubmit({ alt });
     onOpenChange(false);
@@ -57,7 +62,7 @@ export function EditorImageDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg rounded-2xl">
         <DialogHeader>
-          <DialogTitle>{t("image_dialog_title")}</DialogTitle>
+          <DialogTitle>{isEdit ? t("image_edit_dialog_title") : t("image_dialog_title")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
@@ -85,8 +90,8 @@ export function EditorImageDialog({
           <Button type="button" variant="outline" onClick={handleCancel}>
             {t("cancel")}
           </Button>
-          <Button type="button" onClick={handleInsert} disabled={!imageSrc || isUploading}>
-            {t("image_insert")}
+          <Button type="button" onClick={handleSave} disabled={!imageSrc || isUploading}>
+            {isEdit ? t("image_save_alt") : t("image_insert")}
           </Button>
         </DialogFooter>
       </DialogContent>

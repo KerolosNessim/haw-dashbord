@@ -12,12 +12,15 @@ export interface GeneralSettings {
 export interface PhoneItem {
   label: string;
   number: string;
-  type: "phone" | "whatsapp";
+  type: "phone" | "whatsapp" | "mobile";
 }
 
 export interface ContactSettings {
-  email: string;
-  phones: PhoneItem[];
+  email?: string | null;
+  phones?: PhoneItem[];
+  courses_phone?: string | null;
+  address_ar?: string | null;
+  address_en?: string | null;
 }
 
 export interface Office {

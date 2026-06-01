@@ -12,6 +12,7 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
 import type { SectionEmbeddedProps } from "../section-embedded-props";
+import { CardItemOptionsFields } from "../card-item-options-fields";
 import { LocalizedRichTextField } from "../localized-rich-text-field";
 
 const localizedSchema = z.object({
@@ -55,6 +56,8 @@ const cardsSchema = z.object({
       z.object({
         title: localizedSchema,
         description: localizedEditorSchema,
+        link: z.string().optional().default(""),
+        icon: z.string().optional().default(""),
       }),
     )
     .min(1),
@@ -78,6 +81,7 @@ export default function CardsSection({
     control,
     watch,
     getValues,
+    setValue,
     formState: { errors },
   } = useForm<CardsValues>({
     resolver: zodResolver(cardsSchema),
@@ -88,7 +92,7 @@ export default function CardsSection({
       image_alt: bilingualImageAltFromApi(initialData?.image_alt),
       items:
         (Array.isArray(initialData?.items) ? initialData.items : null) || [
-          { title: { ar: "", en: "" }, description: { ar: null, en: null } },
+          { title: { ar: "", en: "" }, description: { ar: null, en: null }, link: "", icon: "" },
         ],
     },
   });
@@ -240,6 +244,12 @@ export default function CardsSection({
                 )}
               </div>
 
+              <CardItemOptionsFields
+                link={watch(`items.${index}.link`) ?? ""}
+                icon={watch(`items.${index}.icon`) ?? ""}
+                onLinkChange={(link) => setValue(`items.${index}.link`, link)}
+                onIconChange={(icon) => setValue(`items.${index}.icon`, icon)}
+              />
 
                 {/* Localized Card Title */}
                 <div className="space-y-6">
@@ -322,6 +332,8 @@ export default function CardsSection({
               append({
                 title: { ar: "", en: "" },
                 description: { ar: null, en: null },
+                link: "",
+                icon: "",
               })
             }
           >

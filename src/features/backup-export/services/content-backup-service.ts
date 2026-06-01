@@ -28,6 +28,8 @@ import {
   fetchAllServiceExportRows,
   importServiceRows,
 } from "@/features/backup-export/services/service-backup-service";
+import type { ImportResult, RowImportResult } from "@/features/backup-export/types";
+import { formatImportRowError } from "@/features/backup-export/utils/import-summary";
 import { cellBoolean, cellString } from "@/lib/excel-io";
 import type { ExcelSheetInput } from "@/lib/excel-io";
 
@@ -51,6 +53,12 @@ function blogFormValuesToRow(id: string | number | "", values: BlogFormValues): 
     description_en: values.description.en,
     content_ar: values.content.ar,
     content_en: values.content.en,
+    faq_ar: values.faq.ar,
+    faq_en: values.faq.en,
+    toc_enabled: values.toc_enabled ? 1 : 0,
+    toc_placement: values.toc_placement,
+    table_of_contents_ar: values.table_of_contents.ar,
+    table_of_contents_en: values.table_of_contents.en,
     slug_ar: values.slug.ar,
     slug_en: values.slug.en,
     meta_title_ar: values.meta_title.ar,
@@ -85,6 +93,24 @@ function rowToBlogFormValues(row: Record<string, unknown>): BlogFormValues {
       en: cellString(row.description_en),
     },
     content: { ar: cellString(row.content_ar), en: cellString(row.content_en) },
+    faq: { ar: cellString(row.faq_ar), en: cellString(row.faq_en) },
+    toc_enabled: cellBoolean(row.toc_enabled, false),
+    toc_placement: (() => {
+      const p = cellString(row.toc_placement);
+      if (
+        p === "after_meta" ||
+        p === "before_body" ||
+        p === "after_body" ||
+        p === "before_faq"
+      ) {
+        return p;
+      }
+      return "before_body" as const;
+    })(),
+    table_of_contents: {
+      ar: cellString(row.table_of_contents_ar),
+      en: cellString(row.table_of_contents_en),
+    },
     slug: { ar: cellString(row.slug_ar), en: cellString(row.slug_en) },
     meta_title: {
       ar: cellString(row.meta_title_ar),
@@ -252,14 +278,7 @@ export async function buildFullBackupSheets(): Promise<ExcelSheetInput[]> {
   ];
 }
 
-export type ImportResult = {
-  blogs: { created: number; updated: number; failed: number };
-  services: { created: number; updated: number; failed: number };
-  legal: { updated: number; failed: number };
-  faqGeneral: boolean;
-  faqItems: { created: number; updated: number; failed: number };
-  errors: string[];
-};
+export type { ImportResult } from "@/features/backup-export/types";
 
 function legalRowToFormData(row: Record<string, unknown>): FormData {
   const fd = new FormData();
@@ -277,6 +296,32 @@ function legalRowToFormData(row: Record<string, unknown>): FormData {
   return fd;
 }
 
+export async function importBlogRows(
+  rows: Record<string, unknown>[],
+): Promise<RowImportResult> {
+  const out: RowImportResult = { created: 0, updated: 0, failed: 0, errors: [] };
+
+  for (const row of rows) {
+    const label = cellString(row.id) || cellString(row.title_ar) || cellString(row.title_en) || "?";
+    try {
+      const values = rowToBlogFormValues(row);
+      const id = cellString(row.id);
+      if (id) {
+        await updateBlog(id, values, null);
+        out.updated += 1;
+      } else {
+        await createBlog(values, null);
+        out.created += 1;
+      }
+    } catch (e) {
+      out.failed += 1;
+      out.errors.push(formatImportRowError(label, e, "Blog"));
+    }
+  }
+
+  return out;
+}
+
 export async function importBackupWorkbook(
   sheets: Record<string, Record<string, unknown>[]>,
 ): Promise<ImportResult> {
@@ -290,24 +335,13 @@ export async function importBackupWorkbook(
   };
 
   const blogRows = sheets.blogs ?? sheets.Blogs ?? [];
-  for (const row of blogRows) {
-    try {
-      const values = rowToBlogFormValues(row);
-      const id = cellString(row.id);
-      if (id) {
-        await updateBlog(id, values, null);
-        result.blogs.updated += 1;
-      } else {
-        await createBlog(values, null);
-        result.blogs.created += 1;
-      }
-    } catch (e) {
-      result.blogs.failed += 1;
-      result.errors.push(
-        `Blog ${cellString(row.id) || cellString(row.title_ar) || "?"}: ${e instanceof Error ? e.message : "failed"}`,
-      );
-    }
-  }
+  const blogImport = await importBlogRows(blogRows);
+  result.blogs = {
+    created: blogImport.created,
+    updated: blogImport.updated,
+    failed: blogImport.failed,
+  };
+  result.errors.push(...blogImport.errors);
 
   const serviceRows = sheets.services ?? sheets.Services ?? [];
   const serviceImport = await importServiceRows(serviceRows);
@@ -327,9 +361,7 @@ export async function importBackupWorkbook(
       result.legal.updated += 1;
     } catch (e) {
       result.legal.failed += 1;
-      result.errors.push(
-        `Legal ${type}: ${e instanceof Error ? e.message : "failed"}`,
-      );
+      result.errors.push(formatImportRowError(type, e, "Legal"));
     }
   }
 
@@ -358,9 +390,7 @@ export async function importBackupWorkbook(
       });
       result.faqGeneral = true;
     } catch (e) {
-      result.errors.push(
-        `FAQ general: ${e instanceof Error ? e.message : "failed"}`,
-      );
+      result.errors.push(formatImportRowError("general", e, "FAQ"));
     }
   }
 
@@ -382,9 +412,7 @@ export async function importBackupWorkbook(
       }
     } catch (e) {
       result.faqItems.failed += 1;
-      result.errors.push(
-        `FAQ item ${id || "?"}: ${e instanceof Error ? e.message : "failed"}`,
-      );
+      result.errors.push(formatImportRowError(id || "?", e, "FAQ item"));
     }
   }
 

@@ -1,12 +1,13 @@
 import { BulkDeleteConfirmationDialog } from "@/components/bulk-delete-confirmation-dialog";
 import { Button } from "@/components/ui/button";
+import type { DeleteSlugRedirectPayload } from "@/lib/delete-slug-redirect";
 import { useTranslation } from "react-i18next";
 
 export type BlogsTableBulkDeleteProps = {
   selectedCount: number;
   dialogOpen: boolean;
   onDialogOpenChange: (open: boolean) => void;
-  onConfirm: () => void | Promise<void>;
+  onConfirm: (redirect: DeleteSlugRedirectPayload) => void | Promise<void>;
   isPending: boolean;
 };
 
@@ -46,7 +47,11 @@ export function BlogsTableBulkDelete({
         cancelLabel={apiT("cancel")}
         deleteLabel={apiT("delete")}
         isPending={isPending}
-        onConfirm={onConfirm}
+        redirectLabelKeyPrefix="blogs.form"
+        onConfirm={(redirect) => {
+          if (!redirect) return;
+          void onConfirm(redirect);
+        }}
       />
     </>
   );

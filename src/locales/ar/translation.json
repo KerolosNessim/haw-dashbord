@@ -58,6 +58,9 @@
     "link_apply": "تطبيق",
     "cancel": "إلغاء",
     "image_dialog_title": "إدراج صورة",
+    "image_edit_dialog_title": "تعديل النص البديل للصورة",
+    "image_save_alt": "حفظ النص البديل",
+    "edit_image_alt": "تعديل النص البديل للصورة",
     "image_insert": "إدراج الصورة",
     "image_uploading": "جاري رفع الصورة…",
     "image_alt_ar": "النص البديل (عربي)",
@@ -78,6 +81,10 @@
     "logout_error": "فشل تسجيل الخروج! حاول مرة أخرى.",
     "generic_updated": "تم التحديث بنجاح",
     "generic_update_failed": "فشل التحديث",
+    "category_updated_successfully": "تم تحديث التصنيف بنجاح",
+    "category_created_successfully": "تم إنشاء التصنيف بنجاح",
+    "blog_category_updated_successfully": "تم تحديث تصنيف المدونة بنجاح",
+    "blog_category_created_successfully": "تم إنشاء تصنيف المدونة بنجاح",
     "faq_created": "تم إنشاء السؤال بنجاح",
     "faq_create_failed": "فشل إنشاء السؤال",
     "faq_updated": "تم تحديث السؤال بنجاح",
@@ -221,10 +228,18 @@
     "clear_selection": "إلغاء التحديد",
     "select_service": "تحديد الخدمة",
     "export_hint": "الصفوف المحددة تُصدَّر في ملف Excel واحد (ورقة services).",
+    "import_export_hint": "صدّر الصفوف المحددة إلى Excel، أو استورد ملفاً يحتوي ورقة services (صف فيه id يحدّث السجل؛ id فارغ ينشئ خدمة جديدة).",
+    "import_excel": "استيراد Excel",
+    "import_bulk_success": "تم الاستيراد: {{created}} جديد، {{updated}} محدّث",
+    "import_bulk_error": "فشل الاستيراد",
+    "import_empty_sheet": "لا توجد ورقة services أو لا توجد صفوف في الملف",
+    "import_partial": "فشل {{count}} صف/صفوف — راجع وحدة التحكم",
+    "import_all_failed": "فشل الاستيراد — تعذّر حفظ {{count}} صف/صفوف",
+    "import_partial_detail": "استيراد جزئي: {{created}} جديد، {{updated}} محدّث، وفشل {{failed}}",
     "edit_service": "تعديل",
     "delete_service": "حذف",
     "delete_confirm": "هل أنت متأكد من حذف هذه الخدمة؟",
-    "delete_confirm_description": "هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الخدمة وجميع بياناتها نهائياً.",
+    "delete_confirm_description": "لا يمكن التراجع عن هذا الإجراء. اختر كيف يجب أن تستجيب روابط الخدمة القديمة بعد الحذف.",
     "delete_success": "تم حذف الخدمة بنجاح",
     "delete_error": "حدث خطأ أثناء حذف الخدمة",
     "no_cover": "لا توجد صورة غلاف",
@@ -250,7 +265,7 @@
       "page_script_hint": "HTML أو JavaScript يُنفَّذ على صفحة الخدمة العامة فقط عند زيارة هذه الخدمة.",
       "page_script_placeholder": "<script>...</script>",
       "slug_redirect_code_label": "إعادة توجيه المسار القديم (رمز HTTP)",
-      "slug_redirect_code_hint": "عند تغيير هذا المسار، يمكن للرابط السابق أن يستجيب بهذا الرمز. اختر «بدون» لصفحة عادية.",
+      "slug_redirect_code_hint": "عند تغيير أو حذف هذا المسار، يمكن للرابط السابق أن يستجيب بهذا الرمز.",
       "slug_redirect_code_none": "بدون — صفحة عادية",
       "slug_redirect_code_301": "301 — نقل دائم",
       "slug_redirect_code_302": "302 — مؤقت",
@@ -388,7 +403,21 @@
           "add_question": "إضافة سؤال جديد",
           "items_list": "قائمة العناصر الإضافية",
           "faq_list": "قائمة الأسئلة والأجوبة",
-          "features": "المميزات"
+          "features": "المميزات",
+          "card_link_label": "رابط البطاقة (اختياري)",
+          "card_link_hint": "يجعل هذه البطاقة فقط قابلة للنقر — لا يؤثر على بقية بطاقات القسم.",
+          "card_link_placeholder": "https://example.com أو /contact",
+          "card_icon_label": "أيقونة البطاقة (اختياري)",
+          "card_icon_hint": "تظهر أيقونة فوق عنوان البطاقة في الموقع.",
+          "card_icon_none": "بدون أيقونة",
+          "card_icon_search": "بحث",
+          "card_icon_megaphone": "إعلان",
+          "card_icon_users": "مستخدمون",
+          "card_icon_store": "متجر",
+          "card_icon_file_image": "صورة",
+          "card_icon_monitor_play": "فيديو",
+          "card_icon_code_xml": "برمجة",
+          "card_icon_badge_dollar": "تسعير"
         }
       },
       "errors": {
@@ -586,6 +615,8 @@
   "login_button": "تسجيل الدخول",
   "validation": {
     "email_invalid": "البريد الإلكتروني غير صالح",
+    "invalid_email": "البريد الإلكتروني غير صالح",
+    "max_length_50": "الحد الأقصى 50 حرفاً",
     "email_required": "البريد الإلكتروني مطلوب",
     "password_required": "كلمة المرور مطلوبة",
     "required": "هذا الحقل مطلوب",
@@ -662,6 +693,13 @@
     "export_all_success": "تم تصدير كل المقالات",
     "export_bulk_error": "فشل التصدير",
     "export_none_selected": "حدّد مقالة واحدة على الأقل",
+    "import_excel": "استيراد Excel",
+    "import_bulk_success": "تم الاستيراد: {{created}} جديد، {{updated}} محدّث",
+    "import_bulk_error": "فشل الاستيراد",
+    "import_empty_sheet": "لا توجد ورقة blogs أو لا توجد صفوف في الملف",
+    "import_partial": "فشل {{count}} صف/صفوف — راجع وحدة التحكم",
+    "import_all_failed": "فشل الاستيراد — تعذّر حفظ {{count}} صف/صفوف",
+    "import_partial_detail": "استيراد جزئي: {{created}} جديد، {{updated}} محدّث، وفشل {{failed}}",
     "all_blogs": "كل المقالات",
     "active_blogs": "المنشورة",
     "inactive_blogs": "المسودات",
@@ -754,7 +792,7 @@
       "slug_placeholder": "how-to-fix-things",
       "slug_placeholder_ar": "مثال-مقال-هنا",
       "slug_redirect_code_label": "إعادة توجيه المسار القديم (رمز HTTP)",
-      "slug_redirect_code_hint": "عند تغيير هذا المسار، يمكن للرابط السابق أن يستجيب بهذا الرمز. اختر «بدون» لصفحة عادية.",
+      "slug_redirect_code_hint": "عند تغيير أو حذف هذا المسار، يمكن للرابط السابق أن يستجيب بهذا الرمز.",
       "slug_redirect_code_none": "بدون — صفحة عادية",
       "slug_redirect_code_301": "301 — نقل دائم",
       "slug_redirect_code_302": "302 — مؤقت",
@@ -775,7 +813,31 @@
       "social_preview_note": "معاينات الشبكات الاجتماعية تستخدم العنوان ووصف الميتا والصورة عند توفرها.",
       "is_active_short": "ظاهر على الموقع",
       "published_at": "تاريخ ووقت النشر",
-      "published_at_hint": "مفيد للمقالات «المجدولة». يُرسل للخادم بالتنسيق Y-m-d H:i:s (اختياري إن وُضع فارغاً)."
+      "published_at_hint": "مفيد للمقالات «المجدولة». يُرسل للخادم بالتنسيق Y-m-d H:i:s (اختياري إن وُضع فارغاً).",
+      "faq_section_title": "الأسئلة الشائعة",
+      "faq_section_hint": "أسئلة وأجوبة متكررة — يدعم التنسيق الغني",
+      "faq_label_ar": "الأسئلة الشائعة (عربي)",
+      "faq_label_en": "الأسئلة الشائعة (إنجليزي)",
+      "faq_hint_ar": "استخدم العناوين للأسئلة والفقرات للأجوبة.",
+      "faq_hint_en": "استخدم العناوين للأسئلة والفقرات للأجوبة.",
+      "faq_placeholder_ar": "أضف الأسئلة والأجوبة هنا…",
+      "faq_placeholder_en": "Add questions and answers here…",
+      "toc_section_title": "جدول المحتويات",
+      "toc_section_hint": "قسم اختياري للتنقل داخل المقال — يمكنك التحكم في مكانه وإظهاره من الأسفل.",
+      "toc_enabled_label": "إظهار جدول المحتويات",
+      "toc_enabled_hint": "عند الإيقاف يُخفى الجدول في الموقع (المحتوى يبقى محفوظاً).",
+      "toc_placement_label": "موضع العرض في الصفحة",
+      "toc_placement_hint": "أين يرى الزائر جدول المحتويات في صفحة المقال.",
+      "toc_placement_after_meta": "بعد معلومات الناشر والتاريخ",
+      "toc_placement_before_body": "قبل نص المقال",
+      "toc_placement_after_body": "بعد نص المقال",
+      "toc_placement_before_faq": "قبل الأسئلة الشائعة",
+      "toc_label_ar": "جدول المحتويات (عربي)",
+      "toc_label_en": "جدول المحتويات (إنجليزي)",
+      "toc_hint_ar": "استخدم روابط مثل #section-1 تطابق معرفات العناوين في المحتوى.",
+      "toc_hint_en": "Use links like #section-1 that match heading ids in the article content.",
+      "toc_placeholder_ar": "عدّل الهيكل الافتراضي أو أضف روابطك…",
+      "toc_placeholder_en": "Edit the default structure or add your own links…"
     },
     "api": {
       "create_success": "تم إنشاء المقالة بنجاح",
@@ -790,7 +852,7 @@
       "delete_success": "تم حذف المقالة",
       "delete_error": "تعذر حذف المقالة",
       "delete_confirm_title": "حذف المقالة",
-      "delete_confirm": "هل تريد حذف هذه المقالة؟ لا يمكن التراجع عن هذا الإجراء.",
+      "delete_confirm": "هل تريد حذف هذه المقالة؟ اختر كيف يجب أن تستجيب روابط المقالة القديمة بعد الحذف.",
       "cancel": "إلغاء",
       "delete": "حذف",
       "bulk_delete_success": "تم حذف المقالات المحددة",
@@ -872,8 +934,8 @@
       "loading": "جاري التحميل…"
     },
     "api": {
-      "create_success": "تم إنشاء التصنيف",
-      "update_success": "تم تحديث التصنيف",
+      "create_success": "تم إنشاء التصنيف بنجاح",
+      "update_success": "تم تحديث التصنيف بنجاح",
       "save_error": "تعذر حفظ التصنيف",
       "delete_success": "تم حذف التصنيف",
       "delete_error": "تعذر حذف التصنيف",
@@ -934,7 +996,7 @@
     "load_error": "تعذر تحميل الخدمات.",
     "empty": "لا توجد خدمات بعد.",
     "delete_confirm": "حذف هذه الخدمة؟",
-    "delete_confirm_description": "لا يمكن التراجع عن هذا الإجراء.",
+    "delete_confirm_description": "لا يمكن التراجع عن هذا الإجراء. اختر كيف يجب أن تستجيب روابط الكتالوج القديمة بعد الحذف.",
     "table": {
       "title": "العنوان",
       "subtitle": "العنوان الفرعي",
@@ -1026,8 +1088,8 @@
       "loading": "جاري التحميل…"
     },
     "api": {
-      "create_success": "تم إنشاء التصنيف",
-      "update_success": "تم تحديث التصنيف",
+      "create_success": "تم إنشاء التصنيف بنجاح",
+      "update_success": "تم تحديث التصنيف بنجاح",
       "save_error": "تعذر حفظ التصنيف",
       "delete_success": "تم حذف التصنيف",
       "delete_error": "تعذر حذف التصنيف",
@@ -1224,6 +1286,8 @@
     "import_button": "اختر ملفاً واستورد",
     "import_error": "فشل الاستيراد",
     "import_partial": "فشل {{count}} صف/صفوف — راجع وحدة التحكم",
+    "import_all_failed": "فشل الاستيراد — تعذّر حفظ {{count}} صف/صفوف",
+    "import_partial_detail": "استيراد جزئي: {{created}} جديد، {{updated}} محدّث، وفشل {{failed}}",
     "import_summary_blogs": "مقالات: {{created}} جديد، {{updated}} محدّث، {{failed}} فشل",
     "import_summary_legal": "صفحات قانونية: {{updated}} محدّث، {{failed}} فشل",
     "import_summary_faq_general_ok": "تم تحديث صفحة الأسئلة الشائعة",
@@ -1277,9 +1341,16 @@
       "number": "رقم الهاتف",
       "type": "نوع التواصل",
       "phone_type": "هاتف",
+      "mobile_type": "جوال",
       "whatsapp_type": "واتساب",
       "phone": "رقم الجوال",
       "email": "البريد الإلكتروني",
+      "courses_phone_section": "الدورات",
+      "courses_phone": "رقم تواصل الكورسات",
+      "courses_phone_hint": "يُستخدم لزر التسجيل عبر واتساب في صفحة الدورة (حد أقصى 50 حرفاً).",
+      "addresses_section": "عنوان الموقع",
+      "address_ar": "العنوان (بالعربية)",
+      "address_en": "العنوان (بالإنجليزية)",
       "save_changes": "حفظ التغييرات"
     },
     "offices": {
@@ -1426,6 +1497,25 @@
       "description": "إدارة العنوان والوصف الرئيسي لقسم 'لماذا تختارنا'.",
       "sec_title": "عنوان القسم",
       "sec_des": "وصف القسم",
+      "section_cover": "صورة القسم (عربي / إنجليزي)",
+      "section_cover_hint": "الصورة الرئيسية بجانب النص في الصفحة الرئيسية. ارفع ملفاً منفصلاً للعربية والإنجليزية عند الحاجة.",
+      "gallery_images": "معرض الصور",
+      "gallery_hint": "أضف عدة صور داعمة (شعارات، شارات، رسوم). لكل صورة نص بديل بالعربية والإنجليزية.",
+      "add_gallery_images": "إضافة صور",
+      "image_alt": "النص البديل",
+      "image_alt_ar": "النص البديل (عربي)",
+      "image_alt_en": "النص البديل (إنجليزي)",
+      "image_alt_placeholder": "وصف الصورة لإمكانية الوصول",
+      "new_image_badge": "جديد",
+      "cover_ar": "صورة الغلاف (عربي)",
+      "cover_en": "صورة الغلاف (إنجليزي)",
+      "cover_per_locale_hint": "ارفع صورة منفصلة لكل لغة عند اختلاف التصميم بين العربية والإنجليزية.",
+      "sections": {
+        "fields": {
+          "image": "صورة"
+        }
+      },
+      "upload_image": "رفع صورة",
       "save": "حفظ التغييرات"
     },
     "content": {
@@ -1436,6 +1526,17 @@
       "feature_description": "وصف الميزة",
       "image": "أيقونة / صورة الميزة",
       "upload_image": "رفع صورة",
+      "cover_ar": "الصورة (عربي)",
+      "cover_en": "الصورة (إنجليزي)",
+      "cover_per_locale_hint": "ارفع أيقونة أو صورة منفصلة لكل لغة عند الحاجة.",
+      "image_alt_ar": "النص البديل (عربي)",
+      "image_alt_en": "النص البديل (إنجليزي)",
+      "image_alt_placeholder": "وصف الصورة لإمكانية الوصول",
+      "sections": {
+        "fields": {
+          "image": "صورة الميزة"
+        }
+      },
       "save": "حفظ المحتوى"
     }
   },
@@ -1530,9 +1631,9 @@
     },
     "api": {
       "load_error": "تعذر تحميل التصنيفات.",
-      "create_success": "تم إنشاء التصنيف.",
+      "create_success": "تم إنشاء التصنيف بنجاح",
       "create_error": "تعذر إنشاء التصنيف.",
-      "update_success": "تم تحديث التصنيف.",
+      "update_success": "تم تحديث التصنيف بنجاح",
       "update_error": "تعذر تحديث التصنيف."
     },
     "dialog": {
@@ -1545,6 +1646,18 @@
       "description": "الوصف",
       "meta_title": "عنوان الميتا",
       "meta_description": "وصف الميتا",
+      "sections": {
+        "fields": {
+          "image": "صورة التصنيف"
+        }
+      },
+      "cover_ar": "الصورة (عربي)",
+      "cover_en": "الصورة (إنجليزي)",
+      "upload_image": "رفع صورة",
+      "cover_per_locale_hint": "صور غلاف اختيارية لكل لغة في صفحة الشركاء العامة.",
+      "image_alt_ar": "النص البديل (عربي)",
+      "image_alt_en": "النص البديل (إنجليزي)",
+      "image_alt_placeholder": "وصف الصورة لإمكانية الوصول",
       "save": "حفظ",
       "cancel": "إلغاء"
     }

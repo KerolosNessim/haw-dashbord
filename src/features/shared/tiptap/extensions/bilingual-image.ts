@@ -8,18 +8,20 @@ export const BilingualImage = Image.extend({
       "data-alt-ar": {
         default: null,
         parseHTML: (el) => el.getAttribute("data-alt-ar"),
-        renderHTML: (attrs) =>
-          attrs["data-alt-ar"]
-            ? { "data-alt-ar": attrs["data-alt-ar"] as string }
-            : {},
+        renderHTML: (attrs) => {
+          const v = attrs["data-alt-ar"];
+          if (v == null) return {};
+          return { "data-alt-ar": String(v) };
+        },
       },
       "data-alt-en": {
         default: null,
         parseHTML: (el) => el.getAttribute("data-alt-en"),
-        renderHTML: (attrs) =>
-          attrs["data-alt-en"]
-            ? { "data-alt-en": attrs["data-alt-en"] as string }
-            : {},
+        renderHTML: (attrs) => {
+          const v = attrs["data-alt-en"];
+          if (v == null) return {};
+          return { "data-alt-en": String(v) };
+        },
       },
     };
   },

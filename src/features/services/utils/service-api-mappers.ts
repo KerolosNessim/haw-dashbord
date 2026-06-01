@@ -95,9 +95,13 @@ function normalizeOfferingItem(item: unknown): Record<string, unknown> {
   } else if (typeof desc === "string") {
     description = { ar: desc, en: desc };
   }
+  const link = typeof row.link === "string" ? row.link.trim() : "";
+  const icon = typeof row.icon === "string" ? row.icon.trim() : "";
   return {
     title: pickLocalized(row.title) ?? { ar: "", en: "" },
     description,
+    ...(link ? { link } : {}),
+    ...(icon ? { icon } : {}),
   };
 }
 
@@ -140,10 +144,12 @@ function normalizeAuditItem(item: unknown): Record<string, unknown> {
   } else if (typeof desc === "string") {
     description = { ar: desc, en: desc };
   }
+  const link = typeof row.link === "string" ? row.link.trim() : "";
   return {
     title: pickLocalized(row.title) ?? { ar: "", en: "" },
     description,
     button_text: pickLocalized(row.button_text) ?? { ar: "", en: "" },
+    ...(link ? { link } : {}),
   };
 }
 
@@ -192,35 +198,74 @@ function normalizePackageItems(items: unknown[]): Array<Record<string, unknown>>
           ? { ar: desc, en: desc }
           : { ar: "", en: "" };
 
+    const link = typeof row.link === "string" ? row.link.trim() : "";
     return {
-      ...row,
+      id: row.id,
+      title: pickLocalized(row.title) ?? { ar: "", en: "" },
       description,
       image: bilingualSectionImageFromApi(row.image, row.images),
       image_alt: pickServiceImageAlt(row.image_alt),
+      price: row.price != null ? Number(row.price) : 0,
+      currency: String(row.currency ?? "OMR"),
       features: featuresNormalized,
+      sort_order: row.sort_order,
+      ...(link ? { link } : {}),
     };
   });
 }
 
-export function packagesDataFromService(service: Service): Record<string, unknown> {
+/**
+ * API may return packages as a section object, an array of sections (each with `items`),
+ * or a flat array of pricing line items. Align with frontend `parsePackagesList`.
+ */
+function resolvePackagesFromService(service: Service): {
+  section: Record<string, unknown>;
+  items: unknown[];
+} {
   const raw = service as Record<string, unknown>;
-  const items = Array.isArray(service.packages)
-    ? service.packages
-    : ((service.packages as { items?: unknown[] } | undefined)?.items ?? []);
+  const packages = service.packages;
+
+  const fallbackSection = (): Record<string, unknown> => ({
+    title: pickLocalized(raw.packages_title) ?? { ar: "", en: "" },
+    description: pickLocalized(raw.packages_description) ?? { ar: "", en: "" },
+  });
+
+  if (packages == null) {
+    return { section: fallbackSection(), items: [] };
+  }
+
+  if (Array.isArray(packages)) {
+    if (!packages.length) {
+      return { section: fallbackSection(), items: [] };
+    }
+    const first = packages[0];
+    if (first && typeof first === "object" && !Array.isArray(first)) {
+      const block = first as Record<string, unknown>;
+      if (Array.isArray(block.items)) {
+        return { section: block, items: block.items };
+      }
+    }
+    return { section: fallbackSection(), items: packages };
+  }
+
+  if (typeof packages === "object") {
+    const block = packages as Record<string, unknown>;
+    const items = Array.isArray(block.items) ? block.items : [];
+    return { section: block, items };
+  }
+
+  return { section: fallbackSection(), items: [] };
+}
+
+export function packagesDataFromService(service: Service): Record<string, unknown> {
+  const { section, items } = resolvePackagesFromService(service);
 
   return {
-    title:
-      pickLocalized(raw.packages_title) ??
-      pickLocalized((service.packages as { title?: unknown })?.title) ?? {
-        ar: "",
-        en: "",
-      },
-    description:
-      pickLocalized(raw.packages_description) ??
-      pickLocalized((service.packages as { description?: unknown })?.description) ?? {
-        ar: "",
-        en: "",
-      },
+    id: section.id,
+    sort_order: section.sort_order,
+    link: section.link,
+    title: pickLocalized(section.title) ?? { ar: "", en: "" },
+    description: pickLocalized(section.description) ?? { ar: "", en: "" },
     items: items.length
       ? normalizePackageItems(items)
       : [

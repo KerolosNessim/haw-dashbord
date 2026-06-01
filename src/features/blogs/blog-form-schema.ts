@@ -1,3 +1,4 @@
+import { BLOG_TOC_PLACEMENTS } from "@/features/blogs/lib/default-blog-toc";
 import { BLOG_SLUG_REDIRECT_CODES } from "@/lib/http-redirect-codes";
 import { localizedSlugOptional } from "@/lib/zod-localized-slug";
 import * as z from "zod";
@@ -42,6 +43,14 @@ export const blogSchema = z.object({
   subtitle: localizedOptional,
   description: localizedArRequiredEnOptional,
   content: localizedArRequiredEnOptional,
+  /** Per-post FAQ rich HTML (`{ ar, en }`); optional on create/edit. */
+  faq: localizedOptional,
+  /** Show table of contents on the public blog post. */
+  toc_enabled: z.boolean().default(false),
+  /** Where the TOC block appears on the single post page. */
+  toc_placement: z.enum(BLOG_TOC_PLACEMENTS).default("before_body"),
+  /** Per-post TOC rich HTML (`{ ar, en }`); optional on create/edit. */
+  table_of_contents: localizedOptional,
   publisher_name: z.string().min(1, { message: "validation.required" }),
   tags: z
     .array(blogTagInputSchema)
