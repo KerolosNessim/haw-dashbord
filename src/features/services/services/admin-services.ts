@@ -7,9 +7,10 @@ import {
 } from "@/lib/api-payload";
 import { normalizeService } from "../utils/service-mapper";
 import type { GetServiceResponse, GetServicesResponse } from "../type";
+import { getAdminServicesBasePath } from "./service-resource-config";
 
 export const getAdminServicesApi = (): Promise<GetServicesResponse> => {
-  return api.get<GetServicesResponse>("/v1/admin/services").then((res) => {
+  return api.get<GetServicesResponse>(getAdminServicesBasePath()).then((res) => {
     assertApiEnvelopeSuccess(res.data);
     const rawList = unwrapDataArray(res.data.data ?? res.data);
     const payload = res.data.data;
@@ -29,7 +30,7 @@ export const getAdminServicesApi = (): Promise<GetServicesResponse> => {
 };
 
 export const getAdminServiceByIdApi = (id: number | string): Promise<GetServiceResponse> => {
-  return api.get<GetServiceResponse>(`/v1/admin/services/${id}`).then((res) => {
+  return api.get<GetServiceResponse>(`${getAdminServicesBasePath()}/${id}`).then((res) => {
     assertApiEnvelopeSuccess(res.data);
     const record = unwrapShowResource(res.data);
     return {
@@ -44,6 +45,6 @@ export const deleteAdminServiceApi = (
   payload: DeleteSlugRedirectPayload,
 ) => {
   return api
-    .delete(`/v1/admin/services/${id}`, { data: payload })
+    .delete(`${getAdminServicesBasePath()}/${id}`, { data: payload })
     .then((res) => res.data);
 };

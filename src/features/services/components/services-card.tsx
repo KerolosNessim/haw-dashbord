@@ -13,6 +13,10 @@ import { DeleteWithSlugRedirectDialog } from "@/components/delete-with-slug-redi
 import type { DeleteSlugRedirectPayload } from "@/lib/delete-slug-redirect";
 import { Can } from "@/features/permissions/components/PermissionGate";
 import { useState } from "react";
+import {
+  getServiceQueryNamespace,
+  getServicesUiBasePath,
+} from "../services/service-resource-config";
 
 type ServiceCardProps = {
   service: Service;
@@ -22,6 +26,8 @@ export default function ServiceCard({ service }: ServiceCardProps) {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "services" });
   const queryClient = useQueryClient();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const scope = getServiceQueryNamespace();
+  const uiBasePath = getServicesUiBasePath();
   const coverUrl = serviceCoverUrl(
     service.image,
     i18n.language?.startsWith("en") ? "en" : "ar",
@@ -53,7 +59,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
       deleteAdminServiceApi(service.id, redirect),
     onSuccess: () => {
       toast.success(t("delete_success"));
-      queryClient.invalidateQueries({ queryKey: ["services"] });
+      queryClient.invalidateQueries({ queryKey: ["services", scope] });
       setIsDeleteDialogOpen(false);
     },
     onError: () => {
@@ -103,7 +109,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
       <div className="mt-auto flex flex-wrap items-center gap-2 p-5 pt-0">
         <Can permission="services.update">
           <Link
-            to={`/services/edit/${service?.id}`}
+            to={`${uiBasePath}/edit/${service?.id}`}
             className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition hover:bg-gray-100"
           >
             <Pencil size={16} />

@@ -7,6 +7,7 @@ import {
   updateBlog,
   type BlogFormValues,
 } from "@/features/blogs/services/blogs-api";
+import type { FaqItem } from "@/features/blogs/blog-form-schema";
 import {
   normalizeAdminBlogListPayload,
   pickAdminBlogMeta,
@@ -42,6 +43,7 @@ const LEGAL_TYPES: LegalPageType[] = [
 ];
 
 function blogFormValuesToRow(id: string | number | "", values: BlogFormValues): Record<string, unknown> {
+  const faqToCell = (rows: FaqItem[]) => JSON.stringify(rows ?? []);
   return {
     id,
     blog_category_id: values.category_id,
@@ -53,8 +55,8 @@ function blogFormValuesToRow(id: string | number | "", values: BlogFormValues): 
     description_en: values.description.en,
     content_ar: values.content.ar,
     content_en: values.content.en,
-    faq_ar: values.faq.ar,
-    faq_en: values.faq.en,
+    faq_ar: faqToCell(values.faq.ar),
+    faq_en: faqToCell(values.faq.en),
     toc_enabled: values.toc_enabled ? 1 : 0,
     toc_placement: values.toc_placement,
     table_of_contents_ar: values.table_of_contents.ar,
@@ -78,6 +80,28 @@ function blogFormValuesToRow(id: string | number | "", values: BlogFormValues): 
   };
 }
 
+function parseFaqCell(raw: unknown): FaqItem[] {
+  const cell = cellString(raw).trim();
+  if (!cell) return [];
+  try {
+    const parsed = JSON.parse(cell) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((row) => {
+        if (!row || typeof row !== "object" || Array.isArray(row)) return null;
+        const rec = row as Record<string, unknown>;
+        const question = typeof rec.question === "string" ? rec.question.trim() : "";
+        const answer = typeof rec.answer === "string" ? rec.answer.trim() : "";
+        if (!question && !answer) return null;
+        return { question, answer };
+      })
+      .filter((item): item is FaqItem => item != null);
+  } catch {
+    // Legacy plain HTML/text fallback.
+    return [];
+  }
+}
+
 function rowToBlogFormValues(row: Record<string, unknown>): BlogFormValues {
   const statusRaw = cellString(row.status);
   const status =
@@ -93,7 +117,7 @@ function rowToBlogFormValues(row: Record<string, unknown>): BlogFormValues {
       en: cellString(row.description_en),
     },
     content: { ar: cellString(row.content_ar), en: cellString(row.content_en) },
-    faq: { ar: cellString(row.faq_ar), en: cellString(row.faq_en) },
+    faq: { ar: parseFaqCell(row.faq_ar), en: parseFaqCell(row.faq_en) },
     toc_enabled: cellBoolean(row.toc_enabled, false),
     toc_placement: (() => {
       const p = cellString(row.toc_placement);

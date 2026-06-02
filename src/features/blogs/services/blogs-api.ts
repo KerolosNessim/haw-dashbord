@@ -70,6 +70,7 @@ export function blogValuesToFormData(
   }
 
   fd.append("blog_category_id", values.category_id.trim());
+  fd.append("author_id", values.author_id?.trim() ?? "");
 
   fd.append("title[ar]", values.title.ar.trim());
   fd.append("title[en]", values.title.en.trim());
@@ -82,8 +83,21 @@ export function blogValuesToFormData(
   fd.append("content[ar]", localizedHtmlForApi(values.content.ar));
   fd.append("content[en]", localizedHtmlForApi(values.content.en));
 
-  fd.append("faq[ar]", localizedHtmlForApi(values.faq.ar));
-  fd.append("faq[en]", localizedHtmlForApi(values.faq.en));
+  const appendFaq = (locale: "ar" | "en") => {
+    const rows = Array.isArray(values.faq?.[locale]) ? values.faq[locale] : [];
+    rows
+      .map((item) => ({
+        question: localizedHtmlForApi(item?.question ?? ""),
+        answer: localizedHtmlForApi(item?.answer ?? ""),
+      }))
+      .filter((item) => item.question || item.answer)
+      .forEach((item, index) => {
+        fd.append(`faq[${locale}][${index}][question]`, item.question);
+        fd.append(`faq[${locale}][${index}][answer]`, item.answer);
+      });
+  };
+  appendFaq("ar");
+  appendFaq("en");
 
   fd.append("toc_enabled", values.toc_enabled ? "1" : "0");
   fd.append("toc_placement", values.toc_placement);
@@ -106,7 +120,8 @@ export function blogValuesToFormData(
   fd.append("image_alt[ar]", values.image_alt.ar ?? "");
   fd.append("image_alt[en]", values.image_alt.en ?? "");
 
-  fd.append("publisher_name", values.publisher_name.trim());
+  // `publisher_name` is now derived from selected author on backend side.
+  fd.append("publisher_name", (values.publisher_name ?? "").trim());
   fd.append("status", values.status);
   fd.append("is_active", values.is_active ? "1" : "0");
   fd.append("is_searchable", values.is_searchable ? "1" : "0");
@@ -178,8 +193,10 @@ function mergeBlogShowPayload(raw: unknown): unknown {
     ...top,
     blog_category_id: coalesceIdField(top.blog_category_id, nested.blog_category_id),
     category_id: coalesceIdField(top.category_id, nested.category_id),
+    author_id: coalesceIdField(top.author_id, nested.author_id),
     category: top.category ?? nested.category,
     blog_category: top.blog_category ?? nested.blog_category,
+    author: top.author ?? nested.author,
   };
 }
 
@@ -313,6 +330,46 @@ function parseBlogIsSearchable(rec: Record<string, unknown>): boolean {
   return true;
 }
 
+type BlogFaqItem = { question: string; answer: string };
+
+function parseFaqItems(raw: unknown): BlogFaqItem[] {
+  if (!Array.isArray(raw)) {
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      const one = raw as Record<string, unknown>;
+      const q = typeof one.question === "string" ? one.question.trim() : "";
+      const a = typeof one.answer === "string" ? one.answer.trim() : "";
+      if (q || a) return [{ question: q, answer: a }];
+    }
+    return [];
+  }
+  return raw
+    .map((row) => {
+      if (!row || typeof row !== "object" || Array.isArray(row)) return null;
+      const item = row as Record<string, unknown>;
+      const question = typeof item.question === "string" ? item.question.trim() : "";
+      const answer = typeof item.answer === "string" ? item.answer.trim() : "";
+      if (!question && !answer) return null;
+      return { question, answer };
+    })
+    .filter((v): v is BlogFaqItem => v != null);
+}
+
+function pickLocalizedFaq(raw: unknown): { ar: BlogFaqItem[]; en: BlogFaqItem[] } {
+  if (raw == null) return { ar: [], en: [] };
+  if (typeof raw === "string") return { ar: [], en: [] };
+  if (Array.isArray(raw)) {
+    const items = parseFaqItems(raw);
+    return { ar: items, en: items };
+  }
+  if (typeof raw === "object") {
+    const rec = raw as Record<string, unknown>;
+    const ar = parseFaqItems(rec.ar);
+    const en = parseFaqItems(rec.en);
+    return { ar, en };
+  }
+  return { ar: [], en: [] };
+}
+
 /** Maps a single admin blog API record into the BlogForm values shape. */
 export function recordToBlogFormValues(raw: unknown): BlogFormValues | null {
   const rec = asRecord(mergeBlogShowPayload(raw));
@@ -321,6 +378,15 @@ export function recordToBlogFormValues(raw: unknown): BlogFormValues | null {
   const tags = normalizeBlogTagsFromApi(rec.tags);
 
   const categoryId = pickBlogFormCategoryId(rec);
+  const authorId = (() => {
+    for (const key of ["author_id", "authorId"] as const) {
+      const value = rec[key];
+      if (value != null && String(value).trim() !== "") return String(value).trim();
+    }
+    const authorRec = asRecord(rec.author);
+    if (authorRec?.id != null && String(authorRec.id).trim() !== "") return String(authorRec.id).trim();
+    return "";
+  })();
 
   const status = (() => {
     const s = rec.status;
@@ -354,19 +420,16 @@ export function recordToBlogFormValues(raw: unknown): BlogFormValues | null {
       ar: pickLocalized(rec.content, "ar"),
       en: pickLocalized(rec.content, "en"),
     },
-    faq: {
-      ar: pickLocalized(rec.faq, "ar"),
-      en: pickLocalized(rec.faq, "en"),
-    },
+    faq: pickLocalizedFaq(rec.faq),
     toc_enabled: parseBlogTocEnabled(rec),
     toc_placement: parseBlogTocPlacement(rec),
     table_of_contents: {
       ar: pickLocalized(rec.table_of_contents, "ar") || DEFAULT_BLOG_TOC_HTML.ar,
       en: pickLocalized(rec.table_of_contents, "en") || DEFAULT_BLOG_TOC_HTML.en,
     },
-    publisher_name: typeof rec.publisher_name === "string" ? rec.publisher_name : "",
     tags,
     category_id: categoryId,
+    author_id: authorId,
     image_alt: pickBilingualImageAlt(rec.image_alt),
     is_active: rec.is_active === false || rec.is_active === 0 || rec.is_active === "0" ? false : true,
     is_searchable: isSearchable,

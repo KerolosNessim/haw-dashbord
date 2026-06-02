@@ -8,10 +8,12 @@ import { toast } from "sonner";
 import type { BasicInfoValues } from "../components/builder/basic-info-form";
 import type { ServiceSectionsPayload } from "../service-section-types";
 import { saveServicePageApi } from "../services/service-page-api";
+import { getServiceQueryNamespace } from "../services/service-resource-config";
 
 export function useServicePageSave() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const scope = getServiceQueryNamespace();
 
   const { mutateAsync: saveServicePage, isPending } = useMutation({
     mutationFn: ({
@@ -28,9 +30,9 @@ export function useServicePageSave() {
         resolveApiToastMessage(data, t("toasts.create_success")),
       );
       const id = variables.serviceId ?? data?.data?.id;
-      queryClient.invalidateQueries({ queryKey: ["services"] });
+      queryClient.invalidateQueries({ queryKey: ["services", scope] });
       if (id) {
-        queryClient.invalidateQueries({ queryKey: ["admin-service", id] });
+        queryClient.invalidateQueries({ queryKey: ["admin-service", scope, id] });
       }
       return data;
     },

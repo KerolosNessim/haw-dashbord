@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
+import { getAdminServicesBasePath } from "./service-resource-config";
 
 /**
  * Service to handle saving different types of service sections.
@@ -7,6 +8,7 @@ import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
  */
 
 export const saveImageTextSection = async (serviceId: number, data: any) => {
+  const base = getAdminServicesBasePath();
   const formData = new FormData();
   formData.append("title[ar]", data.title.ar);
   formData.append("title[en]", data.title.en);
@@ -16,20 +18,21 @@ export const saveImageTextSection = async (serviceId: number, data: any) => {
     formData.append("image", data.image);
   }
   
-  return api.post(`/v1/admin/services/${serviceId}/benefits`, formData, {
+  return api.post(`${base}/${serviceId}/benefits`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 };
 
 export const saveCardsSection = async (serviceId: number, data: any) => {
-  return api.post(`/v1/admin/services/${serviceId}/offerings`, data);
+  return api.post(`${getAdminServicesBasePath()}/${serviceId}/offerings`, data);
 };
 
 export const saveFAQSection = async (serviceId: number, data: any) => {
-  return api.post(`/v1/admin/services/${serviceId}/faqs`, data);
+  return api.post(`${getAdminServicesBasePath()}/${serviceId}/faqs`, data);
 };
 
 export const saveFullSection = async (serviceId: number, data: any) => {
+  const base = getAdminServicesBasePath();
   const formData = new FormData();
   formData.append("title[ar]", data.title.ar);
   formData.append("title[en]", data.title.en);
@@ -52,15 +55,15 @@ export const saveFullSection = async (serviceId: number, data: any) => {
     }
   });
 
-  return api.post(`/v1/admin/services/${serviceId}/steps`, formData, {
+  return api.post(`${base}/${serviceId}/steps`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 };
 
 export const saveDualDescSection = async (serviceId: number, data: any) => {
-  return api.post(`/v1/admin/services/${serviceId}/tools`, data);
+  return api.post(`${getAdminServicesBasePath()}/${serviceId}/tools`, data);
 };
 
 export const saveContactSection = async (serviceId: number, data: any) => {
-  return api.post(`/v1/admin/services/${serviceId}/ctas`, data);
+  return api.post(`${getAdminServicesBasePath()}/${serviceId}/ctas`, data);
 };

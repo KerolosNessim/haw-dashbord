@@ -13,6 +13,8 @@ import {
   serviceToSectionsPayload,
 } from "@/features/services/utils/service-api-mappers";
 import { mapPackagesToPayload } from "@/features/services/utils/section-form-mappers";
+import { syncServicePackagesApi } from "@/features/services/services/service-page-api";
+import { getServiceResourceScope } from "@/features/services/services/service-resource-config";
 import { Can } from "@/features/permissions/components/PermissionGate";
 import { Loader2, Package, Save } from "lucide-react";
 import { useRef, useState } from "react";
@@ -33,13 +35,37 @@ export default function ServicePricingPage() {
     if (!service || !numericId) return;
     const packagesValues = await packagesFormRef.current?.validate();
     if (!packagesValues) return;
+    const scope = getServiceResourceScope();
+    const previousPackages = mapPackagesToPayload(
+      packagesDataFromService(service) as Record<string, unknown>,
+    );
+    const mappedPackages = mapPackagesToPayload(
+      packagesValues as Record<string, unknown>,
+    );
 
     const sections = {
       ...serviceToSectionsPayload(service),
-      packages: [
-        mapPackagesToPayload(packagesValues as Record<string, unknown>),
-      ],
+      packages: [mappedPackages],
     };
+
+    if (scope === "service_ais") {
+      await saveServicePage({
+        basic: serviceToBasicInfoValues(service),
+        sections: {
+          ...sections,
+          // section-level metadata stays in unified endpoint
+          packages: [{ ...mappedPackages, items: [] }],
+        },
+        serviceId: numericId,
+      });
+
+      await syncServicePackagesApi({
+        serviceId: numericId,
+        next: mappedPackages,
+        previous: previousPackages,
+      });
+      return;
+    }
 
     await saveServicePage({
       basic: serviceToBasicInfoValues(service),

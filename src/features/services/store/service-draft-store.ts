@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { BasicInfoValues } from "../components/builder/basic-info-form";
 import type { SectionType } from "../components/builder/section-builder";
+import { getServiceQueryNamespace } from "../services/service-resource-config";
 
 export const SERVICE_DRAFT_STORAGE_KEY = "service-form-drafts";
 
@@ -30,7 +31,8 @@ type ServiceDraftState = {
 };
 
 export function serviceDraftKey(serviceId?: number | null): ServiceDraftKey {
-  return serviceId != null ? `edit:${serviceId}` : "new";
+  const namespace = getServiceQueryNamespace();
+  return serviceId != null ? `${namespace}:edit:${serviceId}` : `${namespace}:new`;
 }
 
 export const useServiceDraftStore = create<ServiceDraftState>()(

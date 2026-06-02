@@ -3,11 +3,13 @@ export const SEO_PAGE_KEYS = [
   "home",
   "about",
   "services",
+  "ai-services",
   "packages",
   "clients",
   "courses",
   "faq",
   "blog",
+  "author",
   "contact-us",
 ] as const;
 

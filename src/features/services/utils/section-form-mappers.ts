@@ -179,7 +179,9 @@ export function mapPackagesToPayload(data: Record<string, unknown>): PackagesSec
       const desc = item.description as { ar?: unknown; en?: unknown } | undefined;
       const itemTitle = item.title as { ar?: unknown; en?: unknown } | undefined;
       const itemLink = typeof item.link === "string" ? item.link.trim() : "";
+      const itemId = item.id != null ? Number(item.id) : undefined;
       return {
+        ...(itemId && Number.isFinite(itemId) && itemId > 0 ? { id: itemId } : {}),
         title: localizedEditorHtml(itemTitle) ?? (item.title as PackagesSectionData["items"][0]["title"]),
         description: desc
           ? { ar: editorHtml(desc.ar), en: editorHtml(desc.en) }

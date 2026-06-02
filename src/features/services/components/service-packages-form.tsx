@@ -45,6 +45,7 @@ const localizedEditorSchema = z.object({
 });
 
 const packageItemSchema = z.object({
+  id: z.coerce.number().optional(),
   title: localizedSchema,
   description: localizedEditorSchema,
   image: z.any().nullable().optional(),

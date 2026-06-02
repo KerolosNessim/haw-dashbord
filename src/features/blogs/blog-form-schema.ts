@@ -20,6 +20,11 @@ const localizedOptional = z.object({
   en: z.string().optional().default(""),
 });
 
+const faqItemSchema = z.object({
+  question: z.string().optional().default(""),
+  answer: z.string().optional().default(""),
+});
+
 const slugRedirectCodeOptional = z.object({
   ar: z
     .string()
@@ -43,15 +48,21 @@ export const blogSchema = z.object({
   subtitle: localizedOptional,
   description: localizedArRequiredEnOptional,
   content: localizedArRequiredEnOptional,
-  /** Per-post FAQ rich HTML (`{ ar, en }`); optional on create/edit. */
-  faq: localizedOptional,
+  /** Per-post FAQ structured items (`{ ar: [{question,answer}], en: [...] }`). */
+  faq: z
+    .object({
+      ar: z.array(faqItemSchema).default([]),
+      en: z.array(faqItemSchema).default([]),
+    })
+    .default({ ar: [], en: [] }),
   /** Show table of contents on the public blog post. */
   toc_enabled: z.boolean().default(false),
   /** Where the TOC block appears on the single post page. */
   toc_placement: z.enum(BLOG_TOC_PLACEMENTS).default("before_body"),
   /** Per-post TOC rich HTML (`{ ar, en }`); optional on create/edit. */
   table_of_contents: localizedOptional,
-  publisher_name: z.string().min(1, { message: "validation.required" }),
+  // Replaced by `author_id` relation; keep optional for backward compatibility with old payloads.
+  publisher_name: z.string().optional().default(""),
   tags: z
     .array(blogTagInputSchema)
     .default([])
@@ -61,6 +72,8 @@ export const blogSchema = z.object({
         .filter((r) => r.name.length > 0),
     ),
   category_id: z.string().min(1, { message: "validation.required" }),
+  /** Optional relation to admin authors table. */
+  author_id: z.string().optional().default(""),
   image_alt: localizedOptional,
   is_active: z.boolean().default(true),
   /** When false, sends `is_searchable=0` in multipart. */
@@ -92,3 +105,5 @@ export const blogSchema = z.object({
 });
 
 export type BlogFormValues = z.infer<typeof blogSchema>;
+export type FaqItem = z.infer<typeof faqItemSchema>;
+export type LocalizedFaq = BlogFormValues["faq"];

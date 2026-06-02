@@ -30,6 +30,7 @@ import {
   Package,
   Shield,
   UserCog,
+  PenSquare,
 } from "lucide-react"
 
 
@@ -146,6 +147,16 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
         href: "/services/pricing",
         icon: Package,
       },
+      {
+        titleKey: "ai_services",
+        href: "/ai-services",
+        icon: BriefcaseBusiness,
+      },
+      {
+        titleKey: "ai_service_pricing",
+        href: "/ai-services/pricing",
+        icon: Package,
+      },
       DASHBOARD_INVOICES_LINK,
     ],
   },
@@ -155,12 +166,14 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
     icon: LibraryBig,
     links: [
       { titleKey: "faq", href: "/faq", icon: CircleQuestionMark },
-      { titleKey: "blogs", href: "/blogs", icon: BookText },
+      { titleKey: "author", href: "/author", icon: PenSquare },
+      { titleKey: "jobs", href: "/jobs", icon: BriefcaseBusiness },
       {
         titleKey: "blog_categories",
         href: "/blog-categories",
         icon: LayoutGrid,
       },
+      { titleKey: "blogs", href: "/blogs", icon: BookText },
       { titleKey: "testimonials", href: "/testimonials", icon: Quote },
       { titleKey: "about_us", href: "/about", icon: Info },
       {

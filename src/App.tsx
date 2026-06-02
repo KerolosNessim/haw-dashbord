@@ -7,6 +7,9 @@ import ServicesPage from "./pages/services/Services"
 import CreateServicesPage from "./pages/services/CreateServices"
 import EditServicesPage from "./pages/services/EditServices"
 import ServicePricingPage from "./pages/services/ServicePricingPage"
+import AiServicesPage from "./pages/services/AiServices"
+import CreateAiServicesPage from "./pages/services/CreateAiServices"
+import EditAiServicesPage from "./pages/services/EditAiServices"
 import ServiceCatalogPage from "./pages/service-catalog/ServiceCatalogPage"
 import CreateServiceCatalogPage from "./pages/service-catalog/CreateServiceCatalogPage"
 import EditServiceCatalogPage from "./pages/service-catalog/EditServiceCatalogPage"
@@ -54,6 +57,8 @@ import TeamPage from "./pages/team/TeamPage"
 import RolesPage from "./pages/roles/RolesPage"
 import InvoicesPage from "./pages/invoices/InvoicesPage"
 import CreateInvoicePage from "./pages/invoices/CreateInvoicePage"
+import AuthorPage from "./pages/author/AuthorPage"
+import JobsPage from "./pages/jobs/JobsPage"
 
 
 const router = createBrowserRouter([
@@ -194,15 +199,31 @@ const router = createBrowserRouter([
         element: <ServicesPage />,
       },
       {
+        path: "/ai-services",
+        element: <AiServicesPage />,
+      },
+      {
         path: "/services/create",
         element: <CreateServicesPage />,
+      },
+      {
+        path: "/ai-services/create",
+        element: <CreateAiServicesPage />,
       },
       {
         path: "/services/edit/:id",
         element: <EditServicesPage />,
       },
       {
+        path: "/ai-services/edit/:id",
+        element: <EditAiServicesPage />,
+      },
+      {
         path: "/services/pricing",
+        element: <ServicePricingPage />,
+      },
+      {
+        path: "/ai-services/pricing",
         element: <ServicePricingPage />,
       },
       {
@@ -224,6 +245,14 @@ const router = createBrowserRouter([
       {
         path: "/about",
         element: <AboutUsPage />,
+      },
+      {
+        path: "/author",
+        element: <AuthorPage />,
+      },
+      {
+        path: "/jobs",
+        element: <JobsPage />,
       },
       {
         path: "/privacy-policy",

@@ -2,10 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { getAdminServicesApi } from "../services/admin-services";
 import { getServicesApi } from "../services/get-services";
 import { isAxiosError } from "axios";
+import { getServiceQueryNamespace } from "../services/service-resource-config";
 
 export const useGetServices = () => {
+  const scope = getServiceQueryNamespace();
   const { data, isLoading, error } = useQuery({
-    queryKey: ["services"],
+    queryKey: ["services", scope],
     queryFn: async () => {
       try {
         return await getAdminServicesApi();

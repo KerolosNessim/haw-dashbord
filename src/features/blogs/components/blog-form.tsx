@@ -32,7 +32,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { Controller, useForm, type FieldErrors, type Resolver } from "react-hook-form";
+import { Controller, useFieldArray, useForm, type FieldErrors, type Resolver } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -44,11 +44,13 @@ import type { BlogFormValues } from "@/features/blogs/blog-form-schema";
 import { BlogTagsField } from "@/features/blogs/components/blog-tags-field";
 import { useCreateBlog } from "@/features/blogs/hooks/useCreateBlog";
 import { useUpdateBlog } from "@/features/blogs/hooks/useUpdateBlog";
+import { fetchAuthors } from "@/features/authors/services/authors-api";
 import {
   BLOG_TOC_PLACEMENTS,
   DEFAULT_BLOG_TOC_HTML,
 } from "@/features/blogs/lib/default-blog-toc";
 import { BLOG_SLUG_REDIRECT_CODES } from "@/lib/http-redirect-codes";
+import { useQuery } from "@tanstack/react-query";
 
 type Mode = "create" | "edit";
 
@@ -76,7 +78,7 @@ const DEFAULT_VALUES: BlogFormValues = {
   subtitle: { ar: "", en: "" },
   description: { ar: "", en: "" },
   content: { ar: "", en: "" },
-  faq: { ar: "", en: "" },
+  faq: { ar: [], en: [] },
   toc_enabled: false,
   toc_placement: "before_body",
   table_of_contents: {
@@ -86,6 +88,7 @@ const DEFAULT_VALUES: BlogFormValues = {
   publisher_name: "",
   tags: [],
   category_id: "",
+  author_id: "",
   image_alt: { ar: "", en: "" },
   is_active: true,
   is_searchable: true,
@@ -116,7 +119,6 @@ function firstResolvedBlogValidationMessage(
     errors.slug_redirect_code?.ar?.message,
     errors.slug_redirect_code?.en?.message,
     errors.category_id?.message as string | undefined,
-    errors.publisher_name?.message as string | undefined,
     errors.title?.ar?.message,
     errors.title?.en?.message,
     errors.description?.ar?.message,
@@ -147,6 +149,11 @@ export default function BlogForm({
   const isPending = mode === "create" ? isCreating : isUpdating;
 
   const { data: blogCategories = [], isLoading: categoriesLoading } = useBlogCategories();
+  const { data: authorsRes, isLoading: authorsLoading } = useQuery({
+    queryKey: ["authors", "for-blog-select"],
+    queryFn: () => fetchAuthors({ page: 1, perPage: 500 }),
+  });
+  const authors = authorsRes?.rows ?? [];
   const catLabel = (nameAr: string, nameEn: string) =>
     i18n.language.startsWith("ar") ? nameAr || nameEn : nameEn || nameAr;
 
@@ -179,6 +186,9 @@ export default function BlogForm({
     shouldFocusError: true,
   });
 
+  const faqArArray = useFieldArray({ control, name: "faq.ar" });
+  const faqEnArray = useFieldArray({ control, name: "faq.en" });
+
   useEffect(() => {
     const lang = i18n.language.startsWith("ar") ? "ar" : "en";
     setArticleLangTab(lang);
@@ -196,8 +206,7 @@ export default function BlogForm({
     if (initialValues) {
       reset(initialValues);
       const hasFaq = Boolean(
-        initialValues.faq?.ar?.replace(/<[^>]*>/g, "").trim() ||
-          initialValues.faq?.en?.replace(/<[^>]*>/g, "").trim(),
+        (initialValues.faq?.ar?.length ?? 0) > 0 || (initialValues.faq?.en?.length ?? 0) > 0,
       );
       if (hasFaq) setFaqExpanded(true);
       if (initialValues.toc_enabled) setTocExpanded(true);
@@ -212,6 +221,15 @@ export default function BlogForm({
     if (!blogCategories.some((c) => String(c.id) === id)) return;
     setValue("category_id", id, { shouldDirty: false, shouldValidate: false });
   }, [blogCategories, categoriesLoading, initialValues?.category_id, mode, setValue]);
+
+  /** Ensure author select reflects existing relation once author options load. */
+  useEffect(() => {
+    if (mode !== "edit" || authorsLoading || authors.length === 0) return;
+    const id = String(initialValues?.author_id ?? "").trim();
+    if (!id) return;
+    if (!authors.some((a) => String(a.id) === id)) return;
+    setValue("author_id", id, { shouldDirty: false, shouldValidate: false });
+  }, [authors, authorsLoading, initialValues?.author_id, mode, setValue]);
 
   useEffect(() => {
     if (initialImageUrl && !imageFile) setPreview(initialImageUrl);
@@ -368,24 +386,35 @@ export default function BlogForm({
                 )}
               />
               <Controller
-                name="publisher_name"
+                name="author_id"
                 control={control}
                 render={({ field }) => (
                   <Field>
-                    <FieldLabel>{t("publisher")}</FieldLabel>
-                    <Input
-                      {...field}
-                      className="h-12 rounded-2xl border-border/40 bg-muted/10 focus:bg-white"
-                    />
-                    <FieldError
-                      errors={[
-                        {
-                          message: errors.publisher_name?.message
-                            ? commonT(errors.publisher_name.message)
-                            : undefined,
-                        },
-                      ]}
-                    />
+                    <FieldLabel>{t("author")}</FieldLabel>
+                    <Select
+                      key={`blog-author-select-${authors.length}-${String(field.value ?? "").trim()}`}
+                      disabled={authorsLoading}
+                      onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)}
+                      value={String(field.value ?? "").trim() === "" ? "__none__" : String(field.value)}
+                    >
+                      <SelectTrigger className="h-12 rounded-2xl border-border/40 bg-muted/10">
+                        <SelectValue placeholder={t("author_placeholder")} />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="__none__">{t("author_none")}</SelectItem>
+                        {String(field.value ?? "").trim() !== "" &&
+                        !authors.some((a) => String(a.id) === String(field.value)) ? (
+                          <SelectItem value={String(field.value)}>{String(field.value)}</SelectItem>
+                        ) : null}
+                        {authors.map((a) => (
+                          <SelectItem key={a.id} value={String(a.id)}>
+                            {i18n.language.startsWith("ar")
+                              ? a.name.ar || a.name.en || String(a.id)
+                              : a.name.en || a.name.ar || String(a.id)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </Field>
                 )}
               />
@@ -726,66 +755,135 @@ export default function BlogForm({
 
                   {(["ar", "en"] as const).map((lang) => (
                     <TabsContent key={lang} value={lang} className="mt-6 space-y-6">
-                      <Controller
-                        name={lang === "ar" ? "faq.ar" : "faq.en"}
-                        control={control}
-                        render={({ field }) => (
-                          <Field>
-                            <FieldLabel>
-                              {lang === "ar"
-                                ? t("faq_label_ar", { defaultValue: "FAQ (Arabic)" })
-                                : t("faq_label_en", { defaultValue: "FAQ (English)" })}
-                              {lang === "en" ? (
-                                <span className="ms-1 font-normal text-muted-foreground">
-                                  {t("optional_suffix")}
-                                </span>
-                              ) : null}
-                            </FieldLabel>
-                            <p className="text-[11px] text-muted-foreground -mt-1 mb-1">
-                              {lang === "ar"
-                                ? t("faq_hint_ar", {
-                                    defaultValue:
-                                      "استخدم العناوين للأسئلة والفقرات للأجوبة. يدعم التنسيق الغني.",
-                                  })
-                                : t("faq_hint_en", {
-                                    defaultValue:
-                                      "Use headings for questions and paragraphs for answers. Rich formatting supported.",
-                                  })}
-                            </p>
-                            <RichTextEditor
-                              dir={lang === "ar" ? "rtl" : "ltr"}
-                              value={field.value}
-                              placeholder={
-                                lang === "ar"
-                                  ? t("faq_placeholder_ar", {
-                                      defaultValue: "أضف الأسئلة والأجوبة هنا…",
-                                    })
-                                  : t("faq_placeholder_en", {
-                                      defaultValue: "Add questions and answers here…",
-                                    })
-                              }
-                              onChange={(val: unknown) => {
-                                const html = (val as { html?: string })?.html ?? "";
-                                field.onChange(typeof html === "string" ? html : "");
-                              }}
-                            />
-                            <FieldError
-                              errors={[
-                                {
-                                  message:
-                                    lang === "ar"
-                                      ? (errors as any).faq?.ar?.message
-                                        ? commonT((errors as any).faq.ar.message)
-                                        : undefined
-                                      : (errors as any).faq?.en?.message
-                                        ? commonT((errors as any).faq.en.message)
-                                        : undefined,
-                                },
-                              ]}
-                            />
-                          </Field>
-                        )}
-                      />
+                      <Field>
+                        <FieldLabel>
+                          {lang === "ar"
+                            ? t("faq_label_ar", { defaultValue: "FAQ (Arabic)" })
+                            : t("faq_label_en", { defaultValue: "FAQ (English)" })}
+                          {lang === "en" ? (
+                            <span className="ms-1 font-normal text-muted-foreground">
+                              {t("optional_suffix")}
+                            </span>
+                          ) : null}
+                        </FieldLabel>
+                        <p className="text-[11px] text-muted-foreground -mt-1 mb-3">
+                          {lang === "ar"
+                            ? t("faq_hint_ar", {
+                                defaultValue: "أضف الأسئلة والأجوبة كعناصر منفصلة.",
+                              })
+                            : t("faq_hint_en", {
+                                defaultValue: "Add FAQ as structured question/answer rows.",
+                              })}
+                        </p>
+
+                        <div className="space-y-3">
+                          {(lang === "ar" ? faqArArray.fields : faqEnArray.fields).map((item, index) => (
+                            <div key={item.id} className="rounded-2xl border bg-muted/5 p-4 space-y-3">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-xs font-bold text-muted-foreground">
+                                  {t("faq_item", { defaultValue: "FAQ item" })} #{index + 1}
+                                </p>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    disabled={index === 0}
+                                    onClick={() =>
+                                      lang === "ar"
+                                        ? faqArArray.swap(index, index - 1)
+                                        : faqEnArray.swap(index, index - 1)
+                                    }
+                                  >
+                                    <ChevronUp className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    disabled={
+                                      index ===
+                                      (lang === "ar" ? faqArArray.fields.length : faqEnArray.fields.length) - 1
+                                    }
+                                    onClick={() =>
+                                      lang === "ar"
+                                        ? faqArArray.swap(index, index + 1)
+                                        : faqEnArray.swap(index, index + 1)
+                                    }
+                                  >
+                                    <ChevronDown className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive"
+                                    onClick={() =>
+                                      lang === "ar"
+                                        ? faqArArray.remove(index)
+                                        : faqEnArray.remove(index)
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+
+                              <Controller
+                                name={lang === "ar" ? `faq.ar.${index}.question` : `faq.en.${index}.question`}
+                                control={control}
+                                render={({ field }) => (
+                                  <div className="rounded-xl border border-border/40 bg-background p-2">
+                                    <RichTextEditor
+                                      dir={lang === "ar" ? "rtl" : "ltr"}
+                                      value={field.value}
+                                      placeholder={t("faq_question_placeholder", { defaultValue: "Question" })}
+                                      onChange={(val: unknown) => {
+                                        const html = (val as { html?: string })?.html ?? "";
+                                        field.onChange(typeof html === "string" ? html : "");
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              />
+
+                              <Controller
+                                name={lang === "ar" ? `faq.ar.${index}.answer` : `faq.en.${index}.answer`}
+                                control={control}
+                                render={({ field }) => (
+                                  <div className="rounded-xl border border-border/40 bg-background p-2">
+                                    <RichTextEditor
+                                      dir={lang === "ar" ? "rtl" : "ltr"}
+                                      value={field.value}
+                                      placeholder={t("faq_answer_placeholder", { defaultValue: "Answer" })}
+                                      onChange={(val: unknown) => {
+                                        const html = (val as { html?: string })?.html ?? "";
+                                        field.onChange(typeof html === "string" ? html : "");
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              />
+                            </div>
+                          ))}
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="mt-4"
+                          onClick={() =>
+                            lang === "ar"
+                              ? faqArArray.append({ question: "", answer: "" })
+                              : faqEnArray.append({ question: "", answer: "" })
+                          }
+                        >
+                          <Plus className="h-4 w-4 me-2" />
+                          {t("faq_add_item", { defaultValue: "Add FAQ item" })}
+                        </Button>
+                      </Field>
                     </TabsContent>
                   ))}
                 </Tabs>

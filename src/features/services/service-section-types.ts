@@ -50,6 +50,7 @@ export type ToolsSectionData = {
 };
 
 export type PackagesSectionItem = {
+  id?: number;
   title?: { ar: string; en: string };
   description?: { ar: unknown; en: unknown };
   image?: BilingualSectionImage | File | string | null;

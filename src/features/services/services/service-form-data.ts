@@ -382,13 +382,9 @@ export function buildServicePageFormData(
 
   if (basic.image.ar instanceof File) {
     fd.append("image[ar]", basic.image.ar);
-  } else if (typeof basic.image.ar === "string" && basic.image.ar.trim()) {
-    fd.append("image[ar]", basic.image.ar.trim());
   }
   if (basic.image.en instanceof File) {
     fd.append("image[en]", basic.image.en);
-  } else if (typeof basic.image.en === "string" && basic.image.en.trim()) {
-    fd.append("image[en]", basic.image.en.trim());
   }
 
   appendBasicSocialAndMedia(fd, basic);
