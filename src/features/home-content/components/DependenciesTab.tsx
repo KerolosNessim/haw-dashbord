@@ -19,11 +19,16 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { LocalizedDescriptionFields } from "@/features/shared/components/localized-description-fields";
+import { AccreditationImageServicesSelect } from "./AccreditationImageServicesSelect";
+import type { AccreditationLinkedService } from "../types";
 import {
   buildMediaGalleryFormData,
+  linkedServicesFromIds,
   mediaAltFromApi,
+  serviceIdsFromAccreditationImage,
   type BilingualAlt,
 } from "../services/accreditation-form-data";
+import { useAccreditationServiceOptions } from "../hooks/useAccreditationServiceOptions";
 import { useAccreditations } from "../hooks/useAccreditations";
 
 const dependenciesSchema = z.object({
@@ -41,12 +46,16 @@ type ExistingImage = {
   id: number;
   url: string;
   alt: BilingualAlt;
+  serviceIds: number[];
+  linkedServices: AccreditationLinkedService[];
 };
 
 type NewImage = {
   file: File;
   preview: string;
   alt: BilingualAlt;
+  serviceIds: number[];
+  linkedServices: AccreditationLinkedService[];
 };
 
 export default function DependenciesTab() {
@@ -56,6 +65,8 @@ export default function DependenciesTab() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { getAccreditationsQuery, updateAccred, isPending } = useAccreditations();
+  const servicesQuery = useAccreditationServiceOptions();
+  const serviceOptions = servicesQuery.data ?? [];
   const apiData = getAccreditationsQuery?.data?.data;
 
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
@@ -96,6 +107,8 @@ export default function DependenciesTab() {
         id: img.id,
         url: img.url,
         alt: mediaAltFromApi(img.image_alt),
+        serviceIds: serviceIdsFromAccreditationImage(img),
+        linkedServices: img.services ?? [],
       })),
     );
     setNewImages([]);
@@ -104,11 +117,14 @@ export default function DependenciesTab() {
 
   const onSubmit = (data: DependenciesFormValues) => {
     const existingImagesAlt: Record<string, BilingualAlt> = {};
+    const existingImagesServices: Record<string, number[]> = {};
     existingImages.forEach((img) => {
-      existingImagesAlt[String(img.id)] = {
+      const mediaId = String(img.id);
+      existingImagesAlt[mediaId] = {
         ar: img.alt.ar.trim(),
         en: img.alt.en.trim(),
       };
+      existingImagesServices[mediaId] = [...img.serviceIds];
     });
 
     const formData = buildMediaGalleryFormData({
@@ -117,7 +133,9 @@ export default function DependenciesTab() {
       sort_order: data.sort_order,
       is_active: data.is_active,
       newImages: newImages.map(({ file, alt }) => ({ file, alt })),
+      newImagesServices: newImages.map((img) => [...img.serviceIds]),
       existingImagesAlt,
+      existingImagesServices,
       deletedImageIds,
     });
 
@@ -137,6 +155,8 @@ export default function DependenciesTab() {
             file,
             preview: reader.result as string,
             alt: { ar: "", en: "" },
+            serviceIds: [],
+            linkedServices: [],
           },
         ]);
       };
@@ -168,6 +188,32 @@ export default function DependenciesTab() {
       prev.map((img, i) =>
         i === index ? { ...img, alt: { ...img.alt, [lang]: value } } : img,
       ),
+    );
+  };
+
+  const updateExistingServiceIds = (id: number, serviceIds: number[]) => {
+    setExistingImages((prev) =>
+      prev.map((img) => {
+        if (img.id !== id) return img;
+        return {
+          ...img,
+          serviceIds,
+          linkedServices: linkedServicesFromIds(serviceIds, serviceOptions, img.linkedServices),
+        };
+      }),
+    );
+  };
+
+  const updateNewServiceIds = (index: number, serviceIds: number[]) => {
+    setNewImages((prev) =>
+      prev.map((img, i) => {
+        if (i !== index) return img;
+        return {
+          ...img,
+          serviceIds,
+          linkedServices: linkedServicesFromIds(serviceIds, serviceOptions, img.linkedServices),
+        };
+      }),
     );
   };
 
@@ -342,6 +388,14 @@ export default function DependenciesTab() {
                       className="h-9 rounded-lg text-sm"
                     />
                   </div>
+                  <AccreditationImageServicesSelect
+                    value={img.serviceIds}
+                    onChange={(ids) => updateExistingServiceIds(img.id, ids)}
+                    services={serviceOptions}
+                    embeddedServices={img.linkedServices}
+                    disabled={isPending}
+                    loading={servicesQuery.isLoading}
+                  />
                 </div>
               </div>
             ))}
@@ -396,6 +450,14 @@ export default function DependenciesTab() {
                       className="h-9 rounded-lg text-sm"
                     />
                   </div>
+                  <AccreditationImageServicesSelect
+                    value={img.serviceIds}
+                    onChange={(ids) => updateNewServiceIds(idx, ids)}
+                    services={serviceOptions}
+                    embeddedServices={img.linkedServices}
+                    disabled={isPending}
+                    loading={servicesQuery.isLoading}
+                  />
                 </div>
               </div>
             ))}

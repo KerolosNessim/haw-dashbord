@@ -1,0 +1,218 @@
+{
+  "info": {
+    "_postman_id": "howeyah-client-portfolio",
+    "name": "HowEyah - Client Portfolio (النتائج المثبتة)",
+    "description": "Admin CMS for Proven Results / case studies. Base: {{API_ROOT}}/api\n\n1. Run **Setup → Admin login** to set `token`.\n2. All admin requests use `Authorization: Bearer {{token}}` and `Accept: application/json`.\n\nEnvelope: `{ status, message, data, errors }` — map `errors` to form fields on 422.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "API_ROOT", "value": "https://howeyah.subcodeco.com" },
+    { "key": "token", "value": "" },
+    { "key": "item_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Setup",
+      "item": [
+        {
+          "name": "Admin login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const token = json?.data?.token || json?.data?.access_token || json?.token;",
+                  "if (token) {",
+                  "  pm.collectionVariables.set('token', token);",
+                  "  pm.test('Token saved', () => pm.expect(token).to.be.a('string'));",
+                  "} else {",
+                  "  pm.test('Token in response', () => pm.expect.fail('No token — check login body'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{API_ROOT}}/api/v1/admin/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Section",
+          "item": [
+            {
+              "name": "Get section",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": "{{API_ROOT}}/api/v1/admin/client-portfolio/section",
+                "description": "First load may return 404 — show empty form."
+              }
+            },
+            {
+              "name": "Update section (JSON)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": { \"ar\": \"نتائج مثبتة\", \"en\": \"Proven Results\" },\n  \"subtitle\": { \"ar\": \"\", \"en\": \"\" },\n  \"view_all_link\": { \"ar\": \"/portfolio\", \"en\": \"/portfolio\" },\n  \"view_all_button_text\": { \"ar\": \"\", \"en\": \"\" },\n  \"view_all_card_title\": { \"ar\": \"\", \"en\": \"\" },\n  \"view_all_card_description\": { \"ar\": \"\", \"en\": \"\" },\n  \"view_all_card_button_text\": { \"ar\": \"\", \"en\": \"\" },\n  \"read_case_study_button_text\": { \"ar\": \"اقرأ دراسة الحالة\", \"en\": \"Read case study\" },\n  \"is_active\": true\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": "{{API_ROOT}}/api/v1/admin/client-portfolio/section"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Items",
+          "item": [
+            {
+              "name": "List items",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": "{{API_ROOT}}/api/v1/admin/client-portfolio"
+              }
+            },
+            {
+              "name": "Get item",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": "{{API_ROOT}}/api/v1/admin/client-portfolio/items/{{item_id}}"
+              }
+            },
+            {
+              "name": "Create item (multipart)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "category", "value": "food_retail", "type": "text" },
+                    { "key": "headline[ar]", "value": "+47% تحويل", "type": "text" },
+                    { "key": "headline[en]", "value": "+47% Conversion Rate in 90 Days", "type": "text" },
+                    { "key": "client_tag[ar]", "value": "عسل أبو نايف", "type": "text" },
+                    { "key": "client_tag[en]", "value": "AbouNayef Honey", "type": "text" },
+                    { "key": "image_alt[ar]", "value": "بطاقة دراسة حالة", "type": "text" },
+                    { "key": "image_alt[en]", "value": "Case study card", "type": "text" },
+                    { "key": "full_case_study_link[ar]", "value": "/case-studies/1", "type": "text" },
+                    { "key": "full_case_study_link[en]", "value": "/case-studies/1", "type": "text" },
+                    { "key": "service_ids[]", "value": "39", "type": "text" },
+                    { "key": "sort_order", "value": "0", "type": "text" },
+                    { "key": "is_active", "value": "1", "type": "text" },
+                    { "key": "metrics[0][ar]", "value": "+47% تحويل", "type": "text" },
+                    { "key": "metrics[0][en]", "value": "+47% conversion", "type": "text" },
+                    { "key": "image[ar]", "type": "file", "src": [] },
+                    { "key": "image[en]", "type": "file", "src": [] }
+                  ]
+                },
+                "url": "{{API_ROOT}}/api/v1/admin/client-portfolio/items"
+              }
+            },
+            {
+              "name": "Update item (JSON)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"category\": \"food_retail\",\n  \"headline\": { \"ar\": \"+47% تحويل\", \"en\": \"+47% Conversion Rate in 90 Days\" },\n  \"client_tag\": { \"ar\": \"عسل أبو نايف\", \"en\": \"AbouNayef Honey\" },\n  \"period\": { \"ar\": \"\", \"en\": \"\" },\n  \"client\": { \"ar\": \"\", \"en\": \"\" },\n  \"challenge\": { \"ar\": \"\", \"en\": \"\" },\n  \"what_we_did\": { \"ar\": \"\", \"en\": \"\" },\n  \"results\": { \"ar\": \"\", \"en\": \"\" },\n  \"metrics\": [],\n  \"image_alt\": { \"ar\": \"بطاقة\", \"en\": \"Card\" },\n  \"full_case_study_link\": { \"ar\": \"/case-studies/1\", \"en\": \"/case-studies/1\" },\n  \"service_ids\": [39],\n  \"sort_order\": 0,\n  \"is_active\": true\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": "{{API_ROOT}}/api/v1/admin/client-portfolio/items/{{item_id}}"
+              }
+            },
+            {
+              "name": "Update item (multipart + _method=PUT)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "_method", "value": "PUT", "type": "text" },
+                    { "key": "headline[ar]", "value": "+47% تحويل", "type": "text" },
+                    { "key": "headline[en]", "value": "+47% Conversion", "type": "text" },
+                    { "key": "image[en]", "type": "file", "src": [] }
+                  ]
+                },
+                "url": "{{API_ROOT}}/api/v1/admin/client-portfolio/items/{{item_id}}"
+              }
+            },
+            {
+              "name": "Delete item",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": "{{API_ROOT}}/api/v1/admin/client-portfolio/items/{{item_id}}"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Public previews (no token)",
+      "item": [
+        {
+          "name": "List public portfolio",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{API_ROOT}}/api/v1/client-portfolio"
+          }
+        },
+        {
+          "name": "Get public item by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{API_ROOT}}/api/v1/client-portfolio/{{item_id}}"
+          }
+        }
+      ]
+    }
+  ]
+}

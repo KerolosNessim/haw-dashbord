@@ -61,11 +61,18 @@ export interface AccreditationImageAlt {
   en: string | null;
 }
 
+export interface AccreditationLinkedService {
+  id: number;
+  title: LocaleString;
+}
+
 /** Spatie media item from GET /v1/admin/accreditations */
 export interface AccreditationMedia {
   id: number;
   url: string;
   image_alt: AccreditationImageAlt;
+  service_ids?: number[];
+  services?: AccreditationLinkedService[];
 }
 
 // Accreditation — single item from GET /v1/admin/accreditations

@@ -7,6 +7,10 @@ import { resourceFromPathname } from "./path-to-resource";
 export function getRoutePermission(pathname: string): string | undefined {
   const normalized = pathname.replace(/\/+$/, "") || "/";
 
+  if (PERMISSION_BY_ROUTE[normalized]) {
+    return PERMISSION_BY_ROUTE[normalized];
+  }
+
   if (normalized.endsWith("/create")) {
     const base = normalized.replace(/\/create$/, "");
     const resource = resourceFromPathname(base);
@@ -17,10 +21,6 @@ export function getRoutePermission(pathname: string): string | undefined {
     const base = normalized.replace(/\/edit\/[^/]+$/, "");
     const resource = resourceFromPathname(base);
     return resource ? `${resource}.update` : undefined;
-  }
-
-  if (PERMISSION_BY_ROUTE[normalized]) {
-    return PERMISSION_BY_ROUTE[normalized];
   }
 
   const nested = Object.entries(PERMISSION_BY_ROUTE)

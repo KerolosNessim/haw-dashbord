@@ -26,6 +26,10 @@ export const p = (resource: string, action: PermissionAction) =>
 export const PERMISSION_BY_ROUTE: Record<string, string> = {
   "/": p("dashboard", "view"),
   "/home-content": p("home-content", "view"),
+  "/promo-banners": p("home-content", "view"),
+  "/client-portfolio": p("home-content", "view"),
+  "/client-portfolio/items/create": p("home-content", "update"),
+  "/client-portfolio/items/edit/:id": p("home-content", "update"),
   "/why-choose-us": p("why-choose-us", "view"),
   "/solutions": p("solutions", "view"),
   "/solution-singles": p("solutions", "view"),
@@ -43,6 +47,7 @@ export const PERMISSION_BY_ROUTE: Record<string, string> = {
   "/service-catalog/create": p("service-catalog", "create"),
   "/services/pricing": p("service-pricing", "view"),
   "/ai-services/pricing": p("service-pricing", "view"),
+  "/ai-services/content": p("services", "view"),
   "/faq": p("faq", "view"),
   "/blogs": p("blogs", "view"),
   "/blog-categories": p("blog-categories", "view"),

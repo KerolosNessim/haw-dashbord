@@ -2,6 +2,8 @@
 export const PATH_TO_RESOURCE: Record<string, string> = {
   "/": "dashboard",
   "/home-content": "home-content",
+  "/promo-banners": "home-content",
+  "/client-portfolio": "home-content",
   "/why-choose-us": "why-choose-us",
   "/solutions": "solutions",
   "/solution-singles": "solutions",
@@ -17,6 +19,7 @@ export const PATH_TO_RESOURCE: Record<string, string> = {
   "/service-catalog": "service-catalog",
   "/services/pricing": "service-pricing",
   "/ai-services/pricing": "service-pricing",
+  "/ai-services/content": "services",
   "/faq": "faq",
   "/blogs": "blogs",
   "/blog-categories": "blog-categories",

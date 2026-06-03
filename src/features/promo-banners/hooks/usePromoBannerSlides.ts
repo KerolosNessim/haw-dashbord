@@ -1,0 +1,38 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import {
+  bulkSyncPromoBannerSlides,
+  fetchPromoBannerSlides,
+} from "../services/promo-banners-api";
+
+const QUERY_KEY = ["promo-banners", "slides"];
+
+export function usePromoBannerSlides() {
+  const { t } = useTranslation("translation", { keyPrefix: "promo_banners" });
+  const queryClient = useQueryClient();
+
+  const slidesQuery = useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: fetchPromoBannerSlides,
+  });
+
+  const bulkSyncMutation = useMutation({
+    mutationFn: bulkSyncPromoBannerSlides,
+    onSuccess: (res) => {
+      toast.success(res?.message || t("slides.toast_saved"));
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message || t("slides.toast_error"));
+    },
+  });
+
+  return {
+    slidesQuery,
+    bulkSync: bulkSyncMutation.mutate,
+    isSaving: bulkSyncMutation.isPending,
+    saveError: bulkSyncMutation.error,
+  };
+}

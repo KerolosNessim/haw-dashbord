@@ -53,6 +53,8 @@ import { useServiceFormDraft } from "../../hooks/useServiceFormDraft";
 import { deserializeBasicInfoFromDraft } from "../../utils/service-draft-serializer";
 import { LocalizedRichTextField } from "./localized-rich-text-field";
 import ServiceSocialMetaDialog from "./service-social-meta-dialog";
+import { getServiceResourceScope } from "../../services/service-resource-config";
+import { slugify, slugifyAr } from "@/lib/slugify";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -137,13 +139,24 @@ const sectionItemSchema = z.object({
   en: z.any().optional(),
 });
 
-const basicInfoSchema = z.object({
-  slug: localizedSchema,
-  slug_redirect_code: slugRedirectCodeOptional,
+const optionalSlugSchema = z.object({
+  ar: z.string().optional().default(""),
+  en: z.string().optional().default(""),
+});
+
+const optionalTitleSchema = z.object({
+  ar: z.string().optional().default(""),
+  en: z.string().optional().default(""),
+});
+
+function buildBasicInfoSchema(isAiScope: boolean) {
+  return z.object({
+    slug: isAiScope ? optionalSlugSchema : localizedSchema,
+    slug_redirect_code: slugRedirectCodeOptional,
   country_ids: z.array(z.string()).min(1, { message: "validation.country_required" }),
   package_ids: z.array(z.string()).optional(),
   is_active: z.boolean(),
-  title: localizedSchema,
+  title: isAiScope ? optionalTitleSchema : localizedSchema,
   single_page_title: optionalLocalizedEditorSchema.optional(),
   tags: z
     .array(serviceTagInputSchema)
@@ -177,9 +190,11 @@ const basicInfoSchema = z.object({
   twitter_title: optionalLocalizedSchema.optional(),
   twitter_description: optionalLocalizedSchema.optional(),
   twitter_image: z.any().optional(),
-});
+  });
+}
 
-export type BasicInfoValues = z.infer<typeof basicInfoSchema>;
+type BasicInfoSchema = ReturnType<typeof buildBasicInfoSchema>;
+export type BasicInfoValues = z.infer<BasicInfoSchema>;
 export type SectionItem = z.infer<typeof sectionItemSchema>;
 
 // ---------------------------------------------------------------------------
@@ -219,6 +234,8 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
   function BasicInfoForm({ initialId, embedded, onBasicDraftChange }, ref) {
     const { t, i18n } = useTranslation("translation", { keyPrefix: "services.form" });
     const { t: commonT } = useTranslation("translation", { keyPrefix: "validation" });
+    const isAiScope = getServiceResourceScope() === "service_ais";
+    const basicInfoSchema = buildBasicInfoSchema(isAiScope);
     const [socialMetaOpen, setSocialMetaOpen] = useState(false);
     const { data: countriesData } = useAdminCountries();
     const countries = countriesData?.data ?? [];
@@ -442,11 +459,37 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
     // ---------------------------------------------------------------------------
     // Normalize + expose ref
     // ---------------------------------------------------------------------------
-    const normalizeValues = (data: BasicInfoValues): BasicInfoValues => ({
+    const normalizeValues = (data: BasicInfoValues): BasicInfoValues => {
+      const resolvedTitle = isAiScope
+        ? {
+            ar:
+              plainTextFromHtml(data.title?.ar ?? "") ||
+              editorOnChangeToHtml(data.single_page_title?.ar) ||
+              data.description?.ar ||
+              "",
+            en:
+              plainTextFromHtml(data.title?.en ?? "") ||
+              editorOnChangeToHtml(data.single_page_title?.en) ||
+              data.description?.en ||
+              "",
+          }
+        : data.title;
+      const titleArPlain = plainTextFromHtml(resolvedTitle?.ar ?? "");
+      const titleEnPlain = plainTextFromHtml(resolvedTitle?.en ?? "");
+      const slug = isAiScope
+        ? {
+            ar: data.slug.ar?.trim() || slugifyAr(titleArPlain) || slugify(titleEnPlain),
+            en: data.slug.en?.trim() || slugify(titleEnPlain),
+          }
+        : data.slug;
+
+      return {
       ...data,
+      slug,
+      tags: isAiScope ? [] : data.tags,
       title: {
-        ar: editorOnChangeToHtml(data.title?.ar),
-        en: editorOnChangeToHtml(data.title?.en),
+        ar: editorOnChangeToHtml(resolvedTitle?.ar),
+        en: editorOnChangeToHtml(resolvedTitle?.en),
       },
       single_page_title: data.single_page_title
         ? {
@@ -454,7 +497,9 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
             en: editorOnChangeToHtml(data.single_page_title.en),
           }
         : data.single_page_title,
-      highlight_description: {
+      highlight_description: isAiScope
+        ? { ar: null, en: null }
+        : {
         ar: editorOnChangeToHtml(data.highlight_description?.ar),
         en: editorOnChangeToHtml(data.highlight_description?.en),
       },
@@ -495,7 +540,8 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
             en: editorOnChangeToHtml(data.twitter_description.en),
           }
         : data.twitter_description,
-    });
+      };
+    };
 
     useImperativeHandle(ref, () => ({
       validate: async () => {
@@ -531,6 +577,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
           </div>
 
           {/* ── Slug + redirect codes ───────────────────────────────────── */}
+          {!isAiScope ? (
           <div className="grid grid-cols-1 gap-6 md:col-span-2 lg:grid-cols-2">
             <div className="space-y-4">
               <SmartSlugField<BasicInfoValues>
@@ -641,7 +688,9 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
               />
             </div>
           </div>
+          ) : null}
 
+          {!isAiScope ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-1">
             <Controller
               name="is_active"
@@ -668,6 +717,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
               )}
             />
           </div>
+          ) : null}
 
           {/* ── Countries ───────────────────────────────────────────────── */}
           <div className="md:col-span-2">
@@ -724,6 +774,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                 <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-widest">
                   {t("arabic")}
                 </div>
+                {!isAiScope ? (
                 <Controller
                   name="title.ar"
                   control={control}
@@ -744,6 +795,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                     </Field>
                   )}
                 />
+                ) : null}
                 <Controller
                   name="single_page_title.ar"
                   control={control}
@@ -791,6 +843,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                 <div className="flex items-center gap-2 text-primary/60 font-bold text-xs uppercase tracking-widest">
                   {t("english")}
                 </div>
+                {!isAiScope ? (
                 <Controller
                   name="title.en"
                   control={control}
@@ -811,6 +864,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                     </Field>
                   )}
                 />
+                ) : null}
                 <Controller
                   name="single_page_title.en"
                   control={control}
@@ -854,6 +908,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
               </div>
             </div>
 
+            {!isAiScope ? (
             <Controller
               name="tags"
               control={control}
@@ -861,6 +916,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                 <ServiceTagsField value={field.value ?? []} onChange={field.onChange} />
               )}
             />
+            ) : null}
 
             <Controller
               name="page_script"
@@ -881,6 +937,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
             />
 
             {/* ── Highlight description ───────────────────────────────── */}
+            {!isAiScope ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-8">
               <Controller
                 name="highlight_description.ar"
@@ -939,6 +996,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                 )}
               />
             </div>
+            ) : null}
 
           </div>
 

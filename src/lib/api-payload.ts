@@ -44,7 +44,16 @@ export function unwrapDataArray(payload: unknown): Record<string, unknown>[] {
   if (payload && typeof payload === "object") {
     const p = payload as Record<string, unknown>;
     const inner =
-      p.data ?? p.categories ?? p.items ?? p.packages ?? p.courses ?? p.results ?? p.blogs;
+      p.data ??
+      p.categories ??
+      p.items ??
+      p.packages ??
+      p.courses ??
+      p.results ??
+      p.blogs ??
+      p.client_portfolio_items ??
+      p.client_portfolio ??
+      p.portfolio_items;
     if (Array.isArray(inner)) return inner as Record<string, unknown>[];
     if (inner && typeof inner === "object") {
       // Support newer envelopes such as `{ data: { blogs: [...], statistics, meta } }`.

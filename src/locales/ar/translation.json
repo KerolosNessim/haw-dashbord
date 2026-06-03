@@ -147,6 +147,8 @@
     "group_content": "المحتوى والتفاعل",
     "home": "الرئيسية",
     "home_content": "محتوى الصفحة الرئيسية",
+    "promo_banners": "عروض الصفحة الرئيسية",
+    "client_portfolio": "نتائج مثبتة",
     "why_choose_us": "لماذا تختارنا",
     "solutions": "شركائنا",
     "solution_categories": "تصنيفات الشركاء",
@@ -155,6 +157,7 @@
     "services": "الخدمات",
     "ai_services": "خدمات الذكاء الاصطناعي",
     "ai_service_pricing": "أسعار خدمات الذكاء الاصطناعي",
+    "ai_service_content": "فديوهات خدمات الذكاء الاصطناعي",
     "service_catalog": "كتالوج الخدمات",
     "service_pricing": "أسعار الخدمات",
     "settings": "الإعدادات",
@@ -1633,6 +1636,244 @@
       }
     }
   },
+  "service_ai_content": {
+    "title": "محتوى خدمات الذكاء الاصطناعي",
+    "description": "إدارة صفحة المحتوى الواحدة لخدمات الذكاء الاصطناعي.",
+    "tabs": {
+      "ar": "العربية",
+      "en": "الإنجليزية"
+    },
+    "save": "حفظ",
+    "toast_saved": "تم حفظ المحتوى بنجاح.",
+    "toast_error": "حدث خطأ، حاول مرة أخرى.",
+    "load_error": "تعذّر تحميل المحتوى.",
+    "sections": {
+      "fields": {
+        "image": "صورة المعاينة"
+      }
+    },
+    "cover_ar": "معاينة (عربي)",
+    "cover_en": "معاينة (إنجليزي)",
+    "upload_image": "رفع صورة",
+    "cover_per_locale_hint": "صورة مصغرة لكل لغة تظهر قبل تشغيل الفيديو.",
+    "fields": {
+      "title": "العنوان",
+      "description": "الوصف",
+      "meta_title": "عنوان الميتا",
+      "meta_description": "وصف الميتا",
+      "image_alt": "النص البديل للصورة",
+      "image": "الصورة",
+      "is_active": "نشط"
+    },
+    "items": {
+      "title": "عناصر الفيديو",
+      "add": "إضافة عنصر",
+      "empty": "لا توجد عناصر فيديو بعد.",
+      "move_up": "نقل للأعلى",
+      "move_down": "نقل للأسفل",
+      "delete": "حذف",
+      "fields": {
+        "video": "رابط الفيديو",
+        "preview_image": "صورة المعاينة"
+      }
+    },
+    "validation": {
+      "title_ar": "العنوان بالعربية مطلوب.",
+      "video_required": "يجب إدخال رابط فيديو لكل عنصر.",
+      "url": "أدخل رابط http(s) صالحاً."
+    }
+  },
+  "client_portfolio": {
+    "title": "نتائج مثبتة للأعمال",
+    "description": "إدارة بطاقات دراسات الحالة وإعدادات قسم المحفظة.",
+    "tabs": {
+      "section": "إعدادات القسم",
+      "items": "بطاقات دراسات الحالة"
+    },
+    "sections": {
+      "fields": {
+        "image": "صورة البطاقة"
+      }
+    },
+    "cover_ar": "الصورة (عربي)",
+    "cover_en": "الصورة (إنجليزي)",
+    "upload_image": "رفع صورة",
+    "cover_per_locale_hint": "ارفع صورة منفصلة لكل لغة.",
+    "section": {
+      "title": "إعدادات القسم",
+      "description": "عنوان H2، بطاقة عرض الكل، ونصوص الأزرار الافتراضية.",
+      "ar": "عربي",
+      "en": "إنجليزي",
+      "save": "حفظ القسم",
+      "toast_saved": "تم حفظ إعدادات القسم.",
+      "toast_error": "تعذر حفظ إعدادات القسم.",
+      "groups": {
+        "main": "العنوان الرئيسي",
+        "view_all": "بطاقة عرض الكل والرابط",
+        "cards": "بطاقات الدراسات"
+      },
+      "validation": {
+        "link": "استخدم https://… أو مساراً يبدأ بـ /"
+      },
+      "fields": {
+        "title": "عنوان القسم (H2)",
+        "subtitle": "الوصف الفرعي",
+        "view_all_link": "رابط عرض الكل",
+        "view_all_button_text": "نص زر عرض الكل (اختياري)",
+        "view_all_card_title": "عنوان بطاقة عرض الكل",
+        "view_all_card_description": "وصف بطاقة عرض الكل",
+        "view_all_card_button_text": "نص زر البطاقة",
+        "read_case_study_button_text": "نص زر «اقرأ دراسة الحالة» الافتراضي",
+        "is_active": "القسم مفعّل"
+      }
+    },
+    "items": {
+      "title": "بطاقات دراسات الحالة",
+      "description": "إنشاء وإدارة بطاقات دراسات الحالة القابلة للتوسيع في صفحات الخدمات.",
+      "ar": "عربي",
+      "en": "إنجليزي",
+      "add_button": "إضافة دراسة حالة",
+      "create_title": "دراسة حالة جديدة",
+      "edit_title": "تعديل دراسة الحالة",
+      "dialog_description": "صورة البطاقة، المقاييس، الخدمات المرتبطة، ونص دراسة الحالة بلغتين.",
+      "dialog_sections": {
+        "settings": "العرض والترتيب",
+        "media": "صورة البطاقة",
+        "services": "صفحات الخدمات",
+        "metrics": "مقاييس بارزة",
+        "content": "نص دراسة الحالة"
+      },
+      "save": "حفظ",
+      "cancel": "إلغاء",
+      "empty": "لا توجد دراسات حالة بعد.",
+      "yes": "نعم",
+      "no": "لا",
+      "toast_created": "تم إنشاء دراسة الحالة.",
+      "toast_saved": "تم حفظ دراسة الحالة.",
+      "toast_deleted": "تم حذف دراسة الحالة.",
+      "toast_error": "تعذر حفظ دراسة الحالة.",
+      "delete_confirm": "حذف دراسة الحالة هذه؟",
+      "delete_yes": "حذف",
+      "load_error": "تعذر تحميل دراسات الحالة.",
+      "retry": "إعادة المحاولة",
+      "back_to_list": "العودة إلى دراسات الحالة",
+      "not_found": "دراسة الحالة غير موجودة.",
+      "preview_public": "معاينة على الموقع العام",
+      "add_metric": "إضافة مقياس",
+      "metric_ar": "المقياس (عربي)",
+      "metric_en": "المقياس (إنجليزي)",
+      "linked_services": "الخدمات المرتبطة",
+      "linked_services_placeholder": "اختر الخدمات…",
+      "linked_services_edit": "إضافة أو تعديل الخدمات",
+      "linked_services_none": "لا توجد خدمات مرتبطة.",
+      "linked_services_remove": "إزالة",
+      "linked_services_loading": "جاري التحميل…",
+      "linked_services_empty": "لا توجد خدمات.",
+      "linked_services_hint": "الخدمات العادية فقط. تظهر البطاقة في صفحات الخدمات المحددة.",
+      "categories": {
+        "healthcare": "الرعاية الصحية",
+        "animals": "الحيوانات",
+        "food_retail": "الأغذية والتجزئة"
+      },
+      "table": {
+        "image": "الصورة",
+        "headline": "العنوان",
+        "category": "التصنيف",
+        "sort_order": "الترتيب",
+        "active": "نشط",
+        "services": "الخدمات",
+        "actions": "إجراءات"
+      },
+      "fields": {
+        "slug": "المسار (slug)",
+        "category": "التصنيف",
+        "client_tag": "وسم العميل",
+        "headline": "العنوان الرئيسي",
+        "period": "الفترة",
+        "client": "العميل (عند التوسيع)",
+        "challenge": "التحدي",
+        "what_we_did": "ما قمنا به",
+        "results": "النتائج",
+        "metrics": "المقاييس",
+        "image_alt": "النص البديل للصورة",
+        "full_case_study_link": "رابط دراسة الحالة الكاملة",
+        "read_case_study_button_text": "نص الزر (اختياري)",
+        "sort_order": "ترتيب العرض",
+        "is_active": "مفعّل"
+      },
+      "validation": {
+        "slug_en": "المسار الإنجليزي: حروف لاتينية صغيرة وأرقام وشرطات فقط.",
+        "slug_ar": "المسار العربي: حروف عربية وأرقام وشرطات فقط.",
+        "headline_ar": "العنوان بالعربية مطلوب.",
+        "headline_en": "العنوان بالإنجليزية مطلوب.",
+        "image_alt_ar": "النص البديل بالعربية مطلوب.",
+        "image_alt_en": "النص البديل بالإنجليزية مطلوب.",
+        "image": "ارفع صورة بلغة واحدة على الأقل.",
+        "link": "أدخل مساراً (/…) أو رابط https:// صالحاً."
+      }
+    }
+  },
+  "promo_banners": {
+    "title": "عروض الصفحة الرئيسية",
+    "description": "إدارة شرائح العروض الترويجية وعناوين القسم في الصفحة الرئيسية.",
+    "tabs": {
+      "section": "إعدادات القسم",
+      "slides": "الشرائح"
+    },
+    "sections": {
+      "fields": {
+        "image": "صورة الشريحة"
+      }
+    },
+    "cover_ar": "الصورة (عربي)",
+    "cover_en": "الصورة (إنجليزي)",
+    "upload_image": "رفع صورة",
+    "cover_per_locale_hint": "ارفع صورة بانر منفصلة لكل لغة.",
+    "section": {
+      "title": "إعدادات القسم",
+      "description": "نص اختياري فوق السلايدر: سطر علوي، عنوان، ووصف فرعي.",
+      "ar": "عربي",
+      "en": "إنجليزي",
+      "save": "حفظ القسم",
+      "toast_saved": "تم حفظ إعدادات القسم.",
+      "toast_error": "تعذر حفظ إعدادات القسم.",
+      "fields": {
+        "eyebrow": "السطر العلوي",
+        "title": "العنوان",
+        "subtitle": "الوصف الفرعي",
+        "is_active": "القسم مفعّل"
+      }
+    },
+    "slides": {
+      "title": "شرائح العروض",
+      "description": "أضف الشرائح ورتّبها وعدّلها. الحفظ يرسل القائمة كاملة إلى الخادم.",
+      "ar": "عربي",
+      "en": "إنجليزي",
+      "add_slide": "إضافة شريحة",
+      "save_all": "حفظ كل الشرائح",
+      "move_up": "تحريك لأعلى",
+      "move_down": "تحريك لأسفل",
+      "slide_label": "الشريحة {{index}}",
+      "toast_saved": "تم حفظ الشرائح بنجاح.",
+      "toast_error": "تعذر حفظ الشرائح.",
+      "button_link_hint": "استخدم مساراً مثل /contact-us أو رابط https:// كاملاً.",
+      "fields": {
+        "badge": "الشارة",
+        "title": "العنوان",
+        "subtitle": "العنوان الفرعي",
+        "description": "الوصف",
+        "button_text": "نص الزر",
+        "button_link": "رابط الزر",
+        "image_alt": "نص بديل للصورة",
+        "is_active": "مفعّل"
+      },
+      "validation": {
+        "title_ar": "العنوان بالعربية مطلوب.",
+        "title_en": "العنوان بالإنجليزي مطلوب.",
+        "button_link": "أدخل مساراً (/…) أو رابط https:// صالحاً."
+      }
+    }
+  },
   "home_content":{
     "title": "محتوى الصفحة الرئيسية",
     "description": "إدارة محتوى الصفحة الرئيسية",
@@ -1681,6 +1922,15 @@
       "new_image_badge": "جديد",
       "sort_order": "ترتيب العرض",
       "is_active": "مفعّل",
+      "linked_services": "الخدمات المرتبطة",
+      "linked_services_placeholder": "اختر الخدمات…",
+      "linked_services_edit": "إضافة أو تعديل الخدمات",
+      "linked_services_none": "لا توجد خدمات مرتبطة بهذه الصورة.",
+      "linked_services_remove": "إزالة الخدمة",
+      "linked_services_count": "{{count}} خدمة محددة",
+      "linked_services_loading": "جاري تحميل الخدمات…",
+      "linked_services_empty": "لا توجد خدمات.",
+      "linked_services_hint": "الخدمات العادية فقط (وليس الذكاء الاصطناعي). يمكن ربط الصورة بعدة خدمات.",
       "save": "حفظ التغييرات"
     },
     "our_clients": {

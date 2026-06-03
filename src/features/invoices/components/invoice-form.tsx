@@ -3,7 +3,6 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { arSA, enUS } from "date-fns/locale";
 import { Loader2, Save } from "lucide-react";
 import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -87,9 +86,7 @@ export default function InvoiceForm() {
     watched.tax ?? 0,
   );
 
-  const invoiceDateLabel = format(new Date(), "EEEE، d MMMM yyyy", {
-    locale: locale === "ar" ? arSA : enUS,
-  });
+  const invoiceDateLabel = format(new Date(), "yyyy-MM-dd");
 
   const onSubmit = (values: FormValues) => {
     const keys = [...values.package_keys, ...values.service_keys, ...values.course_keys];
@@ -284,6 +281,7 @@ export default function InvoiceForm() {
           discount={discount}
           tax={tax}
           total={total}
+          currency={lineItems[0]?.currency}
         />
       </section>
     </form>

@@ -3,11 +3,18 @@ import { useTranslation } from "react-i18next";
 import { formatMoney } from "../utils/invoice-math";
 import { invoiceDisplayText } from "../utils/invoice-display-text";
 import { printInvoiceElement } from "../utils/download-invoice";
+import {
+  formatInvoiceMetaDate,
+  formatInvoiceNumberDisplay,
+  getInvoiceHeaderTitle,
+  getInvoiceHeaderTitleEn,
+} from "../utils/invoice-header-title";
+import { DEFAULT_INVOICE_CURRENCY } from "../utils/invoice-currency";
 import type { InvoiceLineItem } from "../types";
 
 const BRAND_GREEN = "#99C23C";
 const ROW_ALT = "#F2F2F2";
-const LOGO_WATERMARK_OPACITY = 0.07;
+const LOGO_WATERMARK_OPACITY = 0.08;
 
 const invoiceLogoSrc = () => {
   const path = `${import.meta.env.BASE_URL}logo.png`.replace(/\/+/g, "/");
@@ -15,28 +22,17 @@ const invoiceLogoSrc = () => {
   return new URL(path, window.location.href).href;
 };
 
-function InvoiceLogoWatermark({ placement }: { placement: "center" | "bottom" }) {
-  const logoSrc = invoiceLogoSrc();
-  const isCenter = placement === "center";
-
+function InvoiceLogoWatermark() {
   return (
     <div
-      className={
-        isCenter
-          ? "pointer-events-none absolute inset-0 flex items-center justify-center"
-          : "pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-10"
-      }
+      className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center"
       style={{ opacity: LOGO_WATERMARK_OPACITY }}
       aria-hidden
     >
       <img
-        src={logoSrc}
+        src={invoiceLogoSrc()}
         alt=""
-        className={
-          isCenter
-            ? "max-h-[min(420px,72%)] w-auto max-w-[min(480px,88%)] object-contain select-none"
-            : "h-20 w-auto max-w-[240px] object-contain select-none"
-        }
+        className="max-h-[min(460px,78%)] w-auto max-w-[min(520px,90%)] object-contain select-none"
       />
     </div>
   );
@@ -74,7 +70,12 @@ export default function InvoicePreview({
   id,
 }: InvoicePreviewProps) {
   const { t } = useTranslation("translation", { keyPrefix: "invoices" });
-  const displayNumber = invoiceNumber ? `HWEY - ${invoiceNumber}` : "HWEY - —";
+  const resolvedCurrency =
+    currency.trim() || lineItems.find((row) => row.currency.trim())?.currency || DEFAULT_INVOICE_CURRENCY;
+  const invoiceTitleAr = getInvoiceHeaderTitle(resolvedCurrency);
+  const invoiceTitleEn = getInvoiceHeaderTitleEn(resolvedCurrency);
+  const displayNumber = formatInvoiceNumberDisplay(invoiceNumber);
+  const metaDate = formatInvoiceMetaDate(invoiceDateLabel);
   const rows = lineItems.length > 0 ? lineItems : [];
 
   const handlePrint = () => {
@@ -91,10 +92,45 @@ export default function InvoicePreview({
       lang="ar"
       style={{ fontFamily: "system-ui, 'Segoe UI', Tahoma, sans-serif" }}
     >
-      <InvoiceLogoWatermark placement="center" />
-      <InvoiceLogoWatermark placement="bottom" />
+      <InvoiceLogoWatermark />
 
-      <div className="relative z-1 px-8 pb-8 pt-10">
+      <header
+        className="relative z-1 flex items-center justify-between gap-6 px-8 py-5 text-white"
+        style={{ backgroundColor: BRAND_GREEN }}
+      >
+        <div className="min-w-0 flex-1 space-y-1 text-right">
+          <p className="text-lg font-bold tracking-wide">Howeyah — هوية</p>
+          <p className="text-sm leading-relaxed opacity-95">
+            {invoiceTitleEn} | {invoiceTitleAr}
+          </p>
+          <p className="pt-1 text-sm font-semibold">
+            <span dir="ltr" className="inline-block [unicode-bidi:isolate]">
+              {displayNumber}
+            </span>
+            <span className="mx-1">:</span>
+            <span>رقم الفاتورة</span>
+          </p>
+        </div>
+        <img
+          src={invoiceLogoSrc()}
+          alt="Howeyah"
+          className="h-[68px] w-auto max-w-[180px] shrink-0 object-contain brightness-0 invert"
+        />
+      </header>
+
+      <div
+        className="relative z-1 flex items-center justify-between gap-4 border-b border-[#ececec] px-8 py-3 text-sm text-[#333]"
+        dir="rtl"
+      >
+        <p>
+          <span className="font-semibold text-[#555]">التاريخ:</span> {metaDate}
+        </p>
+        <p dir="ltr" className="[unicode-bidi:isolate]">
+          Invoice #: {displayNumber}
+        </p>
+      </div>
+
+      <div className="relative z-1 px-8 pb-8 pt-6">
         {id ? (
           <div className="mb-4 flex justify-start print:hidden" data-print-hide>
             <button
@@ -108,37 +144,18 @@ export default function InvoicePreview({
           </div>
         ) : null}
 
-        <header className="mb-8 text-center">
-          <div className="mb-3 flex justify-center">
-            <img
-              src={invoiceLogoSrc()}
-              alt="Howeyah"
-              className="h-16 w-auto max-w-[220px] object-contain"
-            />
+        <section className="mb-6 rounded-md border border-[#e8e8e8] bg-white/80 p-4">
+          <h2 className="mb-3 text-sm font-bold" style={{ color: BRAND_GREEN }}>
+            فاتورة إلى
+          </h2>
+          <div className="space-y-1.5 text-sm leading-relaxed text-[#333]">
+            <p>{invoiceDisplayText(clientName) || "—"}</p>
+            <p dir="ltr" className="[unicode-bidi:isolate] text-[#555]">
+              {clientPhone || "—"}
+            </p>
+            <p>{invoiceDisplayText(companyName) || "—"}</p>
           </div>
-          <h1 className="text-xl font-bold text-[#333]">فاتورة الخدمات الالكترونية</h1>
-        </header>
-
-        <div className="mb-6 grid grid-cols-1 gap-8 md:grid-cols-2">
-          <section>
-            <h2 className="mb-3 text-sm font-bold text-[#333]">بيانات العميل (Bill To)</h2>
-            <dl className="space-y-2.5 text-sm">
-              <InvoiceFieldRow label="الاسم الكامل" value={invoiceDisplayText(clientName) || "—"} />
-              <InvoiceFieldRow label="رقم الجوال" value={clientPhone || "—"} ltr />
-              <InvoiceFieldRow label="اسم الشركة" value={invoiceDisplayText(companyName) || "—"} />
-            </dl>
-          </section>
-
-          <section>
-            <h2 className="mb-3 text-sm font-bold text-[#333]">بيانات الفاتورة</h2>
-            <dl className="space-y-2.5 text-sm">
-              <InvoiceFieldRow label="رقم الفاتورة" value={displayNumber} ltr />
-              <InvoiceFieldRow label="تاريخ الفاتورة" value={invoiceDateLabel || "—"} />
-            </dl>
-          </section>
-        </div>
-
-        <h2 className="mb-2 text-sm font-bold text-[#333]">تفاصيل الفاتورة</h2>
+        </section>
 
         <table className="mb-6 w-full border-collapse text-sm" dir="rtl">
           <thead>
@@ -194,11 +211,7 @@ export default function InvoicePreview({
             <TotalRow label="المجموع الفرعي" value={formatMoney(subtotal, currency)} alt />
             <TotalRow label="الخصم" value={formatMoney(discount, currency)} />
             <TotalRow label="الضريبة" value={formatMoney(tax, currency)} alt />
-            <TotalRow
-              label="الرصيد المستحق"
-              value={formatMoney(total, currency)}
-              highlight
-            />
+            <TotalRow label="الإجمالي" value={formatMoney(total, currency)} highlight />
           </div>
         </div>
 
@@ -217,28 +230,6 @@ export default function InvoicePreview({
   );
 }
 
-function InvoiceFieldRow({
-  label,
-  value,
-  ltr,
-}: {
-  label: string;
-  value: string;
-  ltr?: boolean;
-}) {
-  return (
-    <div className="grid grid-cols-[auto_1fr] items-baseline gap-x-2">
-      <dt className="font-semibold text-[#555]">{label}:</dt>
-      <dd
-        className={`text-[#333] ${ltr ? "[unicode-bidi:isolate]" : ""}`}
-        dir={ltr ? "ltr" : undefined}
-      >
-        {value}
-      </dd>
-    </div>
-  );
-}
-
 function TotalRow({
   label,
   value,
@@ -253,8 +244,7 @@ function TotalRow({
   if (highlight) {
     return (
       <div
-        className="flex items-center justify-between px-4 py-3 font-bold text-white"
-        style={{ backgroundColor: BRAND_GREEN }}
+        className="flex items-center justify-between border-t-2 border-[#333] px-4 py-3 text-base font-bold text-[#333]"
         dir="rtl"
       >
         <span>{label}</span>

@@ -22,6 +22,7 @@ import {
   Scale,
   ShieldCheck,
   FileText,
+  GalleryHorizontal,
   Receipt,
   Handshake,
   MessageSquare,
@@ -104,6 +105,16 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
         icon: LayoutPanelTop,
       },
       {
+        titleKey: "promo_banners",
+        href: "/promo-banners",
+        icon: GalleryHorizontal,
+      },
+      {
+        titleKey: "client_portfolio",
+        href: "/client-portfolio",
+        icon: BriefcaseBusiness,
+      },
+      {
         titleKey: "why_choose_us",
         href: "/why-choose-us",
         icon: Sparkles,
@@ -149,13 +160,18 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
       },
       {
         titleKey: "ai_services",
-        href: "/ai-services",
+        href: "ai-services/edit/4",
         icon: BriefcaseBusiness,
       },
+      // {
+      //   titleKey: "ai_service_pricing",
+      //   href: "/ai-services/pricing",
+      //   icon: Package,
+      // },
       {
-        titleKey: "ai_service_pricing",
-        href: "/ai-services/pricing",
-        icon: Package,
+        titleKey: "ai_service_content",
+        href: "/ai-services/content",
+        icon: Sparkles,
       },
       DASHBOARD_INVOICES_LINK,
     ],

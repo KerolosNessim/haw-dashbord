@@ -10,6 +10,7 @@ import ServicePricingPage from "./pages/services/ServicePricingPage"
 import AiServicesPage from "./pages/services/AiServices"
 import CreateAiServicesPage from "./pages/services/CreateAiServices"
 import EditAiServicesPage from "./pages/services/EditAiServices"
+import ServiceAiContentPage from "./pages/service-ai-content/ServiceAiContentPage"
 import ServiceCatalogPage from "./pages/service-catalog/ServiceCatalogPage"
 import CreateServiceCatalogPage from "./pages/service-catalog/CreateServiceCatalogPage"
 import EditServiceCatalogPage from "./pages/service-catalog/EditServiceCatalogPage"
@@ -36,6 +37,10 @@ import EditSolutionSinglePage from "./pages/solutions/EditSolutionSinglePage"
 import SolutionsPage from "./pages/solutions/SolutionsPage"
 import HelpYouPage from "./pages/help-you/HelpYouPage"
 import TestimonialsPage from "./pages/testimonials/TestimonialsPage"
+import PromoBannersPage from "./pages/promo-banners/PromoBannersPage"
+import ClientPortfolioPage from "./pages/client-portfolio/ClientPortfolioPage"
+import CreateClientPortfolioItemPage from "./pages/client-portfolio/CreateClientPortfolioItemPage"
+import EditClientPortfolioItemPage from "./pages/client-portfolio/EditClientPortfolioItemPage"
 import AboutUsPage from "./pages/about/AboutUsPage"
 import PackageCategoriesPage from "./pages/package-categories/PackageCategoriesPage"
 import CreatePackageCategoryPage from "./pages/package-categories/CreatePackageCategoryPage"
@@ -73,6 +78,22 @@ const router = createBrowserRouter([
       {
         path: "/home-content",
         element: <HomeContentPage />,
+      },
+      {
+        path: "/promo-banners",
+        element: <PromoBannersPage />,
+      },
+      {
+        path: "/client-portfolio",
+        element: <ClientPortfolioPage />,
+      },
+      {
+        path: "/client-portfolio/items/create",
+        element: <CreateClientPortfolioItemPage />,
+      },
+      {
+        path: "/client-portfolio/items/edit/:id",
+        element: <EditClientPortfolioItemPage />,
       },
       {
         path: "/why-choose-us",
@@ -225,6 +246,10 @@ const router = createBrowserRouter([
       {
         path: "/ai-services/pricing",
         element: <ServicePricingPage />,
+      },
+      {
+        path: "/ai-services/content",
+        element: <ServiceAiContentPage />,
       },
       {
         path: "/service-catalog",
