@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { bilingualSectionImageFromApi } from "@/lib/bilingual-section-image";
+import { appendCountryIdsToFormData, countryIdsQuery } from "@/features/home-content/lib/country-scope";
 import {
   appendLocalizedDescriptionHtml,
   localizedHtmlForApi,
@@ -118,8 +119,12 @@ function appendLocalizedField(fd: FormData, prefix: string, ar: string, en: stri
   fd.append(`${prefix}[en]`, en);
 }
 
-function buildBulkFormData(values: PromoSlidesFormValues): FormData {
+function buildBulkFormData(
+  values: PromoSlidesFormValues,
+  countryIds?: number[],
+): FormData {
   const fd = new FormData();
+  appendCountryIdsToFormData(fd, countryIds);
 
   values.items.forEach((item, index) => {
     const base = `slides[${index}]`;
@@ -143,9 +148,13 @@ function buildBulkFormData(values: PromoSlidesFormValues): FormData {
   return fd;
 }
 
-export async function fetchPromoBannerSection(): Promise<PromoBannerSection | null> {
+export async function fetchPromoBannerSection(
+  countryIds?: number[],
+): Promise<PromoBannerSection | null> {
   try {
-    const res = await api.get(SECTION_PATH);
+    const res = await api.get(SECTION_PATH, {
+      params: countryIdsQuery(countryIds),
+    });
     return normalizeSection(res.data);
   } catch (error) {
     if (isAxiosError(error) && error.response?.status === 404) return null;
@@ -153,7 +162,11 @@ export async function fetchPromoBannerSection(): Promise<PromoBannerSection | nu
   }
 }
 
-export async function updatePromoBannerSection(values: PromoSectionFormValues) {
+export async function updatePromoBannerSection(
+  values: PromoSectionFormValues,
+  countryIds?: number[],
+) {
+  const ids = (countryIds ?? []).filter((id) => id > 0);
   const res = await api.put(SECTION_PATH, {
     eyebrow: {
       ar: localizedHtmlForApi(values.eyebrow_ar),
@@ -168,19 +181,27 @@ export async function updatePromoBannerSection(values: PromoSectionFormValues) {
       en: localizedHtmlForApi(values.subtitle_en),
     },
     is_active: values.is_active,
+    country_ids: ids,
   });
   return res.data as { message?: string };
 }
 
-export async function fetchPromoBannerSlides(): Promise<PromoBannerSlide[]> {
-  const res = await api.get(SLIDES_BASE);
+export async function fetchPromoBannerSlides(
+  countryIds?: number[],
+): Promise<PromoBannerSlide[]> {
+  const res = await api.get(SLIDES_BASE, {
+    params: countryIdsQuery(countryIds),
+  });
   const payload = extractPayload(res.data);
   const rows = Array.isArray(payload) ? payload : [];
   return rows.map(normalizeSlide).sort((a, b) => a.sort_order - b.sort_order);
 }
 
-export async function bulkSyncPromoBannerSlides(values: PromoSlidesFormValues) {
-  const res = await api.post(BULK_SYNC_PATH, buildBulkFormData(values), {
+export async function bulkSyncPromoBannerSlides(
+  values: PromoSlidesFormValues,
+  countryIds?: number[],
+) {
+  const res = await api.post(BULK_SYNC_PATH, buildBulkFormData(values, countryIds), {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return res.data as { message?: string };

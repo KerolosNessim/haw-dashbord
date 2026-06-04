@@ -10,6 +10,5 @@ export function useAdminBlogDetail(id: string | undefined) {
       return recordToBlogFormValues(raw);
     },
     enabled: Boolean(id),
-    staleTime: 30_000,
   });
 }

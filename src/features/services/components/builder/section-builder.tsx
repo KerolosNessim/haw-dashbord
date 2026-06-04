@@ -25,6 +25,7 @@ import { SectionBuilderList } from "./section-builder-list";
 import { useEffect } from "react";
 import { useServiceFormDraft } from "../../hooks/useServiceFormDraft";
 import { builderSectionsFromService } from "../../lib/section-order";
+import { serviceSectionsSignature } from "../../lib/service-section-ids";
 import type { ServiceSectionsPayload } from "../../service-section-types";
 import type { Service } from "../../type";
 import {
@@ -81,9 +82,13 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
   >({});
   const { draft, hydrated } = useServiceFormDraft(serviceId);
   const restoredDraftRef = useRef(false);
-  const initialServiceLoadedRef = useRef(false);
+  const loadedSectionsSignatureRef = useRef<string | null>(null);
   const onSectionsDraftChangeRef = useRef(onSectionsDraftChange);
   onSectionsDraftChangeRef.current = onSectionsDraftChange;
+
+  useEffect(() => {
+    loadedSectionsSignatureRef.current = null;
+  }, [serviceId]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -101,9 +106,12 @@ const SectionBuilder = forwardRef<SectionBuilderHandle, SectionBuilderProps>(
       return;
     }
 
-    // Populate from API service data (only once, independent of draft ref)
-    if (initialService && !initialServiceLoadedRef.current) {
-      initialServiceLoadedRef.current = true;
+    // Populate / refresh from API when service section data changes (e.g. after save)
+    if (initialService) {
+      const signature = serviceSectionsSignature(initialService);
+      if (loadedSectionsSignatureRef.current === signature) return;
+
+      loadedSectionsSignatureRef.current = signature;
       const defs = builderSectionsFromService(initialService);
       const mappedSections: SectionInstance[] = defs.map((def) => ({
         id: def.id,

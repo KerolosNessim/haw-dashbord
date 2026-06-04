@@ -6,8 +6,10 @@ import { FolderTree, Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import HomeContentCountrySelector from "@/features/home-content/components/HomeContentCountrySelector";
+import { HomeContentCountryProvider } from "@/features/home-content/context/home-content-country-context";
 
-export default function SolutionCategoriesPage() {
+function SolutionCategoriesPageContent() {
   const { t } = useTranslation("translation", { keyPrefix: "solution_categories" });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
@@ -39,6 +41,7 @@ export default function SolutionCategoriesPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <HomeContentCountrySelector />
           <Button
             type="button"
             variant="outline"
@@ -69,5 +72,13 @@ export default function SolutionCategoriesPage() {
         initial={editing}
       />
     </div>
+  );
+}
+
+export default function SolutionCategoriesPage() {
+  return (
+    <HomeContentCountryProvider>
+      <SolutionCategoriesPageContent />
+    </HomeContentCountryProvider>
   );
 }

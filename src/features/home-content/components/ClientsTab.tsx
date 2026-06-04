@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlignLeft, ImageIcon, Loader2, Plus, Save, Type, Users, X } from "lucide-react";
+import { ImageIcon, Loader2, Plus, Save, Type, Users, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -14,7 +14,10 @@ import {
   mediaAltFromApi,
   type BilingualAlt,
 } from "../services/accreditation-form-data";
+import { useHomeContentCountry } from "../context/home-content-country-context";
 import { useClients } from "../hooks/useCliets";
+
+/* eslint-disable react-hooks/set-state-in-effect */
 
 const clientsSchema = z.object({
   title_ar: z.string().min(1, "Required"),
@@ -43,8 +46,11 @@ export default function ClientsTab() {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { getClientsQuery, updateClients, isPending } = useClients();
+  const { countryId } = useHomeContentCountry();
+  const { getClientsQuery, updateClients, isPending, isCountryReady } = useClients();
   const apiData = getClientsQuery?.data?.data?.data?.[0];
+  const hasPartnerRow =
+    apiData != null && (apiData.id > 0 || Boolean(apiData.title?.ar?.trim() || apiData.title?.en?.trim()));
 
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
   const [newImages, setNewImages] = useState<NewImage[]>([]);
@@ -66,6 +72,21 @@ export default function ClientsTab() {
   });
 
   useEffect(() => {
+    if (getClientsQuery.isLoading || getClientsQuery.isFetching) return;
+
+    if (!hasPartnerRow) {
+      reset({
+        title_ar: "",
+        title_en: "",
+        des_ar: "",
+        des_en: "",
+      });
+      setExistingImages([]);
+      setNewImages([]);
+      setDeletedImageIds([]);
+      return;
+    }
+
     if (!apiData) return;
 
     reset({
@@ -84,7 +105,14 @@ export default function ClientsTab() {
     );
     setNewImages([]);
     setDeletedImageIds([]);
-  }, [apiData, reset]);
+  }, [
+    apiData,
+    countryId,
+    getClientsQuery.isFetching,
+    getClientsQuery.isLoading,
+    hasPartnerRow,
+    reset,
+  ]);
 
   const onSubmit = (data: ClientsFormValues) => {
     const existingImagesAlt: Record<string, BilingualAlt> = {};
@@ -156,8 +184,17 @@ export default function ClientsTab() {
   const previewAlt = (alt: BilingualAlt) => alt.ar.trim() || alt.en.trim() || "";
   const galleryCount = existingImages.length + newImages.length;
 
+  if (getClientsQuery.isLoading && !apiData) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <form
+      key={countryId ?? "no-country"}
       onSubmit={handleSubmit(onSubmit)}
       className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500"
     >
@@ -371,7 +408,7 @@ export default function ClientsTab() {
       <Button
         type="submit"
         size="lg"
-        disabled={isPending || getClientsQuery.isLoading}
+        disabled={isPending || getClientsQuery.isLoading || !isCountryReady}
         className="rounded-2xl h-14 px-12 font-black text-lg gap-2 shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all bg-primary text-white"
       >
         {isPending ? (

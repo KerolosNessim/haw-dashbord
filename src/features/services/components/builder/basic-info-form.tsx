@@ -20,7 +20,7 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { useAdminCountries } from "@/features/countries/hooks/useCountries";
+import { useActiveUniqueCountries } from "@/features/countries/hooks/useCountries";
 import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import { resolveImagePreviewFromUnknown } from "@/lib/resolve-media-url";
@@ -51,7 +51,6 @@ import { ServiceTagsField } from "../service-tags-field";
 import { useAdminService } from "../../hooks/useAdminService";
 import { useServiceFormDraft } from "../../hooks/useServiceFormDraft";
 import { deserializeBasicInfoFromDraft } from "../../utils/service-draft-serializer";
-import { LocalizedRichTextField } from "./localized-rich-text-field";
 import ServiceSocialMetaDialog from "./service-social-meta-dialog";
 import { getServiceResourceScope } from "../../services/service-resource-config";
 import { slugify, slugifyAr } from "@/lib/slugify";
@@ -157,6 +156,7 @@ function buildBasicInfoSchema(isAiScope: boolean) {
   package_ids: z.array(z.string()).optional(),
   is_active: z.boolean(),
   title: isAiScope ? optionalTitleSchema : localizedSchema,
+  subtitle: optionalLocalizedEditorSchema.optional(),
   single_page_title: optionalLocalizedEditorSchema.optional(),
   tags: z
     .array(serviceTagInputSchema)
@@ -237,8 +237,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
     const isAiScope = getServiceResourceScope() === "service_ais";
     const basicInfoSchema = buildBasicInfoSchema(isAiScope);
     const [socialMetaOpen, setSocialMetaOpen] = useState(false);
-    const { data: countriesData } = useAdminCountries();
-    const countries = countriesData?.data ?? [];
+    const { countries } = useActiveUniqueCountries();
     const { draft, hydrated } = useServiceFormDraft(initialId);
     const restoredDraftRef = useRef(false);
     const onBasicDraftChangeRef = useRef(onBasicDraftChange);
@@ -268,6 +267,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
         is_active: true,
         show_footer: true,
         title: { ar: "", en: "" },
+        subtitle: { ar: null, en: null },
         single_page_title: { ar: null, en: null },
         tags: [],
         page_script: "",
@@ -341,6 +341,10 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
           is_active: service.is_active ?? true,
           show_footer: service.show_footer ?? true,
           title: { ar: service.title?.ar ?? "", en: service.title?.en ?? "" },
+          subtitle: {
+            ar: pickLocalizedFromService(rec, "subtitle").ar || null,
+            en: pickLocalizedFromService(rec, "subtitle").en || null,
+          },
           single_page_title: {
             ar: pickLocalizedFromService(rec, "single_page_title").ar || null,
             en: pickLocalizedFromService(rec, "single_page_title").en || null,
@@ -357,12 +361,12 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
           },
           sections,
           meta_title: {
-            ar: service.meta_title?.ar ?? "",
-            en: service.meta_title?.en ?? "",
+            ar: plainTextFromHtml(service.meta_title?.ar),
+            en: plainTextFromHtml(service.meta_title?.en),
           },
           meta_description: {
-            ar: service.meta_description?.ar ?? "",
-            en: service.meta_description?.en ?? "",
+            ar: plainTextFromHtml(service.meta_description?.ar),
+            en: plainTextFromHtml(service.meta_description?.en),
           },
           image: {
             ar: service.image?.ar ?? null,
@@ -476,12 +480,13 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
         : data.title;
       const titleArPlain = plainTextFromHtml(resolvedTitle?.ar ?? "");
       const titleEnPlain = plainTextFromHtml(resolvedTitle?.en ?? "");
-      const slug = isAiScope
-        ? {
-            ar: data.slug.ar?.trim() || slugifyAr(titleArPlain) || slugify(titleEnPlain),
-            en: data.slug.en?.trim() || slugify(titleEnPlain),
-          }
-        : data.slug;
+      const slug = {
+        ar:
+          data.slug.ar?.trim() ||
+          slugifyAr(titleArPlain) ||
+          slugify(titleEnPlain),
+        en: data.slug.en?.trim() || slugify(titleEnPlain),
+      };
 
       return {
       ...data,
@@ -491,6 +496,12 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
         ar: editorOnChangeToHtml(resolvedTitle?.ar),
         en: editorOnChangeToHtml(resolvedTitle?.en),
       },
+      subtitle: data.subtitle
+        ? {
+            ar: editorOnChangeToHtml(data.subtitle.ar),
+            en: editorOnChangeToHtml(data.subtitle.en),
+          }
+        : data.subtitle,
       single_page_title: data.single_page_title
         ? {
             ar: editorOnChangeToHtml(data.single_page_title.ar),
@@ -509,12 +520,12 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
         en: editorOnChangeToHtml(s.en),
       })),
       meta_title: {
-        ar: editorOnChangeToHtml(data.meta_title?.ar),
-        en: editorOnChangeToHtml(data.meta_title?.en),
+        ar: (data.meta_title?.ar ?? "").trim(),
+        en: (data.meta_title?.en ?? "").trim(),
       },
       meta_description: {
-        ar: editorOnChangeToHtml(data.meta_description?.ar),
-        en: editorOnChangeToHtml(data.meta_description?.en),
+        ar: (data.meta_description?.ar ?? "").trim(),
+        en: (data.meta_description?.en ?? "").trim(),
       },
       og_title: data.og_title
         ? {
@@ -561,6 +572,8 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
 
     const watchTitleAr = plainTextFromHtml(watch("title.ar") ?? "");
     const watchTitleEn = plainTextFromHtml(watch("title.en") ?? "");
+    /** Edit: keep stored slug; create: optional lock-to-title sync via SmartSlugField */
+    const syncSlugFromTitle = initialId == null;
 
     // ---------------------------------------------------------------------------
     // Render
@@ -586,6 +599,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                 slugLocale="ar"
                 titleEn={watchTitleAr ?? ""}
                 trigger={trigger}
+                syncFromTitleWhenLocked={syncSlugFromTitle}
                 label={
                   <span className="flex items-center gap-2">
                     <Globe className="w-4 h-4 opacity-40" /> {t("slug")} (AR)
@@ -640,6 +654,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                 slugLocale="en"
                 titleEn={watchTitleEn ?? ""}
                 trigger={trigger}
+                syncFromTitleWhenLocked={syncSlugFromTitle}
                 label={
                   <span className="flex items-center gap-2">
                     <Globe className="w-4 h-4 opacity-40" /> {t("slug")} (EN)
@@ -796,6 +811,28 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                   )}
                 />
                 ) : null}
+                {!isAiScope ? (
+                <Controller
+                  name="subtitle.ar"
+                  control={control}
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel>{t("subtitle_ar")}</FieldLabel>
+                      <p className="mb-2 text-[10px] text-muted-foreground">
+                        {t("subtitle_hint")}
+                      </p>
+                      <div className="min-h-[100px]">
+                        <RichTextEditor
+                          value={field.value}
+                          onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                          dir="rtl"
+                          placeholder={t("placeholders.subtitle")}
+                        />
+                      </div>
+                    </Field>
+                  )}
+                />
+                ) : null}
                 <Controller
                   name="single_page_title.ar"
                   control={control}
@@ -861,6 +898,28 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                       <FieldError
                         errors={[{ message: translateError(errors.title?.en) }]}
                       />
+                    </Field>
+                  )}
+                />
+                ) : null}
+                {!isAiScope ? (
+                <Controller
+                  name="subtitle.en"
+                  control={control}
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel>{t("subtitle_en")}</FieldLabel>
+                      <p className="mb-2 text-[10px] text-muted-foreground">
+                        {t("subtitle_hint")}
+                      </p>
+                      <div className="min-h-[100px]">
+                        <RichTextEditor
+                          value={field.value}
+                          onChange={(val) => field.onChange(editorOnChangeToHtml(val))}
+                          dir="ltr"
+                          placeholder={t("placeholders.subtitle")}
+                        />
+                      </div>
                     </Field>
                   )}
                 />
@@ -1117,41 +1176,75 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-6">
-                <LocalizedRichTextField
-                  control={control}
+                <Controller
                   name="meta_title.ar"
-                  label={`${t("meta_title")} (AR)`}
-                  dir="rtl"
-                  placeholder={t("placeholders.meta_title")}
-                  minHeightClass="min-h-[100px]"
-                  errorMessage={translateError(errors.meta_title?.ar)}
-                />
-                <LocalizedRichTextField
                   control={control}
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel>{`${t("meta_title")} (AR)`}</FieldLabel>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        dir="rtl"
+                        placeholder={t("placeholders.meta_title")}
+                        className="h-12 rounded-2xl bg-background border-border/50"
+                      />
+                      <FieldError errors={[{ message: translateError(errors.meta_title?.ar) }]} />
+                    </Field>
+                  )}
+                />
+                <Controller
                   name="meta_description.ar"
-                  label={`${t("meta_description")} (AR)`}
-                  dir="rtl"
-                  placeholder={t("placeholders.meta_description")}
-                  errorMessage={translateError(errors.meta_description?.ar)}
+                  control={control}
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel>{`${t("meta_description")} (AR)`}</FieldLabel>
+                      <Textarea
+                        {...field}
+                        value={field.value ?? ""}
+                        dir="rtl"
+                        placeholder={t("placeholders.meta_description")}
+                        className="min-h-[100px] rounded-2xl bg-background border-border/50 resize-none"
+                      />
+                      <FieldError errors={[{ message: translateError(errors.meta_description?.ar) }]} />
+                    </Field>
+                  )}
                 />
               </div>
               <div className="space-y-6">
-                <LocalizedRichTextField
-                  control={control}
+                <Controller
                   name="meta_title.en"
-                  label={`${t("meta_title")} (EN)`}
-                  dir="ltr"
-                  placeholder={t("placeholders.meta_title")}
-                  minHeightClass="min-h-[100px]"
-                  errorMessage={translateError(errors.meta_title?.en)}
-                />
-                <LocalizedRichTextField
                   control={control}
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel>{`${t("meta_title")} (EN)`}</FieldLabel>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        dir="ltr"
+                        placeholder={t("placeholders.meta_title")}
+                        className="h-12 rounded-2xl bg-background border-border/50"
+                      />
+                      <FieldError errors={[{ message: translateError(errors.meta_title?.en) }]} />
+                    </Field>
+                  )}
+                />
+                <Controller
                   name="meta_description.en"
-                  label={`${t("meta_description")} (EN)`}
-                  dir="ltr"
-                  placeholder={t("placeholders.meta_description")}
-                  errorMessage={translateError(errors.meta_description?.en)}
+                  control={control}
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel>{`${t("meta_description")} (EN)`}</FieldLabel>
+                      <Textarea
+                        {...field}
+                        value={field.value ?? ""}
+                        dir="ltr"
+                        placeholder={t("placeholders.meta_description")}
+                        className="min-h-[100px] rounded-2xl bg-background border-border/50 resize-none"
+                      />
+                      <FieldError errors={[{ message: translateError(errors.meta_description?.en) }]} />
+                    </Field>
+                  )}
                 />
               </div>
             </div>

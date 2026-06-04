@@ -94,6 +94,7 @@ const ServiceForm = forwardRef<ServiceFormHandle, ServiceFormProps>(function Ser
       basic,
       sections: sectionBuilderRef.current?.getSectionsPayload() ?? {},
       serviceId: serviceId ?? undefined,
+      previousService: serviceId && service ? service : undefined,
     });
     const newId =
       typeof res?.data === "object" && res.data && "id" in res.data

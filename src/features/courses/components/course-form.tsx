@@ -348,7 +348,7 @@ export default function CourseForm({
 
             inputClassName="rounded-xl"
 
-            syncFromTitleWhenLocked
+            syncFromTitleWhenLocked={mode === "create"}
 
           />
 
@@ -377,7 +377,7 @@ export default function CourseForm({
 
             inputClassName="rounded-xl"
 
-            syncFromTitleWhenLocked
+            syncFromTitleWhenLocked={mode === "create"}
 
           />
 

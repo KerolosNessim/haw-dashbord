@@ -3,13 +3,16 @@ import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SectionTab from "@/features/promo-banners/components/SectionTab";
 import SlidesTab from "@/features/promo-banners/components/SlidesTab";
+import HomeContentCountrySelector from "@/features/home-content/components/HomeContentCountrySelector";
+import { HomeContentCountryProvider } from "@/features/home-content/context/home-content-country-context";
 
 export default function PromoBannersPage() {
   const { t } = useTranslation("translation", { keyPrefix: "promo_banners" });
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-10 pb-20">
-      <div className="flex items-center justify-between border-b pb-6">
+    <HomeContentCountryProvider>
+      <div className="mx-auto max-w-[1400px] space-y-10 pb-20">
+      <div className="flex flex-col gap-6 border-b pb-6 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <GalleryHorizontal className="h-7 w-7" />
@@ -19,6 +22,7 @@ export default function PromoBannersPage() {
             <p className="font-medium text-muted-foreground">{t("description")}</p>
           </div>
         </div>
+        <HomeContentCountrySelector />
       </div>
 
       <Tabs defaultValue="section" className="space-y-8">
@@ -50,6 +54,7 @@ export default function PromoBannersPage() {
           </TabsContent>
         </div>
       </Tabs>
-    </div>
+      </div>
+    </HomeContentCountryProvider>
   );
 }

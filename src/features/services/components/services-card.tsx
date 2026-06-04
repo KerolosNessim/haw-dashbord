@@ -44,6 +44,9 @@ export default function ServiceCard({ service }: ServiceCardProps) {
   const titleHtml = (isEn
     ? service.title?.en || service.title?.ar
     : service.title?.ar || service.title?.en) ?? "";
+  const subtitleHtml = (isEn
+    ? service.subtitle?.en || service.subtitle?.ar
+    : service.subtitle?.ar || service.subtitle?.en) ?? "";
   const descriptionHtml = (isEn
     ? service.description?.en || service.description?.ar
     : service.description?.ar || service.description?.en) ?? "";
@@ -96,6 +99,13 @@ export default function ServiceCard({ service }: ServiceCardProps) {
             __html: titleHtml.trim() || "\u00a0",
           }}
         />
+
+        {subtitleHtml.trim() ? (
+          <div
+            className={`line-clamp-2 min-h-10 text-sm font-medium leading-5 text-gray-700 ${richHtmlClassName}`}
+            dangerouslySetInnerHTML={{ __html: subtitleHtml }}
+          />
+        ) : null}
 
         <div
           className={`min-h-[3.75rem] line-clamp-3 text-sm leading-5 text-gray-600 ${richHtmlClassName}`}

@@ -1,4 +1,5 @@
 import { fetchAdminBlogs } from "@/features/blogs/services/blogs-api";
+import { countryIdsQuery } from "@/features/home-content/lib/country-scope";
 import { ADMIN_BLOGS_QUERY_KEY } from "@/features/blogs/query-keys";
 import {
   blogRecordToRow,
@@ -8,29 +9,31 @@ import {
 } from "@/features/blogs/utils/admin-blog-mapper";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useHomeContentCountry } from "@/features/home-content/context/home-content-country-context";
 
 export type UseAdminBlogsParams = {
-  /** 1-based page index for Laravel paginator. */
   page?: number;
-  /** Optional override for the server's `per_page` (defaults to server default). */
   perPage?: number;
 };
 
 export function useAdminBlogs(params: UseAdminBlogsParams = {}) {
   const { i18n } = useTranslation();
   const locale = i18n.language || "en";
+  const { countryIds, isCountryReady } = useHomeContentCountry();
 
   const page = params.page && params.page > 0 ? params.page : 1;
   const perPage = params.perPage && params.perPage > 0 ? params.perPage : undefined;
 
-  const requestParams: Record<string, string | number> = { page };
+  const requestParams: Record<string, string | number | string[]> = { page };
   if (perPage) requestParams.per_page = perPage;
+  const countryParams = countryIdsQuery(countryIds);
+  if (countryParams) Object.assign(requestParams, countryParams);
 
   const query = useQuery({
-    queryKey: [...ADMIN_BLOGS_QUERY_KEY, { page, perPage: perPage ?? null }] as const,
+    queryKey: [...ADMIN_BLOGS_QUERY_KEY, countryIds, { page, perPage: perPage ?? null }] as const,
     queryFn: () => fetchAdminBlogs(requestParams),
+    enabled: isCountryReady,
     staleTime: 30_000,
-    // Keep last page visible while the next one is loading to avoid blank tables.
     placeholderData: keepPreviousData,
   });
 

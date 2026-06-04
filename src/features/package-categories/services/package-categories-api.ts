@@ -1,4 +1,6 @@
 import { api } from "@/lib/api";
+import { appendCountryIdsToFormData, countryIdsQuery } from "@/features/home-content/lib/country-scope";
+import { parseCountryIdsFromApi } from "@/features/shared/lib/parse-country-ids";
 import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
 import type { PackageCategoryFormValues, PackageCategoryRow } from "../types";
 
@@ -18,6 +20,7 @@ export type PackageCategoryPage = {
 export type PackageCategoryListParams = {
   page?: number;
   perPage?: number;
+  countryIds?: number[];
 };
 
 /**
@@ -128,10 +131,13 @@ async function fetchPackageCategoriesPageFromUrl(
   url: string,
   page?: number,
   perPage?: number,
+  countryIds?: number[],
 ): Promise<PackageCategoryPage> {
-  const params: Record<string, number> = {};
+  const params: Record<string, string | number> = {};
   if (page && page > 0) params.page = page;
   if (perPage && perPage > 0) params.per_page = perPage;
+  const countryParams = countryIdsQuery(countryIds);
+  if (countryParams) Object.assign(params, countryParams);
   const res = await api.get<unknown>(url, { params });
   const body = (res.data as { data?: unknown })?.data ?? res.data;
   const rows = normalizeCategoryListPayload(body);
@@ -153,7 +159,7 @@ export async function fetchPackageCategoriesPage(
   let lastErr: unknown;
   for (const url of tryUrls) {
     try {
-      return await fetchPackageCategoriesPageFromUrl(url, params.page, params.perPage);
+      return await fetchPackageCategoriesPageFromUrl(url, params.page, params.perPage, params.countryIds);
     } catch (e) {
       lastErr = e;
     }
@@ -161,12 +167,14 @@ export async function fetchPackageCategoriesPage(
   throw lastErr;
 }
 
-export async function fetchPackageCategories(): Promise<PackageCategoryRow[]> {
+export async function fetchPackageCategories(
+  countryIds?: number[],
+): Promise<PackageCategoryRow[]> {
   const tryUrls = [ADMIN_PACKAGE_CATEGORIES_BASE, "/v1/packages/categories"];
   let lastErr: unknown;
   for (const url of tryUrls) {
     try {
-      const first = await fetchPackageCategoriesPageFromUrl(url);
+      const first = await fetchPackageCategoriesPageFromUrl(url, undefined, undefined, countryIds);
       if (first.meta.lastPage <= 1) return first.rows;
       const remainingPages = Array.from(
         { length: first.meta.lastPage - 1 },
@@ -174,7 +182,12 @@ export async function fetchPackageCategories(): Promise<PackageCategoryRow[]> {
       );
       const rest = await Promise.all(
         remainingPages.map((p) =>
-          fetchPackageCategoriesPageFromUrl(url, p, first.meta.perPage || undefined),
+          fetchPackageCategoriesPageFromUrl(
+            url,
+            p,
+            first.meta.perPage || undefined,
+            countryIds,
+          ),
         ),
       );
       return rest.reduce<PackageCategoryRow[]>(
@@ -200,6 +213,7 @@ function appendPackageCategoryFormFields(fd: FormData, values: PackageCategoryFo
 
 export async function createPackageCategory(values: PackageCategoryFormValues) {
   const fd = new FormData();
+  appendCountryIdsToFormData(fd, values.country_ids);
   appendPackageCategoryFormFields(fd, values);
   const res = await api.post(ADMIN_PACKAGE_CATEGORIES_BASE, fd);
   assertApiEnvelopeSuccess(res.data);
@@ -208,6 +222,7 @@ export async function createPackageCategory(values: PackageCategoryFormValues) {
 
 export async function updatePackageCategory(id: string, values: PackageCategoryFormValues) {
   const fd = new FormData();
+  appendCountryIdsToFormData(fd, values.country_ids);
   fd.append("_method", "PUT");
   appendPackageCategoryFormFields(fd, values);
   const res = await api.post(
@@ -231,6 +246,7 @@ export function recordToFormValues(raw: unknown): PackageCategoryFormValues | nu
   const titleObj = r.title;
   const slug = pickBilingualSlug(r.slug);
   return {
+    country_ids: parseCountryIdsFromApi(r),
     title: {
       ar: pickLocalized(titleObj, "ar"),
       en: pickLocalized(titleObj, "en"),
@@ -242,7 +258,9 @@ export function recordToFormValues(raw: unknown): PackageCategoryFormValues | nu
   };
 }
 
-export async function fetchPackageCategoryById(id: string): Promise<PackageCategoryFormValues | null> {
+export async function fetchPackageCategoryById(
+  id: string,
+): Promise<PackageCategoryFormValues | null> {
   const urls = [`${ADMIN_PACKAGE_CATEGORIES_BASE}/${encodeURIComponent(id)}`];
   for (const url of urls) {
     try {

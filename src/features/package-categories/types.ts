@@ -1,6 +1,7 @@
 export type LocalizedString = { ar: string; en: string };
 
 export type PackageCategoryFormValues = {
+  country_ids: string[];
   title: LocalizedString;
   slug: LocalizedString;
   sort_order: number;

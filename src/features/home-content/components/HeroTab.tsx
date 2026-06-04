@@ -28,7 +28,10 @@ import {
   emptyBilingualImageAlt,
   type BilingualImageAlt,
 } from "@/lib/bilingual-image-alt";
+import { useHomeContentCountry } from "../context/home-content-country-context";
 import { useHero } from "../hooks/useHero";
+
+/* eslint-disable react-hooks/set-state-in-effect */
 
 /**
  * Validation schema for the Hero section
@@ -70,7 +73,8 @@ export default function HeroTab() {
     keyPrefix: "home_content.hero",
   });
 
-  const { getHero, updateHero, isPending, heroErrorFallbacks } = useHero();
+  const { countryId } = useHomeContentCountry();
+  const { getHero, updateHero, isPending, heroErrorFallbacks, isCountryReady } = useHero();
 
   const { data, isLoading, isError, error, refetch, isFetching } = getHero;
 
@@ -81,6 +85,13 @@ export default function HeroTab() {
   const [userImageFile, setUserImageFile] = useState<File | null>(null);
   const [imageAlt, setImageAlt] = useState<BilingualImageAlt>(emptyBilingualImageAlt());
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setUserImage(undefined);
+    setUserImageFile(null);
+    setImageAlt(emptyBilingualImageAlt());
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, [countryId]);
 
   useEffect(() => {
     const raw = data?.data?.content?.image_alt ?? data?.data?.image_alt;
@@ -180,8 +191,8 @@ export default function HeroTab() {
       })
     : null;
 
-  return isLoading ? (
-    <div className="flex items-center justify-center h-screen">
+  return isLoading || (isFetching && !data) ? (
+    <div className="flex items-center justify-center py-24">
       <Loader2 className="w-8 h-8 animate-spin text-primary" />
     </div>
   ) : isError ? (
@@ -196,6 +207,7 @@ export default function HeroTab() {
     </div>
   ) : (
     <form
+      key={countryId ?? "no-country"}
       onSubmit={handleSubmit(onSubmit)}
       className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500"
     >
@@ -447,7 +459,7 @@ export default function HeroTab() {
               type="submit"
               size="lg"
               className="w-full rounded-[24px] h-16 font-black text-xl shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all gap-3 bg-primary text-white"
-              disabled={isPending}
+              disabled={isPending || !isCountryReady}
               >
                 {isPending ?<Loader2 className="w-6 h-6 animate-spin" />: <Save className="w-6 h-6" />}
               {t("save")}

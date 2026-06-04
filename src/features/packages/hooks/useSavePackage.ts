@@ -8,7 +8,6 @@ import axios, { type AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-
 export function useSavePackage(mode: "create" | "edit", packageId?: string) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();

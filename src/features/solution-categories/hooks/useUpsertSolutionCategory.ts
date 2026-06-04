@@ -10,7 +10,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-
 export function useUpsertSolutionCategory() {
   const queryClient = useQueryClient();
   const { t: tRoot } = useTranslation();

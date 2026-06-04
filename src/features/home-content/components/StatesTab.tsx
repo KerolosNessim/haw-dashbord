@@ -9,7 +9,9 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { localizedHtmlForApi } from "@/lib/localized-html-form";
+import { parseAdminStatsList } from "../services/stats";
 import { useStats } from "../hooks/useStats";
+import { useHomeContentCountry } from "../context/home-content-country-context";
 
 /**
  * Validation schema for the Statistics section
@@ -40,8 +42,9 @@ type StatesFormValues = z.infer<typeof statesSchema>;
 export default function StatesTab() {
   const { t } = useTranslation("translation", { keyPrefix: "home_content.states" });
 
-  const { getStats, updateStat, isPending } = useStats();
-  const apiStats = getStats?.data?.data?.data;
+  const { countryId } = useHomeContentCountry();
+  const { getStats, updateStat, isPending, isCountryReady } = useStats();
+  const apiStats = parseAdminStatsList(getStats.data);
   
 
   const {
@@ -84,8 +87,17 @@ export default function StatesTab() {
     updateStat(payload);
   };
 
+  if (getStats.isLoading && !getStats.data) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <form
+      key={countryId ?? "no-country"} onSubmit={handleSubmit(onSubmit)} className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-8">
         <div>
@@ -257,7 +269,7 @@ export default function StatesTab() {
         <Button
           type="submit"
           size="lg"
-          disabled={isPending}
+          disabled={isPending || !isCountryReady}
           className="rounded-2xl h-14 px-12 font-black text-lg gap-2 shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all bg-primary text-white"
         >
           {isPending ? (

@@ -32,6 +32,8 @@ import { useEffect } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
+import CountriesMultiSelectField from "@/features/shared/components/countries-multi-select-field";
+import { useHomeContentCountry } from "@/features/home-content/context/home-content-country-context";
 
 const imageAltSchema = z.object({
   ar: z.string(),
@@ -39,6 +41,7 @@ const imageAltSchema = z.object({
 });
 
 const schema = z.object({
+  country_ids: z.array(z.string()).min(1, { message: "validation.country_required" }),
   name_ar: z.string().min(1, { message: "validation.required" }),
   name_en: z.string().optional().default(""),
   slug_ar: z.string().min(1, { message: "validation.required" }),
@@ -69,6 +72,7 @@ type SolutionCategoryFormDialogProps = {
 
 function apiValuesToDialog(v: SolutionCategoryFormValues): SolutionCategoryDialogValues {
   return {
+    country_ids: v.country_ids ?? [],
     name_ar: v.name.ar,
     name_en: v.name.en,
     slug_ar: v.slug.ar,
@@ -86,6 +90,7 @@ function apiValuesToDialog(v: SolutionCategoryFormValues): SolutionCategoryDialo
 
 function dialogToApiValues(data: SolutionCategoryDialogValues): SolutionCategoryFormValues {
   return {
+    country_ids: data.country_ids,
     name: { ar: data.name_ar, en: data.name_en },
     slug: { ar: data.slug_ar, en: data.slug_en },
     description: { ar: data.des_ar, en: data.des_en },
@@ -107,11 +112,12 @@ export default function SolutionCategoryFormDialog({
   const { t } = useTranslation("translation", { keyPrefix: "solution_categories.dialog" });
   const { t: commonT } = useTranslation("translation");
   const { upsertMutation, isPending } = useUpsertSolutionCategory();
+  const { countryIds, isCountryReady } = useHomeContentCountry();
 
   const { data: categoryDetail, isLoading: detailLoading } = useQuery({
     queryKey: [...SOLUTION_TAXONOMY_CATEGORIES_KEY, "detail", initial?.id],
     queryFn: () => fetchSolutionCategoryById(initial!.id),
-    enabled: open && mode === "edit" && Boolean(initial?.id),
+    enabled: open && mode === "edit" && Boolean(initial?.id) && isCountryReady,
   });
 
   const {
@@ -142,9 +148,12 @@ export default function SolutionCategoryFormDialog({
       return;
     }
     if (mode === "create") {
-      reset(emptyDialogValues);
+      reset({
+        ...emptyDialogValues,
+        country_ids: countryIds.map(String),
+      });
     }
-  }, [open, mode, initial, categoryDetail, detailLoading, reset]);
+  }, [open, mode, initial, categoryDetail, detailLoading, reset, countryIds]);
 
   const translateError = (msg: string | undefined) => (msg ? commonT(msg) : undefined);
 
@@ -178,6 +187,25 @@ export default function SolutionCategoryFormDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-2">
+          <Controller
+            name="country_ids"
+            control={control}
+            render={({ field }) => (
+              <CountriesMultiSelectField
+                value={field.value ?? []}
+                onChange={field.onChange}
+                label={t("countries")}
+                hint={t("countries_hint")}
+                required
+                error={
+                  errors.country_ids?.message
+                    ? commonT(errors.country_ids.message)
+                    : undefined
+                }
+              />
+            )}
+          />
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Controller
               name="name_ar"

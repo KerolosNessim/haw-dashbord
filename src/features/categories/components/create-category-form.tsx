@@ -170,7 +170,7 @@ export default function CreateCategoryForm() {
                 slugLocale="ar"
                 titleEn={watchTitleAr ?? ""}
                 trigger={trigger}
-                syncFromTitleWhenLocked
+                syncFromTitleWhenLocked={true}
                 label={
                   <span className="flex items-center gap-2 font-bold">
                     <LinkIcon className="h-3 w-3" />
@@ -187,7 +187,7 @@ export default function CreateCategoryForm() {
                 slugLocale="en"
                 titleEn={watchTitleEn ?? ""}
                 trigger={trigger}
-                syncFromTitleWhenLocked
+                syncFromTitleWhenLocked={true}
                 label={
                   <span className="flex items-center gap-2 font-bold">
                     <LinkIcon className="h-3 w-3" />

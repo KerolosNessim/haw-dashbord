@@ -7,6 +7,8 @@ export type PackageFeatureRow = {
 };
 
 export type PackageFormValues = {
+  /** Countries where this package is visible (API: `country_ids[]`). */
+  country_ids: string[];
   package_category_id: string;
   title: LocalizedString;
   description: LocalizedString;

@@ -6,6 +6,7 @@ import {
   normalizeTwitterCard,
 } from "../constants/social-meta-options";
 import type { Service } from "../type";
+import { mergeServiceSlug } from "./service-mapper";
 import type { ServiceSectionsPayload } from "../service-section-types";
 import { builderSectionsFromService } from "../lib/section-blocks";
 import { buildSectionsPayloadFromInstances } from "./section-form-mappers";
@@ -36,13 +37,14 @@ export function serviceToBasicInfoValues(service: Service): BasicInfoValues {
   }
 
   return {
-    slug: { ar: service.slug?.ar ?? "", en: service.slug?.en ?? "" },
+    slug: mergeServiceSlug(service as Service & Record<string, unknown>),
     slug_redirect_code: slugRedirect,
     country_ids: service.countries?.map((c) => String(c.id)) ?? [],
     package_ids: (raw.package_ids as number[] | undefined)?.map(String) ?? [],
     is_active: service.is_active ?? true,
     show_footer: service.show_footer ?? true,
     title: { ar: service.title?.ar ?? "", en: service.title?.en ?? "" },
+    subtitle: pickLocalized(raw.subtitle) ?? { ar: null, en: null },
     single_page_title: pickLocalized(raw.single_page_title) ?? { ar: null, en: null },
     tags: normalizeServiceTagsFromApi(raw.tags ?? raw.article_tags),
     page_script: String(raw.page_script ?? ""),

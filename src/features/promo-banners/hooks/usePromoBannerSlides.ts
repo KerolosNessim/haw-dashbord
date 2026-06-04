@@ -6,23 +6,26 @@ import {
   bulkSyncPromoBannerSlides,
   fetchPromoBannerSlides,
 } from "../services/promo-banners-api";
-
-const QUERY_KEY = ["promo-banners", "slides"];
+import { useHomeContentCountry } from "@/features/home-content/context/home-content-country-context";
 
 export function usePromoBannerSlides() {
   const { t } = useTranslation("translation", { keyPrefix: "promo_banners" });
   const queryClient = useQueryClient();
+  const { countryIds, isCountryReady } = useHomeContentCountry();
+  const queryKey = ["promo-banners", "slides", countryIds] as const;
 
   const slidesQuery = useQuery({
-    queryKey: QUERY_KEY,
-    queryFn: fetchPromoBannerSlides,
+    queryKey,
+    queryFn: () => fetchPromoBannerSlides(countryIds),
+    enabled: isCountryReady,
   });
 
   const bulkSyncMutation = useMutation({
-    mutationFn: bulkSyncPromoBannerSlides,
+    mutationFn: (values: Parameters<typeof bulkSyncPromoBannerSlides>[0]) =>
+      bulkSyncPromoBannerSlides(values, countryIds),
     onSuccess: (res) => {
       toast.success(res?.message || t("slides.toast_saved"));
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message || t("slides.toast_error"));
@@ -34,5 +37,6 @@ export function usePromoBannerSlides() {
     bulkSync: bulkSyncMutation.mutate,
     isSaving: bulkSyncMutation.isPending,
     saveError: bulkSyncMutation.error,
+    isCountryReady,
   };
 }

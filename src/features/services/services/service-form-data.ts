@@ -19,6 +19,8 @@ import {
   appendIndexedLocalizedHtml,
   appendLocalized,
   appendLocalizedHtml,
+  appendLocalizedHtmlClearable,
+  appendIndexedLocalizedHtmlClearable,
   appendScalar,
   appendSectionItemField,
   appendSectionItemLocalizedHtml,
@@ -46,6 +48,15 @@ function appendSectionSortOrder(
   if (sortOrder != null && Number.isFinite(sortOrder) && sortOrder > 0) {
     appendIndexedField(fd, prefix, index, "sort_order", sortOrder);
   }
+}
+
+/** Always send both locale keys (API expects slug[en] even when optional in the UI). */
+function appendServiceSlug(
+  fd: FormData,
+  slug: { ar?: string | null; en?: string | null } | null | undefined,
+) {
+  fd.append("slug[ar]", (slug?.ar ?? "").trim());
+  fd.append("slug[en]", (slug?.en ?? "").trim());
 }
 
 function appendSectionLink(
@@ -175,12 +186,10 @@ function appendToolsSection(fd: FormData, index: number, data: ToolsSectionData)
   appendSectionId(fd, "tools", index, data.id);
   appendSectionSortOrder(fd, "tools", index, data.sort_order);
   appendSectionLink(fd, "tools", index, data.link);
-  appendIndexedLocalizedHtml(fd, "tools", index, "title", data.title);
-  appendIndexedLocalizedHtml(fd, "tools", index, "description", data.description);
-  if (data.sub_title) {
-    appendIndexedLocalizedHtml(fd, "tools", index, "sub_title", data.sub_title);
-  }
-  appendIndexedLocalizedHtml(
+  appendIndexedLocalizedHtmlClearable(fd, "tools", index, "title", data.title);
+  appendIndexedLocalizedHtmlClearable(fd, "tools", index, "description", data.description);
+  appendIndexedLocalizedHtmlClearable(fd, "tools", index, "sub_title", data.sub_title);
+  appendIndexedLocalizedHtmlClearable(
     fd,
     "tools",
     index,
@@ -295,12 +304,12 @@ function appendBasicSocialAndMedia(fd: FormData, basic: BasicInfoValues) {
   basic.package_ids?.forEach((id) => fd.append("package_ids[]", id));
 
   if (basic.og_title) {
-    appendLocalizedHtml(fd, "og_title", basic.og_title.ar, "ar");
-    appendLocalizedHtml(fd, "og_title", basic.og_title.en, "en");
+    appendLocalizedHtmlClearable(fd, "og_title", basic.og_title.ar, "ar");
+    appendLocalizedHtmlClearable(fd, "og_title", basic.og_title.en, "en");
   }
   if (basic.og_description) {
-    appendLocalizedHtml(fd, "og_description", basic.og_description.ar, "ar");
-    appendLocalizedHtml(fd, "og_description", basic.og_description.en, "en");
+    appendLocalizedHtmlClearable(fd, "og_description", basic.og_description.ar, "ar");
+    appendLocalizedHtmlClearable(fd, "og_description", basic.og_description.en, "en");
   }
   appendScalar(fd, "og_type", basic.og_type);
   if (basic.og_image instanceof File) {
@@ -311,12 +320,12 @@ function appendBasicSocialAndMedia(fd: FormData, basic: BasicInfoValues) {
 
   appendScalar(fd, "twitter_card", basic.twitter_card);
   if (basic.twitter_title) {
-    appendLocalizedHtml(fd, "twitter_title", basic.twitter_title.ar, "ar");
-    appendLocalizedHtml(fd, "twitter_title", basic.twitter_title.en, "en");
+    appendLocalizedHtmlClearable(fd, "twitter_title", basic.twitter_title.ar, "ar");
+    appendLocalizedHtmlClearable(fd, "twitter_title", basic.twitter_title.en, "en");
   }
   if (basic.twitter_description) {
-    appendLocalizedHtml(fd, "twitter_description", basic.twitter_description.ar, "ar");
-    appendLocalizedHtml(fd, "twitter_description", basic.twitter_description.en, "en");
+    appendLocalizedHtmlClearable(fd, "twitter_description", basic.twitter_description.ar, "ar");
+    appendLocalizedHtmlClearable(fd, "twitter_description", basic.twitter_description.en, "en");
   }
   if (basic.twitter_image instanceof File) {
     fd.append("twitter_image", basic.twitter_image);
@@ -331,16 +340,18 @@ export function buildServicePageFormData(
 ): FormData {
   const fd = new FormData();
 
-  appendLocalized(fd, "slug", basic.slug);
+  appendServiceSlug(fd, basic.slug);
   fd.append("slug_redirect_code[ar]", basic.slug_redirect_code?.ar ?? "");
   fd.append("slug_redirect_code[en]", basic.slug_redirect_code?.en ?? "");
   appendLocalizedHtml(fd, "title", basic.title?.ar, "ar");
   appendLocalizedHtml(fd, "title", basic.title?.en, "en");
-  if (basic.single_page_title?.ar) {
-    appendLocalizedHtml(fd, "single_page_title", basic.single_page_title.ar, "ar");
+  if (basic.subtitle) {
+    appendLocalizedHtmlClearable(fd, "subtitle", basic.subtitle.ar, "ar");
+    appendLocalizedHtmlClearable(fd, "subtitle", basic.subtitle.en, "en");
   }
-  if (basic.single_page_title?.en) {
-    appendLocalizedHtml(fd, "single_page_title", basic.single_page_title.en, "en");
+  if (basic.single_page_title) {
+    appendLocalizedHtmlClearable(fd, "single_page_title", basic.single_page_title.ar, "ar");
+    appendLocalizedHtmlClearable(fd, "single_page_title", basic.single_page_title.en, "en");
   }
   if (basic.page_script?.trim()) {
     fd.append("page_script", basic.page_script.trim());
@@ -358,26 +369,24 @@ export function buildServicePageFormData(
   fd.append("is_active", basic.is_active ? "1" : "0");
   fd.append("show_footer", basic.show_footer ? "1" : "0");
 
-  if (basic.highlight_description?.ar) {
-    fd.append(
-      "highlight_description[ar]",
-      htmlForMultipartApi(htmlFromUnknown(basic.highlight_description.ar)),
-    );
-  }
-  if (basic.highlight_description?.en) {
-    fd.append(
-      "highlight_description[en]",
-      htmlForMultipartApi(htmlFromUnknown(basic.highlight_description.en)),
-    );
-  }
+  appendLocalizedHtmlClearable(
+    fd,
+    "highlight_description",
+    basic.highlight_description?.ar,
+    "ar",
+  );
+  appendLocalizedHtmlClearable(
+    fd,
+    "highlight_description",
+    basic.highlight_description?.en,
+    "en",
+  );
 
-  appendLocalizedHtml(fd, "inside_desc", basic.inside_desc?.ar, "ar");
-  appendLocalizedHtml(fd, "inside_desc", basic.inside_desc?.en, "en");
+  appendLocalizedHtmlClearable(fd, "inside_desc", basic.inside_desc?.ar, "ar");
+  appendLocalizedHtmlClearable(fd, "inside_desc", basic.inside_desc?.en, "en");
 
-  appendLocalizedHtml(fd, "meta_title", basic.meta_title?.ar, "ar");
-  appendLocalizedHtml(fd, "meta_title", basic.meta_title?.en, "en");
-  appendLocalizedHtml(fd, "meta_description", basic.meta_description?.ar, "ar");
-  appendLocalizedHtml(fd, "meta_description", basic.meta_description?.en, "en");
+  appendLocalized(fd, "meta_title", basic.meta_title);
+  appendLocalized(fd, "meta_description", basic.meta_description);
   appendLocalized(fd, "image_alt", basic.image_alt);
 
   if (basic.image.ar instanceof File) {

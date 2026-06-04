@@ -33,7 +33,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { Controller, useFieldArray, useForm, type FieldErrors, type Resolver } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { SmartSlugField } from "@/components/form/smart-slug-field";
@@ -51,6 +51,11 @@ import {
 } from "@/features/blogs/lib/default-blog-toc";
 import { BLOG_SLUG_REDIRECT_CODES } from "@/lib/http-redirect-codes";
 import { useQuery } from "@tanstack/react-query";
+import CountriesMultiSelectField from "@/features/shared/components/countries-multi-select-field";
+import { BlogTocPreview } from "@/features/blogs/components/blog-toc-preview";
+import { syncBlogArabicContentAndToc } from "@/features/blogs/lib/blog-toc-from-content";
+
+const BLOG_CONTENT_AR_EDITOR_ID = "blog-content-ar-editor";
 
 type Mode = "create" | "edit";
 
@@ -82,12 +87,13 @@ const DEFAULT_VALUES: BlogFormValues = {
   toc_enabled: false,
   toc_placement: "before_body",
   table_of_contents: {
-    ar: DEFAULT_BLOG_TOC_HTML.ar,
+    ar: "",
     en: DEFAULT_BLOG_TOC_HTML.en,
   },
   publisher_name: "",
   tags: [],
   category_id: "",
+  country_ids: [],
   author_id: "",
   image_alt: { ar: "", en: "" },
   is_active: true,
@@ -119,6 +125,7 @@ function firstResolvedBlogValidationMessage(
     errors.slug_redirect_code?.ar?.message,
     errors.slug_redirect_code?.en?.message,
     errors.category_id?.message as string | undefined,
+    errors.country_ids?.message as string | undefined,
     errors.title?.ar?.message,
     errors.title?.en?.message,
     errors.description?.ar?.message,
@@ -198,20 +205,35 @@ export default function BlogForm({
 
   const watchTitleAr = watch("title.ar");
   const watchTitleEn = watch("title.en");
+  const watchTocAr = watch("table_of_contents.ar");
+
+  const syncArabicTocFromContent = useCallback(
+    (contentHtml: string) => syncBlogArabicContentAndToc(contentHtml, { tocTitle: commonT("editor.toc_title") }),
+    [commonT],
+  );
 
   const [preview, setPreview] = useState<string | null>(initialImageUrl ?? null);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (initialValues) {
-      reset(initialValues);
+      const merged = { ...DEFAULT_VALUES, ...initialValues };
+      const { contentHtml, tocHtml } = syncArabicTocFromContent(merged.content.ar ?? "");
+      reset({
+        ...merged,
+        content: { ...merged.content, ar: contentHtml },
+        table_of_contents: {
+          ...merged.table_of_contents,
+          ar: tocHtml,
+        },
+      });
       const hasFaq = Boolean(
         (initialValues.faq?.ar?.length ?? 0) > 0 || (initialValues.faq?.en?.length ?? 0) > 0,
       );
       if (hasFaq) setFaqExpanded(true);
       if (initialValues.toc_enabled) setTocExpanded(true);
     }
-  }, [initialValues, reset]);
+  }, [initialValues, reset, syncArabicTocFromContent]);
 
   /** Radix Select shows no value until items exist; categories often load after blog detail. */
   useEffect(() => {
@@ -344,6 +366,25 @@ export default function BlogForm({
                 )}
               />
             </div>
+
+            <Controller
+              name="country_ids"
+              control={control}
+              render={({ field }) => (
+                <CountriesMultiSelectField
+                  value={field.value ?? []}
+                  onChange={field.onChange}
+                  label={t("countries")}
+                  hint={t("countries_hint")}
+                  required
+                  error={
+                    errors.country_ids?.message
+                      ? commonT(errors.country_ids.message)
+                      : undefined
+                  }
+                />
+              )}
+            />
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               <Controller
@@ -546,15 +587,27 @@ export default function BlogForm({
                             </span>
                           ) : null}
                         </FieldLabel>
-                        <RichTextEditor
-                          dir={lang === "ar" ? "rtl" : "ltr"}
-                          value={field.value}
-                          placeholder={lang === "ar" ? t("content_ar") : t("content_en")}
-                          onChange={(val: unknown) => {
-                            const html = (val as { html?: string })?.html ?? "";
-                            field.onChange(typeof html === "string" ? html : "");
-                          }}
-                        />
+                        <div
+                          id={lang === "ar" ? BLOG_CONTENT_AR_EDITOR_ID : undefined}
+                          className={lang === "ar" ? "scroll-mt-4" : undefined}
+                        >
+                          <RichTextEditor
+                            dir={lang === "ar" ? "rtl" : "ltr"}
+                            value={field.value}
+                            placeholder={lang === "ar" ? t("content_ar") : t("content_en")}
+                            onChange={(val: unknown) => {
+                              const html = (val as { html?: string })?.html ?? "";
+                              const raw = typeof html === "string" ? html : "";
+                              if (lang === "ar") {
+                                const { contentHtml, tocHtml } = syncArabicTocFromContent(raw);
+                                field.onChange(contentHtml);
+                                setValue("table_of_contents.ar", tocHtml, { shouldDirty: true });
+                                return;
+                              }
+                              field.onChange(raw);
+                            }}
+                          />
+                        </div>
                         <FieldError
                           errors={[
                             {
@@ -667,36 +720,46 @@ export default function BlogForm({
 
                   {(["ar", "en"] as const).map((lang) => (
                     <TabsContent key={lang} value={lang} className="mt-6 space-y-6">
-                      <Controller
-                        name={lang === "ar" ? "table_of_contents.ar" : "table_of_contents.en"}
-                        control={control}
-                        render={({ field }) => (
-                          <Field>
-                            <FieldLabel>
-                              {lang === "ar" ? t("toc_label_ar") : t("toc_label_en")}
-                              {lang === "en" ? (
+                      {lang === "ar" ? (
+                        <Field>
+                          <FieldLabel>{t("toc_label_ar")}</FieldLabel>
+                          <p className="text-[11px] text-muted-foreground -mt-1 mb-1">
+                            {t("toc_hint_ar")}
+                          </p>
+                          <BlogTocPreview
+                            html={watchTocAr ?? ""}
+                            contentScrollRootId={BLOG_CONTENT_AR_EDITOR_ID}
+                            emptyMessage={commonT("editor.toc_no_headings")}
+                          />
+                        </Field>
+                      ) : (
+                        <Controller
+                          name="table_of_contents.en"
+                          control={control}
+                          render={({ field }) => (
+                            <Field>
+                              <FieldLabel>
+                                {t("toc_label_en")}
                                 <span className="ms-1 font-normal text-muted-foreground">
                                   {t("optional_suffix")}
                                 </span>
-                              ) : null}
-                            </FieldLabel>
-                            <p className="text-[11px] text-muted-foreground -mt-1 mb-1">
-                              {lang === "ar" ? t("toc_hint_ar") : t("toc_hint_en")}
-                            </p>
-                            <RichTextEditor
-                              dir={lang === "ar" ? "rtl" : "ltr"}
-                              value={field.value}
-                              placeholder={
-                                lang === "ar" ? t("toc_placeholder_ar") : t("toc_placeholder_en")
-                              }
-                              onChange={(val: unknown) => {
-                                const html = (val as { html?: string })?.html ?? "";
-                                field.onChange(typeof html === "string" ? html : "");
-                              }}
-                            />
-                          </Field>
-                        )}
-                      />
+                              </FieldLabel>
+                              <p className="text-[11px] text-muted-foreground -mt-1 mb-1">
+                                {t("toc_hint_en")}
+                              </p>
+                              <RichTextEditor
+                                dir="ltr"
+                                value={field.value}
+                                placeholder={t("toc_placeholder_en")}
+                                onChange={(val: unknown) => {
+                                  const html = (val as { html?: string })?.html ?? "";
+                                  field.onChange(typeof html === "string" ? html : "");
+                                }}
+                              />
+                            </Field>
+                          )}
+                        />
+                      )}
                     </TabsContent>
                   ))}
                 </Tabs>
@@ -914,6 +977,7 @@ export default function BlogForm({
                     slugLocale={lang}
                     titleEn={lang === "ar" ? (watchTitleAr ?? "") : (watchTitleEn ?? "")}
                     trigger={trigger}
+                    syncFromTitleWhenLocked={mode === "create"}
                     label={
                       <span className="flex items-center gap-2">
                         {lang === "ar" ? t("slug_label_ar") : t("slug_label_en")}

@@ -250,6 +250,7 @@ export default function SolutionSingleForm({ mode, initial = null, onSaved }: So
               slugLocale="ar"
               titleEn={watchTitleAr ?? ""}
               trigger={trigger}
+              syncFromTitleWhenLocked={mode === "create"}
               label={
                 <span className="flex items-center gap-2 text-sm font-bold">
                   <LinkIcon className="h-3 w-3" />
@@ -266,6 +267,7 @@ export default function SolutionSingleForm({ mode, initial = null, onSaved }: So
               slugLocale="en"
               titleEn={watchTitleEn ?? ""}
               trigger={trigger}
+              syncFromTitleWhenLocked={mode === "create"}
               label={
                 <span className="flex items-center gap-2 text-sm font-bold">
                   <LinkIcon className="h-3 w-3" />

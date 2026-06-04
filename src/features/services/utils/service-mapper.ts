@@ -7,6 +7,20 @@ export function pickLocalizedField(field: LocalizedField | null | undefined): Lo
   return { ar: field.ar ?? "", en: field.en ?? "" };
 }
 
+/** Merge `slug` + `slug_local` so EN is not dropped when API splits locales across keys. */
+export function mergeServiceSlug(raw: Record<string, unknown>): LocalizedString {
+  const fromSlug = pickLocalizedField(
+    (raw.slug ?? raw.url_slug) as LocalizedField | null | undefined,
+  );
+  const fromLocal = pickLocalizedField(
+    raw.slug_local as LocalizedField | null | undefined,
+  );
+  return {
+    ar: fromLocal.ar.trim() || fromSlug.ar.trim(),
+    en: fromLocal.en.trim() || fromSlug.en.trim(),
+  };
+}
+
 export function pickServiceImage(
   field: unknown,
   imagesFallback?: unknown,
@@ -46,10 +60,11 @@ export function normalizeService(raw: Record<string, unknown>): Service {
   return {
     ...raw,
     id: Number(raw.id),
-    slug: pickLocalizedField((raw.slug_local ?? raw.slug) as LocalizedField),
+    slug: mergeServiceSlug(raw),
     image: pickServiceImage(raw.image, raw.images),
     image_alt: pickServiceImageAlt(raw.image_alt ?? null),
     title: pickLocalizedField(raw.title as LocalizedField),
+    subtitle: pickLocalizedField(raw.subtitle as LocalizedField),
     description: pickLocalizedField(raw.description as LocalizedField),
     highlight_description: pickLocalizedField(raw.highlight_description as LocalizedField),
     inside_desc: pickLocalizedField(raw.inside_desc as LocalizedField),

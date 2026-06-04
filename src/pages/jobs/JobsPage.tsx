@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { LaravelResourcePagination } from "@/components/ui/laravel-resource-pagination";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -610,15 +611,19 @@ function JobsHeaderTab({
         </Field>
         <Field>
           <FieldLabel>{t("header.fields.meta_description_ar")}</FieldLabel>
-          <Input
+          <Textarea
             value={form.meta_description.ar}
+            dir="rtl"
+            className="min-h-[100px] resize-none rounded-xl"
             onChange={(e) => setForm((s) => ({ ...s, meta_description: { ...s.meta_description, ar: e.target.value } }))}
           />
         </Field>
         <Field>
           <FieldLabel>{t("header.fields.meta_description_en")}</FieldLabel>
-          <Input
+          <Textarea
             value={form.meta_description.en}
+            dir="ltr"
+            className="min-h-[100px] resize-none rounded-xl"
             onChange={(e) => setForm((s) => ({ ...s, meta_description: { ...s.meta_description, en: e.target.value } }))}
           />
         </Field>

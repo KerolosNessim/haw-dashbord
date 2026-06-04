@@ -1,6 +1,7 @@
 import { fetchPackageCategoriesPage } from "@/features/package-categories/services/package-categories-api";
 import { PACKAGE_CATEGORIES_PAGED_QUERY_KEY } from "@/features/package-categories/query-keys";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useHomeContentCountry } from "@/features/home-content/context/home-content-country-context";
 
 export type UsePackageCategoriesPagedParams = {
   page?: number;
@@ -10,10 +11,12 @@ export type UsePackageCategoriesPagedParams = {
 export function usePackageCategoriesPaged(params: UsePackageCategoriesPagedParams = {}) {
   const page = params.page && params.page > 0 ? params.page : 1;
   const perPage = params.perPage && params.perPage > 0 ? params.perPage : undefined;
+  const { countryIds, isCountryReady } = useHomeContentCountry();
 
   const query = useQuery({
-    queryKey: [...PACKAGE_CATEGORIES_PAGED_QUERY_KEY, { page, perPage: perPage ?? null }] as const,
-    queryFn: () => fetchPackageCategoriesPage({ page, perPage }),
+    queryKey: [...PACKAGE_CATEGORIES_PAGED_QUERY_KEY, countryIds, { page, perPage: perPage ?? null }] as const,
+    queryFn: () => fetchPackageCategoriesPage({ page, perPage, countryIds }),
+    enabled: isCountryReady,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });

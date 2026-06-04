@@ -72,6 +72,7 @@ export const blogSchema = z.object({
         .filter((r) => r.name.length > 0),
     ),
   category_id: z.string().min(1, { message: "validation.required" }),
+  country_ids: z.array(z.string()).min(1, { message: "validation.country_required" }),
   /** Optional relation to admin authors table. */
   author_id: z.string().optional().default(""),
   image_alt: localizedOptional,

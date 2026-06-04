@@ -1,6 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  AlignLeft,
   ImageIcon,
   Loader2,
   Plus,
@@ -29,7 +28,10 @@ import {
   type BilingualAlt,
 } from "../services/accreditation-form-data";
 import { useAccreditationServiceOptions } from "../hooks/useAccreditationServiceOptions";
+import { useHomeContentCountry } from "../context/home-content-country-context";
 import { useAccreditations } from "../hooks/useAccreditations";
+
+/* eslint-disable react-hooks/set-state-in-effect */
 
 const dependenciesSchema = z.object({
   title_ar: z.string().min(1, "Required"),
@@ -64,10 +66,15 @@ export default function DependenciesTab() {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { getAccreditationsQuery, updateAccred, isPending } = useAccreditations();
+  const { countryId } = useHomeContentCountry();
+  const { getAccreditationsQuery, updateAccred, isPending, isCountryReady } = useAccreditations();
   const servicesQuery = useAccreditationServiceOptions();
   const serviceOptions = servicesQuery.data ?? [];
   const apiData = getAccreditationsQuery?.data?.data;
+  const isEmptyAccreditation =
+    !getAccreditationsQuery.isLoading &&
+    !getAccreditationsQuery.isFetching &&
+    (!apiData || apiData.id === 0);
 
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
   const [newImages, setNewImages] = useState<NewImage[]>([]);
@@ -91,6 +98,23 @@ export default function DependenciesTab() {
   });
 
   useEffect(() => {
+    if (getAccreditationsQuery.isLoading || getAccreditationsQuery.isFetching) return;
+
+    if (isEmptyAccreditation) {
+      reset({
+        title_ar: "",
+        title_en: "",
+        des_ar: "",
+        des_en: "",
+        sort_order: 0,
+        is_active: true,
+      });
+      setExistingImages([]);
+      setNewImages([]);
+      setDeletedImageIds([]);
+      return;
+    }
+
     if (!apiData) return;
 
     reset({
@@ -113,7 +137,14 @@ export default function DependenciesTab() {
     );
     setNewImages([]);
     setDeletedImageIds([]);
-  }, [apiData, reset]);
+  }, [
+    apiData,
+    countryId,
+    getAccreditationsQuery.isFetching,
+    getAccreditationsQuery.isLoading,
+    isEmptyAccreditation,
+    reset,
+  ]);
 
   const onSubmit = (data: DependenciesFormValues) => {
     const existingImagesAlt: Record<string, BilingualAlt> = {};
@@ -221,8 +252,17 @@ export default function DependenciesTab() {
 
   const galleryCount = existingImages.length + newImages.length;
 
+  if (getAccreditationsQuery.isLoading && !apiData) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <form
+      key={countryId ?? "no-country"}
       onSubmit={handleSubmit(onSubmit)}
       className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500"
     >
@@ -490,7 +530,7 @@ export default function DependenciesTab() {
       <Button
         type="submit"
         size="lg"
-        disabled={isPending || getAccreditationsQuery.isLoading}
+        disabled={isPending || getAccreditationsQuery.isLoading || !isCountryReady}
         className="rounded-2xl h-14 px-12 font-black text-lg gap-2 shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all bg-primary text-white"
       >
         {isPending ? (

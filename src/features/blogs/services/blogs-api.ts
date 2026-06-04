@@ -1,5 +1,10 @@
 import { api } from "@/lib/api";
 import {
+  appendCountryIdsToFormData,
+  countryIdsQuery,
+} from "@/features/home-content/lib/country-scope";
+import { parseCountryIdsFromApi } from "@/features/shared/lib/parse-country-ids";
+import {
   appendLocalizedDescriptionHtml,
   localizedHtmlForApi,
 } from "@/lib/localized-html-form";
@@ -64,6 +69,7 @@ export function blogValuesToFormData(
   mode: "create" | "update",
 ): FormData {
   const fd = new FormData();
+  appendCountryIdsToFormData(fd, values.country_ids);
 
   if (mode === "update") {
     fd.append("_method", "PUT");
@@ -446,5 +452,6 @@ export function recordToBlogFormValues(raw: unknown): BlogFormValues | null {
       en: pickLocalized(rec.meta_description, "en"),
     },
     published_at: publishedAtApiToLocal(publishedRaw),
+    country_ids: parseCountryIdsFromApi(rec),
   };
 }

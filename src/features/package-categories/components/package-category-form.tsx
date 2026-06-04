@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import CountriesMultiSelectField from "@/features/shared/components/countries-multi-select-field";
 import { useSavePackageCategory } from "@/features/package-categories/hooks/useSavePackageCategory";
 import type { PackageCategoryFormValues } from "@/features/package-categories/types";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +20,7 @@ const localizedRequired = z.object({
 });
 
 const packageCategorySchema = z.object({
+  country_ids: z.array(z.string()).min(1, { message: "validation.country_required" }),
   title: localizedRequired,
   slug: localizedSlugRequired,
   sort_order: z.coerce.number().int().min(0),
@@ -28,6 +30,7 @@ const packageCategorySchema = z.object({
 type FormValues = z.infer<typeof packageCategorySchema>;
 
 const emptyValues: PackageCategoryFormValues = {
+  country_ids: [],
   title: { ar: "", en: "" },
   slug: { ar: "", en: "" },
   sort_order: 0,
@@ -76,6 +79,7 @@ export default function PackageCategoryForm({
 
   const onSubmit = (data: FormValues) => {
     void saveMutation({
+      country_ids: data.country_ids,
       title: { ar: data.title.ar, en: data.title.en },
       slug: { ar: data.slug.ar, en: data.slug.en },
       sort_order: data.sort_order,
@@ -96,6 +100,25 @@ export default function PackageCategoryForm({
           <Languages className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-bold text-gray-900">{t("basic_section")}</h2>
         </div>
+
+        <Controller
+          name="country_ids"
+          control={control}
+          render={({ field }) => (
+            <CountriesMultiSelectField
+              value={field.value ?? []}
+              onChange={field.onChange}
+              label={t("countries")}
+              hint={t("countries_hint")}
+              required
+              error={
+                errors.country_ids?.message
+                  ? commonT(errors.country_ids.message)
+                  : undefined
+              }
+            />
+          )}
+        />
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Controller

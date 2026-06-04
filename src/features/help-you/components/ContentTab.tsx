@@ -32,7 +32,6 @@ export default function ContentTab() {
   const { getHelpYouQuery, updateHelpYou, isPending } = useHelpYou();
   
   const apiItems = Array.isArray(getHelpYouQuery?.data?.data?.data) ? getHelpYouQuery?.data?.data?.data : [];
-console.log("apiItemshelp", apiItems);
 
   const {
     control,

@@ -14,6 +14,7 @@ import {
 import { BilingualImageAltFields } from "@/components/form/bilingual-image-alt-fields";
 import { emptyBilingualImageAlt } from "@/lib/bilingual-image-alt";
 import { usePackageCategories } from "@/features/package-categories/hooks/usePackageCategories";
+import CountriesMultiSelectField from "@/features/shared/components/countries-multi-select-field";
 import { useSavePackage } from "@/features/packages/hooks/useSavePackage";
 import type { PackageFormValues } from "@/features/packages/types";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,6 +48,7 @@ const imageAltSchema = z.object({
 });
 
 const packageFormSchema = z.object({
+  country_ids: z.array(z.string()).min(1, { message: "validation.country_required" }),
   package_category_id: z.string().min(1, { message: "validation.required" }),
   title: localizedRequired,
   description: localizedRichTextRequired,
@@ -64,6 +66,7 @@ type FormValues = z.infer<typeof packageFormSchema>;
 
 function defaultFormValues(): PackageFormValues {
   return {
+    country_ids: [],
     package_category_id: "",
     title: { ar: "", en: "" },
     description: { ar: "", en: "" },
@@ -126,7 +129,9 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
     if (initialValues) {
       const { existing_icon_url, ...rest } = initialValues;
       reset({
+        ...defaultFormValues(),
         ...rest,
+        country_ids: rest.country_ids?.length ? rest.country_ids : [],
         package_category_id: rest.package_category_id ? String(rest.package_category_id).trim() : "",
         features: initialValues.features?.length ? initialValues.features : [],
       });
@@ -223,6 +228,7 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
     const slugEn = data.slug.en.trim() || data.title.en.trim();
 
     const payload: PackageFormValues = {
+      country_ids: data.country_ids,
       package_category_id: data.package_category_id,
       title: data.title,
       description: {
@@ -257,6 +263,25 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
           <Languages className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-bold text-gray-900">{t("basic_section")}</h2>
         </div>
+
+        <Controller
+          name="country_ids"
+          control={control}
+          render={({ field }) => (
+            <CountriesMultiSelectField
+              value={field.value ?? []}
+              onChange={field.onChange}
+              label={t("countries")}
+              hint={t("countries_hint")}
+              required
+              error={
+                errors.country_ids?.message
+                  ? commonT(errors.country_ids.message)
+                  : undefined
+              }
+            />
+          )}
+        />
 
         <Controller
           name="package_category_id"

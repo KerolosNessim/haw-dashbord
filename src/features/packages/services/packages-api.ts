@@ -1,5 +1,7 @@
 import { API_BASE_URL } from "@/config/api";
 import { api } from "@/lib/api";
+import { appendCountryIdsToFormData, countryIdsQuery } from "@/features/home-content/lib/country-scope";
+import { parseCountryIdsFromApi } from "@/features/shared/lib/parse-country-ids";
 import { appendBilingualImageAlt, bilingualImageAltFromApi } from "@/lib/bilingual-image-alt";
 import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
@@ -22,6 +24,7 @@ export type PackageListParams = {
   perPage?: number;
   /** Postman: `GET …/v1/admin/packages?search=` — filter by title/description */
   search?: string;
+  countryIds?: number[];
 };
 
 /** Build absolute URL for media paths returned by the backend (dashboard). */
@@ -225,6 +228,8 @@ export async function fetchPackagesPage(
   if (params.perPage && params.perPage > 0) query.per_page = params.perPage;
   const q = params.search?.trim();
   if (q) query.search = q;
+  const countryParams = countryIdsQuery(params.countryIds);
+  if (countryParams) Object.assign(query, countryParams);
 
   let lastErr: unknown;
   for (const url of urls) {
@@ -246,13 +251,21 @@ export async function fetchPackages(locale: "ar" | "en"): Promise<PackageRow[]> 
   return (await fetchPackagesPage(locale)).rows;
 }
 
-async function fetchPackageRowById(id: string, locale: "ar" | "en"): Promise<PackageRow | null> {
-  const first = await fetchPackagesPage(locale, { perPage: 100 });
+async function fetchPackageRowById(
+  id: string,
+  locale: "ar" | "en",
+  countryIds?: number[],
+): Promise<PackageRow | null> {
+  const first = await fetchPackagesPage(locale, { perPage: 100, countryIds });
   const firstHit = first.rows.find((p) => p.id === id);
   if (firstHit) return firstHit;
 
   for (let page = 2; page <= first.meta.lastPage; page += 1) {
-    const next = await fetchPackagesPage(locale, { page, perPage: first.meta.perPage || 100 });
+    const next = await fetchPackagesPage(locale, {
+      page,
+      perPage: first.meta.perPage || 100,
+      countryIds,
+    });
     const hit = next.rows.find((p) => p.id === id);
     if (hit) return hit;
   }
@@ -269,11 +282,15 @@ function appendDescription(fd: FormData, value: { ar: string; en: string }) {
   appendLocalizedDescriptionHtml(fd, "description", value.ar, value.en);
 }
 
-export function packageValuesToFormData(values: PackageFormValues, iconFile: File | null): FormData {
+export function packageValuesToFormData(
+  values: PackageFormValues,
+  iconFile: File | null,
+): FormData {
   const { existing_icon_url: _preview, ...v } = values;
   void _preview;
 
   const fd = new FormData();
+  appendCountryIdsToFormData(fd, v.country_ids);
   fd.append("package_category_id", v.package_category_id);
   appendLocalized(fd, "title", v.title);
   appendDescription(fd, v.description);
@@ -311,7 +328,11 @@ export async function createPackage(values: PackageFormValues, iconFile: File | 
 }
 
 /** POST multipart with Laravel-style method spoof (_method=PUT) per API contract */
-export async function updatePackage(packageId: string, values: PackageFormValues, iconFile: File | null) {
+export async function updatePackage(
+  packageId: string,
+  values: PackageFormValues,
+  iconFile: File | null,
+) {
   const fd = packageValuesToFormData(values, iconFile);
   fd.append("_method", "PUT");
   const res = await api.post(`/v1/admin/packages/${packageId}`, fd);
@@ -357,6 +378,7 @@ export function recordToPackageFormValues(raw: unknown): PackageFormValues | nul
     pkgCat && typeof pkgCat === "object" ? categoryLabel(pkgCat, "en") : "";
 
   return {
+    country_ids: parseCountryIdsFromApi(r),
     package_category_id: categoryId,
     title: { ar: pickLocalized(r.title, "ar"), en: pickLocalized(r.title, "en") },
     description: {

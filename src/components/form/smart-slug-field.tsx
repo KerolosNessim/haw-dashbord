@@ -125,7 +125,8 @@ export function SmartSlugField<T extends FieldValues>({
   slugPrefix,
   placeholder,
   errorMessage,
-  syncFromTitleWhenLocked = true,
+  /** Default false: edit screens keep API slug; pass `true` (or `mode === "create"`) on create forms. */
+  syncFromTitleWhenLocked = false,
   trigger,
   slugLocale = "en",
   normalizeSlug = false,

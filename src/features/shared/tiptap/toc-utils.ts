@@ -38,7 +38,7 @@ function collectHeadings(editor: Editor): CollectedHeading[] {
   return items;
 }
 
-function buildTocHtml(headings: CollectedHeading[], title: string): string {
+export function buildTocHtml(headings: CollectedHeading[], title: string): string {
   if (headings.length === 0) return "";
 
   let html = `<div class="${EDITOR_TOC_CLASS}"><p><strong>${escapeHtml(title)}</strong></p><ul>`;

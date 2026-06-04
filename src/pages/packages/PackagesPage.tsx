@@ -4,8 +4,10 @@ import { Boxes, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Can } from "@/features/permissions/components/PermissionGate";
 import { useNavigate } from "react-router-dom";
+import HomeContentCountrySelector from "@/features/home-content/components/HomeContentCountrySelector";
+import { HomeContentCountryProvider } from "@/features/home-content/context/home-content-country-context";
 
-export default function PackagesPage() {
+function PackagesPageContent() {
   const { t } = useTranslation("translation", { keyPrefix: "packages" });
   const navigate = useNavigate();
 
@@ -22,19 +24,30 @@ export default function PackagesPage() {
           </div>
         </div>
 
-        <Can permission="packages.create">
-          <Button
-            size="lg"
-            onClick={() => navigate("/packages/create")}
-            className="h-14 rounded-2xl px-8 font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95"
-          >
-            <Plus className="mr-2 h-6 w-6" />
-            {t("add_button")}
-          </Button>
-        </Can>
+        <div className="flex flex-wrap items-center gap-3">
+          <HomeContentCountrySelector />
+          <Can permission="packages.create">
+            <Button
+              size="lg"
+              onClick={() => navigate("/packages/create")}
+              className="h-14 rounded-2xl px-8 font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95"
+            >
+              <Plus className="mr-2 h-6 w-6" />
+              {t("add_button")}
+            </Button>
+          </Can>
+        </div>
       </div>
 
       <PackagesTable />
     </div>
+  );
+}
+
+export default function PackagesPage() {
+  return (
+    <HomeContentCountryProvider>
+      <PackagesPageContent />
+    </HomeContentCountryProvider>
   );
 }

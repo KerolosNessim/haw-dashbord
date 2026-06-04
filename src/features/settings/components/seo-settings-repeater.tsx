@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -15,8 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
-import { localizedHtmlForApi } from "@/lib/localized-html-form";
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import { Pencil, X, Check, Search, Plus, Trash2, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -90,8 +90,8 @@ export default function SeoSettingsRepeater() {
       name_en: pageLabel(editPageKey, "en"),
       metaTitle_ar: formData.get("metaTitle_ar") as string,
       metaTitle_en: formData.get("metaTitle_en") as string,
-      description_ar: localizedHtmlForApi(editDescriptions.description_ar),
-      description_en: localizedHtmlForApi(editDescriptions.description_en),
+      description_ar: editDescriptions.description_ar.trim(),
+      description_en: editDescriptions.description_en.trim(),
     };
 
     if (typeof id === "number") {
@@ -218,16 +218,17 @@ export default function SeoSettingsRepeater() {
                               <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">AR</span>
                               <span className="text-sm font-bold text-gray-600">{t("description_ar")}</span>
                            </div>
-                           <div className="min-h-[160px] rounded-xl border overflow-hidden bg-white">
-                             <RichTextEditor
-                               value={editDescriptions.description_ar}
-                               onChange={(val) => {
-                                 const html = editorOnChangeToHtml(val);
-                                 setEditDescriptions((d) => ({ ...d, description_ar: html }));
-                               }}
-                               dir="rtl"
-                             />
-                           </div>
+                           <Textarea
+                             value={editDescriptions.description_ar}
+                             onChange={(e) =>
+                               setEditDescriptions((d) => ({
+                                 ...d,
+                                 description_ar: e.target.value,
+                               }))
+                             }
+                             dir="rtl"
+                             className="min-h-[120px] rounded-xl bg-white border-border/40 resize-none"
+                           />
                         </div>
 
                         <div className="space-y-4">
@@ -247,16 +248,17 @@ export default function SeoSettingsRepeater() {
                               <span className="text-[10px] font-black bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full uppercase tracking-wider">EN</span>
                               <span className="text-sm font-bold text-gray-600">{t("description_en")}</span>
                            </div>
-                           <div className="min-h-[160px] rounded-xl border overflow-hidden bg-white">
-                             <RichTextEditor
-                               value={editDescriptions.description_en}
-                               onChange={(val) => {
-                                 const html = editorOnChangeToHtml(val);
-                                 setEditDescriptions((d) => ({ ...d, description_en: html }));
-                               }}
-                               dir="ltr"
-                             />
-                           </div>
+                           <Textarea
+                             value={editDescriptions.description_en}
+                             onChange={(e) =>
+                               setEditDescriptions((d) => ({
+                                 ...d,
+                                 description_en: e.target.value,
+                               }))
+                             }
+                             dir="ltr"
+                             className="min-h-[120px] rounded-xl bg-white border-border/40 resize-none"
+                           />
                         </div>
                       </div>
                       <div className="flex justify-end gap-3 pt-4 border-t">
@@ -332,13 +334,17 @@ export default function SeoSettingsRepeater() {
                         <div className="space-y-1">
                            <div className="flex items-center gap-2 mb-1">
                             <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">AR</span>
-                            <span className="text-xs font-medium text-muted-foreground leading-relaxed italic line-clamp-2">{p.description_ar}</span>
+                            <span className="text-xs font-medium text-muted-foreground leading-relaxed italic line-clamp-2">
+                              {plainTextFromHtml(p.description_ar)}
+                            </span>
                           </div>
                         </div>
                         <div className="space-y-1 border-t pt-4">
                            <div className="flex items-center gap-2 mb-1">
                             <span className="text-[10px] font-black bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full uppercase tracking-wider">EN</span>
-                            <span className="text-xs font-medium text-muted-foreground leading-relaxed italic line-clamp-2">{p.description_en}</span>
+                            <span className="text-xs font-medium text-muted-foreground leading-relaxed italic line-clamp-2">
+                              {plainTextFromHtml(p.description_en)}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -355,8 +361,8 @@ export default function SeoSettingsRepeater() {
                             setEditingId(p.id);
                             setEditPageKey(resolvePageKey(p, pageLabel));
                             setEditDescriptions({
-                              description_ar: p.description_ar ?? "",
-                              description_en: p.description_en ?? "",
+                              description_ar: plainTextFromHtml(p.description_ar),
+                              description_en: plainTextFromHtml(p.description_en),
                             });
                           }}
                         >

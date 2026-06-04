@@ -5,8 +5,10 @@ import { Link } from "react-router-dom";
 import BlogsStats from "@/features/blogs/components/blogs-stats";
 import BlogsTable from "@/features/blogs/components/blogs-table";
 import { Can } from "@/features/permissions/components/PermissionGate";
+import HomeContentCountrySelector from "@/features/home-content/components/HomeContentCountrySelector";
+import { HomeContentCountryProvider } from "@/features/home-content/context/home-content-country-context";
 
-export default function BlogsPage() {
+function BlogsPageContent() {
   const { t } = useTranslation("translation", { keyPrefix: "blogs" });
 
   return (
@@ -18,6 +20,7 @@ export default function BlogsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <HomeContentCountrySelector />
           <Can permission="blog-categories.view">
             <Link to="/blog-categories">
               <Button
@@ -49,5 +52,13 @@ export default function BlogsPage() {
 
       <BlogsTable />
     </div>
+  );
+}
+
+export default function BlogsPage() {
+  return (
+    <HomeContentCountryProvider>
+      <BlogsPageContent />
+    </HomeContentCountryProvider>
   );
 }

@@ -12,6 +12,7 @@ export type SolutionCategoryRow = {
 };
 
 export type SolutionCategoryFormValues = {
+  country_ids: string[];
   name: { ar: string; en: string };
   slug: { ar: string; en: string };
   description: { ar: string; en: string };
@@ -35,4 +36,5 @@ export type SolutionCategoryListParams = {
   page?: number;
   perPage?: number;
   search?: string;
+  countryIds?: number[];
 };

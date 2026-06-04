@@ -1,4 +1,5 @@
 import type { GetServiceResponse } from "../type";
+import type { Service } from "../type";
 import type { BasicInfoValues } from "../components/builder/basic-info-form";
 import type {
   PackagesSectionData,
@@ -6,9 +7,20 @@ import type {
   ServiceSectionsPayload,
 } from "../service-section-types";
 import { buildServicePageFormData } from "./service-form-data";
+import {
+  syncRemovedPackagesSectionApi,
+  syncRemovedServiceSectionsApi,
+} from "./sync-removed-service-sections";
+
+export { syncRemovedPackagesSectionApi, syncRemovedServiceSectionsApi };
 import { api } from "@/lib/api";
 import { getAdminServicesBasePath } from "./service-resource-config";
 import { appendLocalizedHtml } from "../utils/form-data-helpers";
+
+export type SaveServicePageOptions = {
+  /** When set on edit, removed builder sections are DELETE'd via nested section APIs. */
+  previousService?: Service;
+};
 
 /**
  * Single request create/update for service + all sections (page builder).
@@ -18,7 +30,12 @@ export async function saveServicePageApi(
   basic: BasicInfoValues,
   sections: ServiceSectionsPayload,
   serviceId?: number,
+  options?: SaveServicePageOptions,
 ): Promise<GetServiceResponse> {
+  if (serviceId && options?.previousService) {
+    await syncRemovedServiceSectionsApi(serviceId, options.previousService, sections);
+  }
+
   const formData = buildServicePageFormData(basic, sections);
   const base = getAdminServicesBasePath();
   const url = serviceId ? `${base}/${serviceId}` : base;

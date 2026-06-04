@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useParams } from "react-router-dom";
+import { HomeContentCountryProvider } from "@/features/home-content/context/home-content-country-context";
 
 type PackageEditLocationState = {
   packageCategoryId?: string;
   categoryTitle?: string;
 };
 
-export default function EditPackagePage() {
+function EditPackagePageContent() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const { t, i18n } = useTranslation("translation", { keyPrefix: "packages" });
@@ -55,5 +56,13 @@ export default function EditPackagePage() {
 
       <PackageForm mode="edit" packageId={id} initialValues={formInitialValues ?? null} isInitialLoading={isLoading} />
     </div>
+  );
+}
+
+export default function EditPackagePage() {
+  return (
+    <HomeContentCountryProvider>
+      <EditPackagePageContent />
+    </HomeContentCountryProvider>
   );
 }

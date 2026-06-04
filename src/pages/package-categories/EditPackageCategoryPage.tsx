@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
+import HomeContentCountrySelector from "@/features/home-content/components/HomeContentCountrySelector";
+import { HomeContentCountryProvider } from "@/features/home-content/context/home-content-country-context";
 
-export default function EditPackageCategoryPage() {
+function EditPackageCategoryPageContent() {
   const { id } = useParams<{ id: string }>();
   const { t, i18n } = useTranslation("translation", { keyPrefix: "package_categories" });
   const isRtl = i18n.language.startsWith("ar");
@@ -27,9 +29,12 @@ export default function EditPackageCategoryPage() {
         </Button>
       </Link>
 
-      <div className="space-y-2">
-        <h1 className="text-4xl font-black tracking-tight text-gray-900">{t("edit_title")}</h1>
-        <p className="text-lg font-medium text-muted-foreground">{t("edit_description")}</p>
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-black tracking-tight text-gray-900">{t("edit_title")}</h1>
+          <p className="text-lg font-medium text-muted-foreground">{t("edit_description")}</p>
+        </div>
+        <HomeContentCountrySelector />
       </div>
 
       {isError && (
@@ -38,5 +43,13 @@ export default function EditPackageCategoryPage() {
 
       <PackageCategoryForm mode="edit" categoryId={id} initialValues={initialValues ?? null} isInitialLoading={isLoading} />
     </div>
+  );
+}
+
+export default function EditPackageCategoryPage() {
+  return (
+    <HomeContentCountryProvider>
+      <EditPackageCategoryPageContent />
+    </HomeContentCountryProvider>
   );
 }

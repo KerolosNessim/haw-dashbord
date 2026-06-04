@@ -198,14 +198,13 @@ export default function BlogCategoryForm({
                 )}
               />
 
-              {/* Same opt-in behavior in both modes: starts Manual; clicking "Linked"
-                 explicitly syncs from the matching name field. */}
               <SmartSlugField<SchemaValues>
                 control={control}
                 name="slug.ar"
                 slugLocale="ar"
                 titleEn={watchNameAr ?? ""}
                 trigger={trigger}
+                syncFromTitleWhenLocked={mode === "create"}
                 label={
                   <span className="flex items-center gap-2">
                     <LinkIcon className="h-3 w-3" />
@@ -221,6 +220,7 @@ export default function BlogCategoryForm({
                 slugLocale="en"
                 titleEn={watchNameEn ?? ""}
                 trigger={trigger}
+                syncFromTitleWhenLocked={mode === "create"}
                 label={
                   <span className="flex items-center gap-2">
                     <LinkIcon className="h-3 w-3" />

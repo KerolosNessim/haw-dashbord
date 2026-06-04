@@ -5,6 +5,7 @@ import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { headingColorCssVariables } from "../lib/editor-colors";
 import { buildEditorExtensions } from "../tiptap/build-extensions";
+import { EditorImageProvider } from "./editor-image-provider";
 import TiptapToolbar from "./tiptap-toolbar";
 
 export type EditorChangeValue = {
@@ -151,22 +152,24 @@ export default function RichTextEditor({
       style={editorSurfaceStyle}
     >
       <EditorContext.Provider value={{ editor }}>
-        <TiptapToolbar
-          onHeadingColorsChange={() => setHeadingColorVars(headingColorCssVariables())}
-        />
-        <div className="relative flex-1">
-          <EditorContent editor={editor} />
-          {editor.isEmpty ? (
-            <div
-              className={cn(
-                "pointer-events-none absolute top-4 select-none text-muted-foreground/50",
-                isRTL ? "right-4" : "left-4",
-              )}
-            >
-              {placeholder}
-            </div>
-          ) : null}
-        </div>
+        <EditorImageProvider>
+          <TiptapToolbar
+            onHeadingColorsChange={() => setHeadingColorVars(headingColorCssVariables())}
+          />
+          <div className="relative flex-1">
+            <EditorContent editor={editor} />
+            {editor.isEmpty ? (
+              <div
+                className={cn(
+                  "pointer-events-none absolute top-4 select-none text-muted-foreground/50",
+                  isRTL ? "right-4" : "left-4",
+                )}
+              >
+                {placeholder}
+              </div>
+            ) : null}
+          </div>
+        </EditorImageProvider>
       </EditorContext.Provider>
     </div>
   );

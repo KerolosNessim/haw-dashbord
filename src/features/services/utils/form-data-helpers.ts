@@ -31,6 +31,31 @@ export function appendLocalizedHtml(
   if (html) fd.append(`${prefix}[${locale}]`, html);
 }
 
+/** Sends the locale key even when empty so the API can clear nullable HTML fields. */
+export function appendLocalizedHtmlClearable(
+  fd: FormData,
+  prefix: string,
+  value: unknown,
+  locale: "ar" | "en",
+) {
+  const html = htmlForMultipartApi(htmlFromUnknown(value));
+  fd.append(`${prefix}[${locale}]`, html);
+}
+
+/** Indexed HTML fields that must be clearable (e.g. tools sub_description). */
+export function appendIndexedLocalizedHtmlClearable(
+  fd: FormData,
+  base: string,
+  index: number,
+  field: string,
+  value: { ar?: unknown; en?: unknown } | null | undefined,
+) {
+  const ar = htmlForMultipartApi(htmlFromUnknown(value?.ar));
+  const en = htmlForMultipartApi(htmlFromUnknown(value?.en));
+  fd.append(`${base}[${index}][${field}][ar]`, ar);
+  fd.append(`${base}[${index}][${field}][en]`, en);
+}
+
 /** Appends `steps[0][title][ar]` style nested keys */
 export function appendIndexedLocalized(
   fd: FormData,

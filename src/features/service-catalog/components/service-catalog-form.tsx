@@ -203,7 +203,7 @@ export default function ServiceCatalogForm({
             placeholder={t("slug_placeholder_ar")}
             errorMessage={translateError(errors.slug?.ar?.message)}
             inputClassName="rounded-xl"
-            syncFromTitleWhenLocked
+            syncFromTitleWhenLocked={mode === "create"}
           />
           <SmartSlugField<FormShape>
             control={control}
@@ -220,7 +220,7 @@ export default function ServiceCatalogForm({
             placeholder={t("slug_placeholder")}
             errorMessage={translateError(errors.slug?.en?.message)}
             inputClassName="rounded-xl"
-            syncFromTitleWhenLocked
+            syncFromTitleWhenLocked={mode === "create"}
           />
         </div>
 

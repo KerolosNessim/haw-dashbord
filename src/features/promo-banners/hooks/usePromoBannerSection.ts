@@ -6,23 +6,26 @@ import {
   fetchPromoBannerSection,
   updatePromoBannerSection,
 } from "../services/promo-banners-api";
-
-const QUERY_KEY = ["promo-banners", "section"];
+import { useHomeContentCountry } from "@/features/home-content/context/home-content-country-context";
 
 export function usePromoBannerSection() {
   const { t } = useTranslation("translation", { keyPrefix: "promo_banners" });
   const queryClient = useQueryClient();
+  const { countryIds, isCountryReady } = useHomeContentCountry();
+  const queryKey = ["promo-banners", "section", countryIds] as const;
 
   const sectionQuery = useQuery({
-    queryKey: QUERY_KEY,
-    queryFn: fetchPromoBannerSection,
+    queryKey,
+    queryFn: () => fetchPromoBannerSection(countryIds),
+    enabled: isCountryReady,
   });
 
   const updateMutation = useMutation({
-    mutationFn: updatePromoBannerSection,
+    mutationFn: (values: Parameters<typeof updatePromoBannerSection>[0]) =>
+      updatePromoBannerSection(values, countryIds),
     onSuccess: (res) => {
       toast.success(res?.message || t("section.toast_saved"));
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message || t("section.toast_error"));
@@ -34,5 +37,6 @@ export function usePromoBannerSection() {
     updateSection: updateMutation.mutate,
     isSaving: updateMutation.isPending,
     saveError: updateMutation.error,
+    isCountryReady,
   };
 }

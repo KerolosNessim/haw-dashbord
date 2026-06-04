@@ -28,6 +28,8 @@ export interface HeroData {
   is_active: boolean;
   content: HeroContent;
   phone: string;
+  /** Scope: which country sees this hero (backend). */
+  country_id?: number | null;
 };
 
 // Full API Response
@@ -45,6 +47,7 @@ export interface StatsData {
             description: LocaleString,
             sort_order: number,
             is_active: boolean,
+            country_id?: number | null,
             created_at: string,
             updated_at: string
 }
@@ -83,6 +86,7 @@ export interface AccreditationData {
   images: AccreditationMedia[];
   sort_order: number;
   is_active: boolean;
+  country_id?: number | null;
   created_at: string;
   updated_at?: string;
 };

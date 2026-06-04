@@ -1,4 +1,6 @@
 import { appendRootBilingualSectionImageFilesOnly } from "@/features/services/utils/append-bilingual-section-image";
+import { appendCountryIdsToFormData, countryIdsQuery } from "@/features/home-content/lib/country-scope";
+import { parseCountryIdsFromApi } from "@/features/shared/lib/parse-country-ids";
 import { appendLocalized } from "@/features/services/utils/form-data-helpers";
 import { api } from "@/lib/api";
 import {
@@ -105,6 +107,7 @@ function listQueryParams(params: SolutionCategoryListParams): Record<string, str
     page: params.page && params.page > 0 ? params.page : 1,
     per_page: params.perPage && params.perPage > 0 ? params.perPage : 15,
     ...(params.search?.trim() ? { search: params.search.trim() } : {}),
+    ...(countryIdsQuery(params.countryIds) ?? {}),
   };
 }
 
@@ -224,6 +227,7 @@ function valuesToDedicatedJson(values: SolutionCategoryFormValues) {
       ar: (values.image_alt.ar ?? "").trim(),
       en: (values.image_alt.en ?? "").trim(),
     },
+    country_ids: values.country_ids.map((id) => Number(id)).filter((n) => n > 0),
   };
 }
 
@@ -232,6 +236,7 @@ function valuesToDedicatedFormData(
   mode: "create" | "update",
 ): FormData {
   const fd = new FormData();
+  appendCountryIdsToFormData(fd, values.country_ids);
   if (mode === "update") {
     fd.append("_method", "PUT");
   }
@@ -250,6 +255,7 @@ function valuesToDedicatedFormData(
 
 export function valuesToUpsertFormData(values: SolutionCategoryFormValues, categoryId?: string | null) {
   const fd = new FormData();
+  appendCountryIdsToFormData(fd, values.country_ids);
   fd.append("type", TYPE_SOLUTIONS);
   if (categoryId?.trim()) {
     fd.append("id", categoryId.trim());
@@ -287,6 +293,7 @@ function recordToFormValues(r: Record<string, unknown>): SolutionCategoryFormVal
   const slug = pickBilingualSlug(r.slug);
   const { image, image_alt } = pickCategoryMediaFromRecord(r);
   return {
+    country_ids: parseCountryIdsFromApi(r),
     name: { ar: pickCategoryName(r, "ar"), en: pickCategoryName(r, "en") },
     slug,
     description: {
@@ -307,7 +314,9 @@ function recordToFormValues(r: Record<string, unknown>): SolutionCategoryFormVal
 }
 
 /** Full category record for edit form (admin show). */
-export async function fetchSolutionCategoryById(id: string): Promise<SolutionCategoryFormValues | null> {
+export async function fetchSolutionCategoryById(
+  id: string,
+): Promise<SolutionCategoryFormValues | null> {
   try {
     const res = await api.get<unknown>(`${ADMIN_SOLUTION_CATEGORIES}/${id.trim()}`);
     assertApiEnvelopeSuccess(res.data);
@@ -370,6 +379,7 @@ export async function upsertSolutionCategory(
 
 export function rowToFormValues(row: SolutionCategoryRow): SolutionCategoryFormValues {
   return {
+    country_ids: [],
     name: { ar: row.nameAr, en: row.nameEn },
     slug: { ar: row.slugAr, en: row.slugEn },
     description: { ar: "", en: "" },
@@ -382,6 +392,7 @@ export function rowToFormValues(row: SolutionCategoryRow): SolutionCategoryFormV
 
 export function emptySolutionCategoryFormValues(): SolutionCategoryFormValues {
   return {
+    country_ids: [],
     name: { ar: "", en: "" },
     slug: { ar: "", en: "" },
     description: { ar: "", en: "" },

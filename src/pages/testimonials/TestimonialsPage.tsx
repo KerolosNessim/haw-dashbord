@@ -7,6 +7,8 @@ import {
 import { useTranslation } from "react-i18next";
 import GeneralTab from "@/features/testimonials/components/GeneralTab";
 import TestimonialsListTab from "@/features/testimonials/components/TestimonialsListTab";
+import HomeContentCountrySelector from "@/features/home-content/components/HomeContentCountrySelector";
+import { HomeContentCountryProvider } from "@/features/home-content/context/home-content-country-context";
 
 /**
  * TestimonialsPage
@@ -17,9 +19,10 @@ export default function TestimonialsPage() {
   const { t } = useTranslation("translation", { keyPrefix: "testimonials" });
 
   return (
-    <div className="space-y-10 max-w-[1400px] mx-auto pb-20">
+    <HomeContentCountryProvider>
+      <div className="space-y-10 max-w-[1400px] mx-auto pb-20">
       {/* Header */}
-      <div className="flex items-center justify-between border-b pb-6">
+      <div className="flex flex-col gap-6 border-b pb-6 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
             <MessageSquare className="w-7 h-7" />
@@ -33,6 +36,7 @@ export default function TestimonialsPage() {
             </p>
           </div>
         </div>
+        <HomeContentCountrySelector />
       </div>
 
       {/* Tabs */}
@@ -67,6 +71,7 @@ export default function TestimonialsPage() {
           </TabsContent>
         </div>
       </Tabs>
-    </div>
+      </div>
+    </HomeContentCountryProvider>
   );
 }

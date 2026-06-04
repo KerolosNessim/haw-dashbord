@@ -39,6 +39,8 @@ export interface Service {
   image: ServiceImageUrls;
   image_alt?: ServiceImageAlt | null;
   title: LocalizedString;
+  subtitle?: LocalizedString | null;
+  single_page_title?: LocalizedString | null;
   description: LocalizedString;
   highlight_description: LocalizedString;
   inside_desc?: LocalizedString;

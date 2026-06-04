@@ -1,12 +1,20 @@
 import PackageForm from "@/features/packages/components/package-form";
+import type { PackageFormValues } from "@/features/packages/types";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { HomeContentCountryProvider, useHomeContentCountry } from "@/features/home-content/context/home-content-country-context";
 
-export default function CreatePackagePage() {
+function CreatePackagePageContent() {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "packages" });
   const isRtl = i18n.language.startsWith("ar");
+  const { countryIds } = useHomeContentCountry();
+  const initialValues = useMemo<Partial<PackageFormValues>>(
+    () => ({ country_ids: countryIds.map(String) }),
+    [countryIds],
+  );
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 pb-20">
@@ -29,7 +37,15 @@ export default function CreatePackagePage() {
         <p className="text-lg font-medium text-muted-foreground">{t("create_description")}</p>
       </div>
 
-      <PackageForm mode="create" />
+      <PackageForm mode="create" initialValues={initialValues as PackageFormValues} />
     </div>
+  );
+}
+
+export default function CreatePackagePage() {
+  return (
+    <HomeContentCountryProvider>
+      <CreatePackagePageContent />
+    </HomeContentCountryProvider>
   );
 }

@@ -249,6 +249,13 @@
   height: auto;
   border-radius: 0.5rem;
   margin-block: 0.75rem;
+  cursor: pointer;
+}
+
+.tiptap.ProseMirror img.editor-image.ProseMirror-selectednode,
+.tiptap.ProseMirror .ProseMirror-selectednode img.editor-image {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
 }
 
 .tiptap.ProseMirror {
