@@ -150,11 +150,6 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
         icon: BriefcaseBusiness,
       },
       {
-        titleKey: "service_catalog",
-        href: "/service-catalog",
-        icon: BriefcaseBusiness,
-      },
-      {
         titleKey: "service_pricing",
         href: "/services/pricing",
         icon: Package,

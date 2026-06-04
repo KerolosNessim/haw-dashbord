@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { Loader2, Save } from "lucide-react";
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -48,6 +48,25 @@ export default function InvoiceForm() {
   const invoicePerms = useResourcePermissions("invoices");
 
   const invoiceNumber = useMemo(() => generateInvoiceNumber(), []);
+  const [lineCosts, setLineCosts] = useState<Record<string, number>>({});
+
+  const syncLineCostsForKeys = useCallback(
+    (keys: string[]) => {
+      setLineCosts((prev) => {
+        const next: Record<string, number> = {};
+        for (const key of keys) {
+          const opt = catalog.find((o) => o.key === key);
+          next[key] = prev[key] ?? opt?.price ?? 0;
+        }
+        return next;
+      });
+    },
+    [catalog],
+  );
+
+  const handleLineCostChange = useCallback((key: string, cost: number) => {
+    setLineCosts((prev) => ({ ...prev, [key]: cost }));
+  }, []);
 
   const {
     control,
@@ -76,8 +95,15 @@ export default function InvoiceForm() {
   );
 
   const lineItems = useMemo(
-    () => buildLineItemsFromKeys(allCatalogKeys, catalog, watched.company_name, locale),
-    [allCatalogKeys, catalog, watched.company_name, locale],
+    () =>
+      buildLineItemsFromKeys(
+        allCatalogKeys,
+        catalog,
+        watched.company_name,
+        locale,
+        lineCosts,
+      ),
+    [allCatalogKeys, catalog, watched.company_name, locale, lineCosts],
   );
 
   const { subtotal, discount, tax, total } = computeInvoiceTotals(
@@ -94,7 +120,13 @@ export default function InvoiceForm() {
       return;
     }
 
-    const items = buildLineItemsFromKeys(keys, catalog, values.company_name, locale);
+    const items = buildLineItemsFromKeys(
+      keys,
+      catalog,
+      values.company_name,
+      locale,
+      lineCosts,
+    );
     createMutation.mutate(
       {
         invoice_number: invoiceNumber,
@@ -178,7 +210,16 @@ export default function InvoiceForm() {
                 placeholder={t("select_packages")}
                 options={catalog}
                 value={field.value}
-                onChange={field.onChange}
+                onChange={(keys) => {
+                  field.onChange(keys);
+                  syncLineCostsForKeys([
+                    ...keys,
+                    ...watched.service_keys,
+                    ...watched.course_keys,
+                  ]);
+                }}
+                lineCosts={lineCosts}
+                onLineCostChange={handleLineCostChange}
                 isLoading={catalogLoading}
               />
             )}
@@ -193,7 +234,16 @@ export default function InvoiceForm() {
                 placeholder={t("select_services")}
                 options={catalog}
                 value={field.value}
-                onChange={field.onChange}
+                onChange={(keys) => {
+                  field.onChange(keys);
+                  syncLineCostsForKeys([
+                    ...watched.package_keys,
+                    ...keys,
+                    ...watched.course_keys,
+                  ]);
+                }}
+                lineCosts={lineCosts}
+                onLineCostChange={handleLineCostChange}
                 isLoading={catalogLoading}
               />
             )}
@@ -208,7 +258,16 @@ export default function InvoiceForm() {
                 placeholder={t("select_courses")}
                 options={catalog}
                 value={field.value}
-                onChange={field.onChange}
+                onChange={(keys) => {
+                  field.onChange(keys);
+                  syncLineCostsForKeys([
+                    ...watched.package_keys,
+                    ...watched.service_keys,
+                    ...keys,
+                  ]);
+                }}
+                lineCosts={lineCosts}
+                onLineCostChange={handleLineCostChange}
                 isLoading={catalogLoading}
               />
             )}

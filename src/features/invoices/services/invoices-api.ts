@@ -11,7 +11,9 @@ import type {
 import { normalizeInvoiceCurrency } from "../utils/invoice-currency";
 
 function asRecord(v: unknown): Record<string, unknown> | null {
-  return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+  return v && typeof v === "object" && !Array.isArray(v)
+    ? (v as Record<string, unknown>)
+    : null;
 }
 
 function parseNumber(v: unknown, fallback = 0): number {
@@ -27,15 +29,20 @@ function normalizeLineItem(raw: unknown): InvoiceLineItem | null {
   const r = asRecord(raw);
   if (!r) return null;
   const type = r.type as InvoiceCatalogType;
-  if (type !== "package" && type !== "service" && type !== "course") return null;
+  if (type !== "package" && type !== "service" && type !== "course")
+    return null;
   const id = readId(r) || String(r.catalog_id ?? r.item_id ?? "");
   if (!id) return null;
   return {
     catalogKey: `${type}:${id}`,
     type,
     id,
-    serviceNameAr: plainTextFromHtml(String(r.service_name_ar ?? r.title_ar ?? r.title ?? "")),
-    serviceNameEn: plainTextFromHtml(String(r.service_name_en ?? r.title_en ?? r.title ?? "")),
+    serviceNameAr: plainTextFromHtml(
+      String(r.service_name_ar ?? r.title_ar ?? r.title ?? ""),
+    ),
+    serviceNameEn: plainTextFromHtml(
+      String(r.service_name_en ?? r.title_en ?? r.title ?? ""),
+    ),
     siteName: plainTextFromHtml(String(r.site_name ?? r.company_name ?? "")),
     cost: parseNumber(r.cost ?? r.price ?? r.amount),
     currency: typeof r.currency === "string" ? r.currency : "",
@@ -47,7 +54,11 @@ function normalizeInvoiceRow(raw: unknown): InvoiceRow | null {
   if (!r) return null;
   const id = readId(r);
   if (!id) return null;
-  const lineItems = Array.isArray(r.line_items) ? r.line_items : Array.isArray(r.items) ? r.items : [];
+  const lineItems = Array.isArray(r.line_items)
+    ? r.line_items
+    : Array.isArray(r.items)
+      ? r.items
+      : [];
   return {
     id,
     invoice_number: String(r.invoice_number ?? r.number ?? ""),
@@ -68,7 +79,11 @@ function normalizeInvoiceDetail(raw: unknown): InvoiceDetail | null {
   const row = normalizeInvoiceRow(raw);
   if (!row) return null;
   const r = asRecord(raw)!;
-  const itemsRaw = Array.isArray(r.line_items) ? r.line_items : Array.isArray(r.items) ? r.items : [];
+  const itemsRaw = Array.isArray(r.line_items)
+    ? r.line_items
+    : Array.isArray(r.items)
+      ? r.items
+      : [];
   const line_items = itemsRaw
     .map((item) => normalizeLineItem(item))
     .filter((x): x is InvoiceLineItem => x != null);
@@ -120,16 +135,22 @@ export async function fetchInvoicesPage(params: {
   return { rows, meta: pickMeta(res.data) };
 }
 
-export async function fetchInvoiceById(id: string): Promise<InvoiceDetail | null> {
+export async function fetchInvoiceById(
+  id: string,
+): Promise<InvoiceDetail | null> {
   const res = await api.get<unknown>(`/v1/admin/invoices/${id}`);
   const body = (res.data as { data?: unknown })?.data ?? res.data;
-  const entity = asRecord(body)?.data && typeof (body as Record<string, unknown>).data === "object"
-    ? (body as Record<string, unknown>).data
-    : body;
+  const entity =
+    asRecord(body)?.data &&
+    typeof (body as Record<string, unknown>).data === "object"
+      ? (body as Record<string, unknown>).data
+      : body;
   return normalizeInvoiceDetail(entity);
 }
 
-export async function createInvoice(payload: CreateInvoicePayload): Promise<InvoiceDetail> {
+export async function createInvoice(
+  payload: CreateInvoicePayload,
+): Promise<InvoiceDetail> {
   const requestBody: CreateInvoicePayload = {
     ...payload,
     line_items: payload.line_items.map((item) => ({
@@ -149,7 +170,9 @@ export async function deleteInvoice(id: string): Promise<void> {
 }
 
 /** Optional server PDF; falls back to client download when unavailable. */
-export async function downloadInvoicePdfFromApi(id: string): Promise<Blob | null> {
+export async function downloadInvoicePdfFromApi(
+  id: string,
+): Promise<Blob | null> {
   try {
     const res = await api.get(`/v1/admin/invoices/${id}/download`, {
       responseType: "blob",

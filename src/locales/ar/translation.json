@@ -2432,7 +2432,8 @@
       "cancel": "إلغاء",
       "preview_title": "معاينة مباشرة",
       "invoice_number_hint": "رقم الفاتورة (يُولَّد تلقائياً):",
-      "catalog_required": "اختر باقة أو خدمة أو دورة واحدة على الأقل."
+      "catalog_required": "اختر باقة أو خدمة أو دورة واحدة على الأقل.",
+      "line_price": "السعر"
     }
   },
   "redirects_page": {

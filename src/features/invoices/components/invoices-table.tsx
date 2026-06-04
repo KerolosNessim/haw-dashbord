@@ -25,7 +25,10 @@ import { createRoot } from "react-dom/client";
 import { useTranslation } from "react-i18next";
 import { Can } from "@/features/permissions/components/PermissionGate";
 import { useDeleteInvoice, useInvoices } from "../hooks/useInvoices";
-import { downloadInvoicePdfFromApi, fetchInvoiceById } from "../services/invoices-api";
+import {
+  downloadInvoicePdfFromApi,
+  fetchInvoiceById,
+} from "../services/invoices-api";
 import { downloadInvoiceHtml } from "../utils/download-invoice";
 import { formatMoney } from "../utils/invoice-math";
 import InvoiceDetailsDialog from "./invoice-details-dialog";
@@ -34,7 +37,9 @@ import { computeInvoiceTotals } from "../utils/invoice-math";
 
 export default function InvoicesTable() {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "invoices" });
-  const { t: tbl } = useTranslation("translation", { keyPrefix: "invoices.table" });
+  const { t: tbl } = useTranslation("translation", {
+    keyPrefix: "invoices.table",
+  });
   const isRtl = i18n.language.startsWith("ar");
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
@@ -49,7 +54,10 @@ export default function InvoicesTable() {
   const deleteMutation = useDeleteInvoice();
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedSearch(searchInput.trim()), 350);
+    const timer = window.setTimeout(
+      () => setDebouncedSearch(searchInput.trim()),
+      350,
+    );
     return () => window.clearTimeout(timer);
   }, [searchInput]);
 
@@ -60,7 +68,10 @@ export default function InvoicesTable() {
     total: meta.total,
     path: "",
     from: meta.total === 0 ? null : (meta.current_page - 1) * meta.per_page + 1,
-    to: meta.total === 0 ? null : Math.min(meta.current_page * meta.per_page, meta.total),
+    to:
+      meta.total === 0
+        ? null
+        : Math.min(meta.current_page * meta.per_page, meta.total),
   };
 
   const openDetails = (id: string) => {
@@ -146,87 +157,104 @@ export default function InvoicesTable() {
         <Table dir={isRtl ? "rtl" : "ltr"}>
           <TableHeader className="bg-muted/30">
             <TableRow className="border-none hover:bg-transparent">
-              <TableHead className="py-6 ps-8 font-bold">{tbl("invoice_number")}</TableHead>
+              <TableHead className="py-6 ps-8 font-bold">
+                {tbl("invoice_number")}
+              </TableHead>
               <TableHead className="font-bold">{tbl("client")}</TableHead>
               <TableHead className="font-bold">{tbl("company")}</TableHead>
               <TableHead className="font-bold">{tbl("total")}</TableHead>
               <TableHead className="font-bold">{tbl("date")}</TableHead>
-              <TableHead className="w-[140px] py-6 pe-8 font-bold">{tbl("actions")}</TableHead>
+              <TableHead className="w-[140px] py-6 pe-8 font-bold">
+                {tbl("actions")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading
-              ? Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={`sk-${i}`}>
-                    {Array.from({ length: 6 }).map((__, j) => (
-                      <TableCell key={j} className="py-5">
-                        <div className="h-8 animate-pulse rounded-lg bg-muted/40" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              : rows.length === 0
-                ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="py-16 text-center text-muted-foreground">
-                        {t("empty")}
-                      </TableCell>
-                    </TableRow>
-                  )
-                : rows.map((row) => (
-                    <TableRow key={row.id} className="border-border/40 hover:bg-muted/5">
-                      <TableCell className="py-5 ps-8 font-mono text-sm font-bold" dir="ltr">
-                        HWEY - {row.invoice_number}
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-bold">{row.client_name}</div>
-                        <div className="text-xs text-muted-foreground" dir="ltr">
-                          {row.client_phone}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{row.company_name}</TableCell>
-                      <TableCell dir="ltr" className="font-bold">
-                        {formatMoney(row.total, row.currency)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{row.created_at}</TableCell>
-                      <TableCell className="py-5 pe-8">
-                        <div className="flex items-center gap-1">
-                          <Can permission="invoices.view">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 rounded-xl"
-                              onClick={() => openDetails(row.id)}
-                              title={tbl("view")}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </Can>
-                          <Can permission="invoices.view">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 rounded-xl"
-                              onClick={() => handleDownloadRow(row)}
-                              title={tbl("download")}
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          </Can>
-                          <Can permission="invoices.delete">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 rounded-xl text-rose-600 hover:bg-rose-50"
-                              onClick={() => setDeleteId(row.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </Can>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={`sk-${i}`}>
+                  {Array.from({ length: 6 }).map((__, j) => (
+                    <TableCell key={j} className="py-5">
+                      <div className="h-8 animate-pulse rounded-lg bg-muted/40" />
+                    </TableCell>
                   ))}
+                </TableRow>
+              ))
+            ) : rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="py-16 text-center text-muted-foreground"
+                >
+                  {t("empty")}
+                </TableCell>
+              </TableRow>
+            ) : (
+              rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className="border-border/40 hover:bg-muted/5"
+                >
+                  <TableCell
+                    className="py-5 ps-8 font-mono text-sm font-bold"
+                    dir="ltr"
+                  >
+                    HWEY - {row.invoice_number}
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-bold">{row.client_name}</div>
+                    <div className="text-xs text-muted-foreground" dir="ltr">
+                      {row.client_phone}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {row.company_name}
+                  </TableCell>
+                  <TableCell dir="ltr" className="font-bold">
+                    {formatMoney(row.total, row.currency)}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {row.created_at}
+                  </TableCell>
+                  <TableCell className="py-5 pe-8">
+                    <div className="flex items-center gap-1">
+                      <Can permission="invoices.view">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 rounded-xl"
+                          onClick={() => openDetails(row.id)}
+                          title={tbl("view")}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Can>
+                      <Can permission="invoices.view">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 rounded-xl"
+                          onClick={() => handleDownloadRow(row)}
+                          title={tbl("download")}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </Can>
+                      <Can permission="invoices.delete">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 rounded-xl text-rose-600 hover:bg-rose-50"
+                          onClick={() => setDeleteId(row.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </Can>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
 
@@ -249,11 +277,16 @@ export default function InvoicesTable() {
         onClose={() => setDetailsOpen(false)}
       />
 
-      <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={(o) => !o && setDeleteId(null)}
+      >
         <AlertDialogContent className="rounded-[32px]">
           <AlertDialogHeader>
             <AlertDialogTitle>{t("delete_confirm_title")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("delete_confirm_description")}</AlertDialogDescription>
+            <AlertDialogDescription>
+              {t("delete_confirm_description")}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
@@ -267,7 +300,6 @@ export default function InvoicesTable() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
     </>
   );
 }

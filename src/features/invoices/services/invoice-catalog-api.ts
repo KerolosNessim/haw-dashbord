@@ -137,19 +137,27 @@ export function buildLineItemsFromKeys(
   options: InvoiceCatalogOption[],
   companyName: string,
   locale: "ar" | "en",
+  costOverrides?: Record<string, number>,
 ): import("../types").InvoiceLineItem[] {
   const byKey = new Map(options.map((o) => [o.key, o]));
   return catalogKeys
     .map((key) => byKey.get(key))
     .filter((o): o is InvoiceCatalogOption => Boolean(o))
-    .map((o) => ({
-      catalogKey: o.key,
-      type: o.type,
-      id: o.id,
-      serviceNameAr: o.labelAr,
-      serviceNameEn: o.labelEn,
-      siteName: companyName.trim() || "—",
-      cost: o.price,
-      currency: normalizeInvoiceCurrency(o.currency),
-    }));
+    .map((o) => {
+      const override = costOverrides?.[o.key];
+      const cost =
+        typeof override === "number" && Number.isFinite(override) && override >= 0
+          ? override
+          : o.price;
+      return {
+        catalogKey: o.key,
+        type: o.type,
+        id: o.id,
+        serviceNameAr: o.labelAr,
+        serviceNameEn: o.labelEn,
+        siteName: companyName.trim() || "—",
+        cost,
+        currency: normalizeInvoiceCurrency(o.currency),
+      };
+    });
 }

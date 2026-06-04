@@ -2445,7 +2445,8 @@
       "cancel": "Cancel",
       "preview_title": "Live preview",
       "invoice_number_hint": "Invoice number (generated):",
-      "catalog_required": "Select at least one package, service, or course."
+      "catalog_required": "Select at least one package, service, or course.",
+      "line_price": "Price"
     }
   },
   "redirects_page": {

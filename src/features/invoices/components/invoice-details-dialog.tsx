@@ -57,7 +57,7 @@ export default function InvoiceDetailsDialog({ invoiceId, isOpen, onClose }: Pro
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto rounded-[32px] p-0">
+      <DialogContent className="max-h-[92vh] w-[min(96vw,72rem)] overflow-y-auto rounded-[32px] p-0 sm:max-w-[min(96vw,72rem)]">
         <DialogHeader className="border-b p-6">
           <DialogTitle className="flex items-center gap-3 text-2xl font-black">
             <FileText className="h-7 w-7 text-primary" />

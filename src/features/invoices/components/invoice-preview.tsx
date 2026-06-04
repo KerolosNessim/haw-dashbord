@@ -71,7 +71,9 @@ export default function InvoicePreview({
 }: InvoicePreviewProps) {
   const { t } = useTranslation("translation", { keyPrefix: "invoices" });
   const resolvedCurrency =
-    currency.trim() || lineItems.find((row) => row.currency.trim())?.currency || DEFAULT_INVOICE_CURRENCY;
+    currency.trim() ||
+    lineItems.find((row) => row.currency.trim())?.currency ||
+    DEFAULT_INVOICE_CURRENCY;
   const invoiceTitleAr = getInvoiceHeaderTitle(resolvedCurrency);
   const invoiceTitleEn = getInvoiceHeaderTitleEn(resolvedCurrency);
   const displayNumber = formatInvoiceNumberDisplay(invoiceNumber);
@@ -179,7 +181,9 @@ export default function InvoicePreview({
                   style={{ backgroundColor: i % 2 === 0 ? ROW_ALT : "#fff" }}
                 >
                   <td className="px-4 py-3 text-right text-[#666]">
-                    {invoiceDisplayText(row.serviceNameAr || row.serviceNameEn) || "—"}
+                    {invoiceDisplayText(
+                      row.serviceNameAr || row.serviceNameEn,
+                    ) || "—"}
                   </td>
                   <td className="px-4 py-3 text-center text-[#666]">
                     {invoiceDisplayText(row.siteName)}
@@ -202,16 +206,24 @@ export default function InvoicePreview({
               ملاحظات / تعليمات الدفع
             </div>
             <p className="text-sm leading-relaxed text-[#333]">
-              يتم سداد قيمة هذه الفاتورة حصراً عبر رابط الدفع الإلكتروني الخاص بـ بوابة دفع شركة
-              هوية.
+              يتم سداد قيمة هذه الفاتورة حصراً عبر رابط الدفع الإلكتروني الخاص
+              بـ بوابة دفع شركة هوية.
             </p>
           </div>
 
           <div className="space-y-0 text-sm">
-            <TotalRow label="المجموع الفرعي" value={formatMoney(subtotal, currency)} alt />
+            <TotalRow
+              label="المجموع الفرعي"
+              value={formatMoney(subtotal, currency)}
+              alt
+            />
             <TotalRow label="الخصم" value={formatMoney(discount, currency)} />
             <TotalRow label="الضريبة" value={formatMoney(tax, currency)} alt />
-            <TotalRow label="الإجمالي" value={formatMoney(total, currency)} highlight />
+            <TotalRow
+              label="الإجمالي"
+              value={formatMoney(total, currency)}
+              highlight
+            />
           </div>
         </div>
 
