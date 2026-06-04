@@ -9,6 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -17,12 +18,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  codeNeedsRedirectTarget,
   DEFAULT_DELETE_SLUG_REDIRECT_CODE,
   type DeleteSlugRedirectPayload,
 } from "@/lib/delete-slug-redirect";
 import { BLOG_SLUG_REDIRECT_CODES, type BlogSlugRedirectCode } from "@/lib/http-redirect-codes";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export type DeleteWithSlugRedirectDialogProps = {
@@ -52,25 +54,29 @@ export function DeleteWithSlugRedirectDialog({
   const { t: redirectT } = useTranslation("translation", { keyPrefix: redirectLabelKeyPrefix });
   const [redirectAr, setRedirectAr] = useState<BlogSlugRedirectCode>(DEFAULT_DELETE_SLUG_REDIRECT_CODE);
   const [redirectEn, setRedirectEn] = useState<BlogSlugRedirectCode>(DEFAULT_DELETE_SLUG_REDIRECT_CODE);
-
-  useEffect(() => {
-    if (!open) {
-      setRedirectAr(DEFAULT_DELETE_SLUG_REDIRECT_CODE);
-      setRedirectEn(DEFAULT_DELETE_SLUG_REDIRECT_CODE);
-    }
-  }, [open]);
+  const [targetAr, setTargetAr] = useState("");
+  const [targetEn, setTargetEn] = useState("");
 
   const payload: DeleteSlugRedirectPayload = {
     slug_redirect_code: { ar: redirectAr, en: redirectEn },
+    slug_redirect_target: {
+      ar: codeNeedsRedirectTarget(redirectAr) ? targetAr.trim() : "",
+      en: codeNeedsRedirectTarget(redirectEn) ? targetEn.trim() : "",
+    },
   };
+  const missingArTarget = codeNeedsRedirectTarget(redirectAr) && !targetAr.trim();
+  const missingEnTarget = codeNeedsRedirectTarget(redirectEn) && !targetEn.trim();
+  const isConfirmDisabled = isPending || missingArTarget || missingEnTarget;
 
   return (
     <AlertDialog
       open={open}
-      onOpenChange={(next) => {
+        onOpenChange={(next) => {
         if (!next) {
           setRedirectAr(DEFAULT_DELETE_SLUG_REDIRECT_CODE);
           setRedirectEn(DEFAULT_DELETE_SLUG_REDIRECT_CODE);
+          setTargetAr("");
+          setTargetEn("");
         }
         onOpenChange(next);
       }}
@@ -121,6 +127,48 @@ export function DeleteWithSlugRedirectDialog({
               </Select>
             </div>
           </div>
+          {(codeNeedsRedirectTarget(redirectAr) || codeNeedsRedirectTarget(redirectEn)) ? (
+            <div className="grid gap-4 rounded-xl border bg-muted/20 p-4 sm:grid-cols-2">
+              {codeNeedsRedirectTarget(redirectAr) ? (
+                <div className="space-y-2">
+                  <Label className="text-xs">
+                    {redirectT("slug_redirect_target_label", { defaultValue: "Redirect target" })} (AR)
+                  </Label>
+                  <Input
+                    value={targetAr}
+                    onChange={(e) => setTargetAr(e.target.value)}
+                    placeholder="/ar/blogs/new-slug"
+                    className="rounded-xl"
+                    dir="ltr"
+                  />
+                  {missingArTarget ? (
+                    <p className="text-xs text-destructive">
+                      {redirectT("slug_redirect_target_required", { defaultValue: "Target is required for redirects." })}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+              {codeNeedsRedirectTarget(redirectEn) ? (
+                <div className="space-y-2">
+                  <Label className="text-xs">
+                    {redirectT("slug_redirect_target_label", { defaultValue: "Redirect target" })} (EN)
+                  </Label>
+                  <Input
+                    value={targetEn}
+                    onChange={(e) => setTargetEn(e.target.value)}
+                    placeholder="/en/blogs/new-slug"
+                    className="rounded-xl"
+                    dir="ltr"
+                  />
+                  {missingEnTarget ? (
+                    <p className="text-xs text-destructive">
+                      {redirectT("slug_redirect_target_required", { defaultValue: "Target is required for redirects." })}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
@@ -131,7 +179,7 @@ export function DeleteWithSlugRedirectDialog({
             type="button"
             variant="destructive"
             className="rounded-xl"
-            disabled={isPending}
+            disabled={isConfirmDisabled}
             onClick={() => void onConfirm(payload)}
           >
             {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : deleteLabel}

@@ -230,7 +230,7 @@ export default function AuthorFormDialog({
                   readOnly={slugLinked.ar}
                   placeholder={t("placeholders.slug")}
                   className={slugLinked.ar ? "bg-muted/20" : ""}
-                  onChange={(e) => setLocalized("slug", "ar", e.target.value)}
+                  onChange={(e) => setLocalized("slug", "ar", slugifyForLocale("ar", e.target.value))}
                 />
               </Field>
               <Field>
@@ -249,7 +249,7 @@ export default function AuthorFormDialog({
                   readOnly={slugLinked.en}
                   placeholder={t("placeholders.slug")}
                   className={slugLinked.en ? "bg-muted/20" : ""}
-                  onChange={(e) => setLocalized("slug", "en", e.target.value)}
+                  onChange={(e) => setLocalized("slug", "en", slugifyForLocale("en", e.target.value))}
                 />
               </Field>
             </div>

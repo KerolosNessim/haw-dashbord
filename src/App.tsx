@@ -64,6 +64,7 @@ import InvoicesPage from "./pages/invoices/InvoicesPage"
 import CreateInvoicePage from "./pages/invoices/CreateInvoicePage"
 import AuthorPage from "./pages/author/AuthorPage"
 import JobsPage from "./pages/jobs/JobsPage"
+import RedirectsPage from "./pages/redirects/RedirectsPage"
 
 
 const router = createBrowserRouter([
@@ -186,6 +187,10 @@ const router = createBrowserRouter([
       {
         path: "/blogs",
         element: <BlogsPage/>,
+      },
+      {
+        path: "/redirects",
+        element: <RedirectsPage />,
       },
       {
         path: "/blogs/create",

@@ -1,8 +1,5 @@
 import { api } from "@/lib/api";
-import {
-  appendCountryIdsToFormData,
-  countryIdsQuery,
-} from "@/features/home-content/lib/country-scope";
+import { appendCountryIdsToFormData } from "@/features/home-content/lib/country-scope";
 import { parseCountryIdsFromApi } from "@/features/shared/lib/parse-country-ids";
 import {
   appendLocalizedDescriptionHtml,
@@ -21,6 +18,7 @@ import {
   type DeleteSlugRedirectPayload,
 } from "@/lib/delete-slug-redirect";
 import { normalizeSlugRedirectCodeInput } from "@/lib/http-redirect-codes";
+import { slugify, slugifyAr } from "@/lib/slugify";
 import { isAxiosError } from "axios";
 
 const ADMIN_BLOGS_BASE = "/v1/admin/blogs";
@@ -110,8 +108,8 @@ export function blogValuesToFormData(
   fd.append("table_of_contents[ar]", localizedHtmlForApi(values.table_of_contents.ar));
   fd.append("table_of_contents[en]", localizedHtmlForApi(values.table_of_contents.en));
 
-  fd.append("slug[ar]", (values.slug.ar ?? "").trim());
-  fd.append("slug[en]", (values.slug.en ?? "").trim());
+  fd.append("slug[ar]", slugifyAr(values.slug.ar ?? ""));
+  fd.append("slug[en]", slugify(values.slug.en ?? ""));
 
   fd.append("slug_redirect_code[ar]", values.slug_redirect_code.ar ?? "");
   fd.append("slug_redirect_code[en]", values.slug_redirect_code.en ?? "");

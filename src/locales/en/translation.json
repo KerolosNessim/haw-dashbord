@@ -1,4 +1,5 @@
-{  "success_message": "Saved successfully",
+{
+  "success_message": "Saved successfully",
   "error_message": "An error occurred, please try again",
   "welcome": "Welcome to the application",
   "editor": {
@@ -121,10 +122,10 @@
     "forbidden": "You do not have permission to perform this action.",
     "unauthorized": "Your session has expired. Please sign in again.",
     "server_error": "Server error. Please try again later.",
-    "network_error": "Network error. Check your connection and try again.", 
+    "network_error": "Network error. Check your connection and try again.",
     "success_message": "Saved successfully",
     "error_message": "An error occurred, please try again"
-    }, 
+  },
   "forms": {
     "smart_slug": {
       "linked": "Linked to Title",
@@ -139,7 +140,7 @@
     "search_dialog_description": "Search dashboard routes by title or URL path.",
     "no_results": "No matching pages."
   },
-  "sidebar":{
+  "sidebar": {
     "dashboard_title": "My Dashboard",
     "navigation": "Navigation",
     "group_landing": "Landing page",
@@ -163,6 +164,7 @@
     "settings": "Settings",
     "faq": "FAQ",
     "blogs": "Blogs",
+    "redirects": "Redirects",
     "blog_categories": "Blog categories",
     "categories": "Categories",
     "package_categories": "Package categories",
@@ -210,8 +212,7 @@
       "upload_image": "Upload Image"
     }
   },
-
-  "services":{
+  "services": {
     "title": "Services",
     "pricing": {
       "title": "Service pricing packages",
@@ -526,6 +527,7 @@
       "service_pricing": "Service Pricing",
       "faq": "FAQ",
       "blogs": "Blogs",
+      "redirects": "Redirects",
       "blog_categories": "Blog Categories",
       "testimonials": "Testimonials",
       "about": "About Us",
@@ -638,7 +640,7 @@
     "url_invalid": "Enter a valid http(s) URL or leave empty.",
     "invalid_redirect_code": "Choose a valid redirect status or leave as None."
   },
-"faq": {
+  "faq": {
     "title": "FAQs",
     "description": "Manage frequently asked questions and categories.",
     "tabs": {
@@ -1890,7 +1892,7 @@
       }
     }
   },
-    "home_content":{
+  "home_content": {
     "title": "Home Page Content",
     "description": "Manage Home Page Content",
     "country_label": "Show content in country",
@@ -1974,6 +1976,14 @@
       "image_alt_en": "Alt text (English)",
       "image_alt_placeholder": "Describe the logo for accessibility",
       "new_image_badge": "New",
+      "linked_services": "Linked services",
+      "linked_services_placeholder": "Select services…",
+      "linked_services_edit": "Add or change services",
+      "linked_services_none": "No services linked to this client.",
+      "linked_services_remove": "Remove service",
+      "linked_services_loading": "Loading services…",
+      "linked_services_empty": "No services found.",
+      "linked_services_hint": "Regular services only. This client can appear on selected service pages; home page display is unchanged.",
       "save": "Save Changes"
     }
   },
@@ -2437,9 +2447,84 @@
       "invoice_number_hint": "Invoice number (generated):",
       "catalog_required": "Select at least one package, service, or course."
     }
+  },
+  "redirects_page": {
+    "title": "Redirects",
+    "description": "Manage deleted and renamed public URLs from one place.",
+    "dialog": {
+      "create_title": "Create redirect",
+      "edit_title": "Edit redirect",
+      "description": "Keep deleted or renamed URLs explicit with 301/302 redirects, or mark them as 404/410."
+    },
+    "fields": {
+      "old_path": "Old path",
+      "locale": "Locale",
+      "status": "Status",
+      "resource_type": "Resource type",
+      "resource_id": "Resource ID",
+      "target_path": "New target path",
+      "target_locale": "Target locale",
+      "active": "Active"
+    },
+    "placeholders": {
+      "optional": "Optional"
+    },
+    "validation": {
+      "old_path_required": "Old path is required.",
+      "target_required": "Target is required for this status."
+    },
+    "locales": {
+      "ar": "Arabic",
+      "en": "English"
+    },
+    "actions": {
+      "new": "New redirect",
+      "cancel": "Cancel",
+      "create": "Create redirect",
+      "save": "Save redirect",
+      "apply": "Apply"
+    },
+    "filters": {
+      "search": "Search",
+      "search_placeholder": "Old path, target, resource...",
+      "type": "Type",
+      "status": "Status",
+      "locale": "Locale",
+      "all": "All"
+    },
+    "table": {
+      "old_url": "Old URL",
+      "status": "Status",
+      "target": "Target",
+      "type": "Type",
+      "locale": "Locale",
+      "state": "State",
+      "actions": "Actions"
+    },
+    "state": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "resources": {
+      "blog": "Blog",
+      "service": "Service",
+      "solution": "Solution",
+      "page": "Page",
+      "custom": "Custom",
+      "other": "Other"
+    },
+    "toasts": {
+      "created": "Redirect created successfully",
+      "updated": "Redirect updated successfully",
+      "deleted": "Redirect deleted successfully",
+      "create_error": "Could not create redirect",
+      "update_error": "Could not update redirect",
+      "delete_error": "Could not delete redirect"
+    },
+    "errors": {
+      "load": "Could not load redirects."
+    },
+    "delete_confirm": "Delete this redirect?",
+    "empty": "No redirects found."
   }
 }
-
-
-
-

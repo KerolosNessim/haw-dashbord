@@ -21,6 +21,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useActiveUniqueCountries } from "@/features/countries/hooks/useCountries";
+import { countryFlagEmoji } from "@/features/countries/lib/country-flag";
 import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import { resolveImagePreviewFromUnknown } from "@/lib/resolve-media-url";
@@ -754,6 +755,19 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                             : val;
                           return (
                             <ComboboxChip key={val} value={val}>
+                              {country ? (
+                                country.image ? (
+                                  <img
+                                    src={country.image}
+                                    alt=""
+                                    className="mr-1 h-4 w-4 rounded object-cover"
+                                  />
+                                ) : (
+                                  <span className="mr-1 text-sm leading-none" aria-hidden>
+                                    {countryFlagEmoji(country)}
+                                  </span>
+                                )
+                              ) : null}
                               {countryName}
                             </ComboboxChip>
                           );
@@ -767,7 +781,20 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                       <ComboboxList>
                         {countries.map((country) => (
                           <ComboboxItem key={country.id} value={String(country.id)}>
-                            {i18n.language === "ar" ? country.name.ar : country.name.en}
+                            <span className="inline-flex items-center gap-2">
+                              {country.image ? (
+                                <img
+                                  src={country.image}
+                                  alt=""
+                                  className="h-5 w-5 rounded object-cover"
+                                />
+                              ) : (
+                                <span className="text-base leading-none" aria-hidden>
+                                  {countryFlagEmoji(country)}
+                                </span>
+                              )}
+                              {i18n.language === "ar" ? country.name.ar : country.name.en}
+                            </span>
                           </ComboboxItem>
                         ))}
                       </ComboboxList>

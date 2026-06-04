@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
+import { slugify, slugifyAr } from "@/lib/slugify";
 import type { BlogCategoryFormValues, BlogCategoryRow } from "../types";
 
 /** Laravel paginator summary from `data.meta` (snake_case → camelCase). */
@@ -172,8 +173,8 @@ function appendBlogCategoryFormFields(fd: FormData, values: BlogCategoryFormValu
   fd.append("name[ar]", values.name.ar.trim());
   fd.append("name[en]", values.name.en.trim());
   appendLocalizedDescriptionHtml(fd, "description", values.description.ar, values.description.en);
-  fd.append("slug[ar]", values.slug.ar.trim());
-  fd.append("slug[en]", values.slug.en.trim());
+  fd.append("slug[ar]", slugifyAr(values.slug.ar));
+  fd.append("slug[en]", slugify(values.slug.en));
   fd.append("is_active", values.is_active ? "1" : "0");
   fd.append("is_featured", values.is_featured ? "1" : "0");
   fd.append("is_searchable", values.is_searchable ? "1" : "0");

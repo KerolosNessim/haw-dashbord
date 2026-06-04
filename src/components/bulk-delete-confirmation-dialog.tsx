@@ -17,11 +17,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  codeNeedsRedirectTarget,
   DEFAULT_DELETE_SLUG_REDIRECT_CODE,
   type DeleteSlugRedirectPayload,
 } from "@/lib/delete-slug-redirect";
 import { BLOG_SLUG_REDIRECT_CODES, type BlogSlugRedirectCode } from "@/lib/http-redirect-codes";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export type BulkDeleteConfirmationDialogProps = {
@@ -55,29 +56,37 @@ export function BulkDeleteConfirmationDialog({
   const [typed, setTyped] = useState("");
   const [redirectAr, setRedirectAr] = useState<BlogSlugRedirectCode>(DEFAULT_DELETE_SLUG_REDIRECT_CODE);
   const [redirectEn, setRedirectEn] = useState<BlogSlugRedirectCode>(DEFAULT_DELETE_SLUG_REDIRECT_CODE);
+  const [targetAr, setTargetAr] = useState("");
+  const [targetEn, setTargetEn] = useState("");
   const { t: redirectT } = useTranslation("translation", {
     keyPrefix: redirectLabelKeyPrefix ?? "blogs.form",
   });
 
-  useEffect(() => {
-    if (!open) {
-      setTyped("");
-      setRedirectAr(DEFAULT_DELETE_SLUG_REDIRECT_CODE);
-      setRedirectEn(DEFAULT_DELETE_SLUG_REDIRECT_CODE);
-    }
-  }, [open]);
-
   const trimmed = typed.trim();
   const matches = trimmed === confirmationPhrase;
   const redirectPayload: DeleteSlugRedirectPayload | undefined = redirectLabelKeyPrefix
-    ? { slug_redirect_code: { ar: redirectAr, en: redirectEn } }
+    ? {
+        slug_redirect_code: { ar: redirectAr, en: redirectEn },
+        slug_redirect_target: {
+          ar: codeNeedsRedirectTarget(redirectAr) ? targetAr.trim() : "",
+          en: codeNeedsRedirectTarget(redirectEn) ? targetEn.trim() : "",
+        },
+      }
     : undefined;
+  const missingArTarget = codeNeedsRedirectTarget(redirectAr) && !targetAr.trim();
+  const missingEnTarget = codeNeedsRedirectTarget(redirectEn) && !targetEn.trim();
 
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (!next) setTyped("");
+        if (!next) {
+          setTyped("");
+          setRedirectAr(DEFAULT_DELETE_SLUG_REDIRECT_CODE);
+          setRedirectEn(DEFAULT_DELETE_SLUG_REDIRECT_CODE);
+          setTargetAr("");
+          setTargetEn("");
+        }
         onOpenChange(next);
       }}
     >
@@ -128,6 +137,48 @@ export function BulkDeleteConfirmationDialog({
                   </Select>
                 </div>
               </div>
+              {(codeNeedsRedirectTarget(redirectAr) || codeNeedsRedirectTarget(redirectEn)) ? (
+                <div className="grid gap-3 rounded-xl border bg-muted/20 p-3 sm:grid-cols-2">
+                  {codeNeedsRedirectTarget(redirectAr) ? (
+                    <div className="space-y-2">
+                      <Label className="text-xs">
+                        {redirectT("slug_redirect_target_label", { defaultValue: "Redirect target" })} (AR)
+                      </Label>
+                      <Input
+                        dir="ltr"
+                        value={targetAr}
+                        onChange={(e) => setTargetAr(e.target.value)}
+                        placeholder="/ar/blogs/new-slug"
+                        className="rounded-xl"
+                      />
+                      {missingArTarget ? (
+                        <p className="text-xs text-destructive">
+                          {redirectT("slug_redirect_target_required", { defaultValue: "Target is required for redirects." })}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {codeNeedsRedirectTarget(redirectEn) ? (
+                    <div className="space-y-2">
+                      <Label className="text-xs">
+                        {redirectT("slug_redirect_target_label", { defaultValue: "Redirect target" })} (EN)
+                      </Label>
+                      <Input
+                        dir="ltr"
+                        value={targetEn}
+                        onChange={(e) => setTargetEn(e.target.value)}
+                        placeholder="/en/blogs/new-slug"
+                        className="rounded-xl"
+                      />
+                      {missingEnTarget ? (
+                        <p className="text-xs text-destructive">
+                          {redirectT("slug_redirect_target_required", { defaultValue: "Target is required for redirects." })}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           ) : null}
           <div className="space-y-2">
@@ -151,7 +202,7 @@ export function BulkDeleteConfirmationDialog({
             type="button"
             variant="destructive"
             className="rounded-xl"
-            disabled={!matches || isPending}
+            disabled={!matches || isPending || missingArTarget || missingEnTarget}
             onClick={() => void onConfirm(redirectPayload)}
           >
             {deleteLabel}

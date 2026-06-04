@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
 import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import { localizedHtmlForApi } from "@/lib/localized-html-form";
+import { slugify, slugifyAr } from "@/lib/slugify";
 import type {
   ServiceCatalogDetail,
   ServiceCatalogFormValues,
@@ -107,8 +108,8 @@ function appendFormFields(fd: FormData, values: ServiceCatalogFormValues) {
   fd.append("subtitle[ar]", values.subtitle.ar.trim());
   fd.append("subtitle[en]", values.subtitle.en.trim());
   appendLocalizedDescriptionHtml(fd, "description", values.description.ar, values.description.en);
-  fd.append("slug[ar]", values.slug.ar.trim());
-  fd.append("slug[en]", values.slug.en.trim());
+  fd.append("slug[ar]", slugifyAr(values.slug.ar));
+  fd.append("slug[en]", slugify(values.slug.en));
   fd.append("sort_order", String(values.sort_order ?? 0));
   fd.append("is_active", values.is_active ? "1" : "0");
 }

@@ -40,8 +40,8 @@ export type SmartSlugFieldProps<T extends FieldValues> = {
   /** Which slug rules / normalization to use when `normalizeSlug` is true. */
   slugLocale?: SlugLocale;
   /**
-   * When true, linked title sync and blur run `slugifyForLocale` (legacy URL-safe slugs).
-   * When false (default), the user can type any text; linked mode copies the title as-is.
+   * When true, linked title sync, typing, and blur run `slugifyForLocale`.
+   * Slugs should be URL segments, so the default is normalized/hyphenated text.
    */
   normalizeSlug?: boolean;
   className?: string;
@@ -103,7 +103,6 @@ function SmartSlugFieldBody<T extends FieldValues>({
       name={name}
       value={value ?? ""}
       onBlur={handleBlur}
-      onChange={(e) => onChange(e.target.value)}
       readOnly={isSlugLocked}
       dir="ltr"
       placeholder={placeholder}
@@ -113,6 +112,10 @@ function SmartSlugFieldBody<T extends FieldValues>({
         !isSlugLocked && "border-orange-200 focus-visible:border-orange-300",
         inputClassName,
       )}
+      onChange={(e) => {
+        const raw = e.target.value;
+        onChange(normalizeSlug ? slugifyForLocale(slugLocale, raw) : raw);
+      }}
     />
   );
 }
@@ -129,7 +132,7 @@ export function SmartSlugField<T extends FieldValues>({
   syncFromTitleWhenLocked = false,
   trigger,
   slugLocale = "en",
-  normalizeSlug = false,
+  normalizeSlug = true,
   className,
   inputClassName,
 }: SmartSlugFieldProps<T>) {

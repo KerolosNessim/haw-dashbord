@@ -22,6 +22,7 @@ export const PATH_TO_RESOURCE: Record<string, string> = {
   "/ai-services/content": "services",
   "/faq": "faq",
   "/blogs": "blogs",
+  "/redirects": "redirects",
   "/blog-categories": "blog-categories",
   "/testimonials": "testimonials",
   "/about": "about",

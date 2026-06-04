@@ -19,6 +19,7 @@ import {
   emptyBilingualSectionImage,
 } from "@/lib/bilingual-section-image";
 import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
+import { slugify, slugifyAr } from "@/lib/slugify";
 import type {
   SolutionCategoryFormValues,
   SolutionCategoryListParams,
@@ -216,7 +217,7 @@ export async function fetchPublicSolutionCategoriesList(): Promise<SolutionCateg
 function valuesToDedicatedJson(values: SolutionCategoryFormValues) {
   return {
     title: { ar: values.name.ar.trim(), en: values.name.en.trim() },
-    slug: { ar: (values.slug.ar ?? "").trim(), en: (values.slug.en ?? "").trim() },
+    slug: { ar: slugifyAr(values.slug.ar ?? ""), en: slugify(values.slug.en ?? "") },
     is_active: true,
     meta_title: { ar: values.meta_title.ar ?? "", en: values.meta_title.en ?? "" },
     meta_description: {
@@ -242,8 +243,8 @@ function valuesToDedicatedFormData(
   }
   fd.append("title[ar]", values.name.ar.trim());
   fd.append("title[en]", values.name.en.trim());
-  fd.append("slug[ar]", (values.slug.ar ?? "").trim());
-  fd.append("slug[en]", (values.slug.en ?? "").trim());
+  fd.append("slug[ar]", slugifyAr(values.slug.ar ?? ""));
+  fd.append("slug[en]", slugify(values.slug.en ?? ""));
   appendLocalizedDescriptionHtml(fd, "description", values.description.ar, values.description.en);
   appendLocalized(fd, "meta_title", values.meta_title);
   appendLocalized(fd, "meta_description", values.meta_description);
@@ -262,8 +263,8 @@ export function valuesToUpsertFormData(values: SolutionCategoryFormValues, categ
   }
   fd.append("name[ar]", values.name.ar.trim());
   fd.append("name[en]", values.name.en.trim());
-  fd.append("slug[ar]", (values.slug.ar ?? "").trim());
-  fd.append("slug[en]", (values.slug.en ?? "").trim());
+  fd.append("slug[ar]", slugifyAr(values.slug.ar ?? ""));
+  fd.append("slug[en]", slugify(values.slug.en ?? ""));
   appendLocalizedDescriptionHtml(fd, "description", values.description.ar, values.description.en);
   fd.append("meta_title[ar]", values.meta_title.ar ?? "");
   fd.append("meta_title[en]", values.meta_title.en ?? "");

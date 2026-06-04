@@ -2,6 +2,7 @@ import { Globe, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useHomeContentCountry } from "../context/home-content-country-context";
+import { countryFlagEmoji } from "@/features/countries/lib/country-flag";
 
 /**
  * Country scope selector — single mode for per-country home sections,
@@ -85,7 +86,11 @@ export default function HomeContentCountrySelector() {
                   alt=""
                   className="h-6 w-6 rounded-md object-cover"
                 />
-              ) : null}
+              ) : (
+                <span className="text-lg leading-none" aria-hidden>
+                  {countryFlagEmoji(country)}
+                </span>
+              )}
               {label}
             </button>
           );

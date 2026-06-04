@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/combobox";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { useActiveUniqueCountries } from "@/features/countries/hooks/useCountries";
+import { countryFlagEmoji } from "@/features/countries/lib/country-flag";
 import { useTranslation } from "react-i18next";
 
 type Props = {
@@ -62,6 +63,10 @@ export default function CountriesMultiSelectField({
               <ComboboxChip key={val} value={val}>
                 {country?.image ? (
                   <img src={country.image} alt="" className="mr-1 h-4 w-4 rounded object-cover" />
+                ) : country ? (
+                  <span className="mr-1 text-sm leading-none" aria-hidden>
+                    {countryFlagEmoji(country)}
+                  </span>
                 ) : null}
                 {name}
               </ComboboxChip>
@@ -83,7 +88,11 @@ export default function CountriesMultiSelectField({
                       alt=""
                       className="h-5 w-5 rounded object-cover"
                     />
-                  ) : null}
+                  ) : (
+                    <span className="text-base leading-none" aria-hidden>
+                      {countryFlagEmoji(country)}
+                    </span>
+                  )}
                   {lang === "ar" ? country.name.ar : country.name.en}
                 </span>
               </ComboboxItem>

@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { unwrapLaravelPaginated } from "@/lib/laravel-pagination";
 import { localizedHtmlForApi } from "@/lib/localized-html-form";
+import { slugify, slugifyAr } from "@/lib/slugify";
 import type { Author, AuthorFormValues, AuthorListResult, LocalizedText } from "../types";
 
 const AUTHORS_BASE = "/v1/admin/authors";
@@ -130,8 +131,8 @@ function valuesToFormData(values: AuthorFormValues, imageFile: File | null, mode
   fd.append("image_alt[ar]", values.image_alt.ar.trim());
   fd.append("image_alt[en]", values.image_alt.en.trim());
 
-  fd.append("slug[ar]", values.slug.ar.trim());
-  fd.append("slug[en]", values.slug.en.trim());
+  fd.append("slug[ar]", slugifyAr(values.slug.ar));
+  fd.append("slug[en]", slugify(values.slug.en));
 
   fd.append("meta_title[ar]", values.meta_title.ar.trim());
   fd.append("meta_title[en]", values.meta_title.en.trim());

@@ -32,6 +32,7 @@ import {
   Shield,
   UserCog,
   PenSquare,
+  Route,
 } from "lucide-react"
 
 
@@ -190,6 +191,7 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
         icon: LayoutGrid,
       },
       { titleKey: "blogs", href: "/blogs", icon: BookText },
+      { titleKey: "redirects", href: "/redirects", icon: Route },
       { titleKey: "testimonials", href: "/testimonials", icon: Quote },
       { titleKey: "about_us", href: "/about", icon: Info },
       {

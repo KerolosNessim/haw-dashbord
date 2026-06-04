@@ -24,6 +24,7 @@ import { Controller, useForm } from "react-hook-form";
 
 import { useTranslation } from "react-i18next";
 import { localizedSlugRequired } from "@/lib/zod-localized-slug";
+import { slugify, slugifyAr } from "@/lib/slugify";
 
 import * as z from "zod";
 
@@ -219,8 +220,8 @@ export default function CourseForm({
       description: data.description,
 
       slug: {
-        ar: data.slug.ar.trim(),
-        en: data.slug.en.trim(),
+        ar: slugifyAr(data.slug.ar),
+        en: slugify(data.slug.en),
       },
 
       is_active: data.is_active,

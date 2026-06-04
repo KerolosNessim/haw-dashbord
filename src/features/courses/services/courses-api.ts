@@ -14,6 +14,7 @@ import { api } from "@/lib/api";
 import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { appendBilingualImageAlt, bilingualImageAltFromApi } from "@/lib/bilingual-image-alt";
 import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
+import { slugify, slugifyAr } from "@/lib/slugify";
 import type {
   CourseDetailForForm,
   CourseFormValues,
@@ -161,26 +162,15 @@ export function slugifyCourseSlugFromEn(titleEn: string): string {
 }
 
 /** Arabic slug fallback from the Arabic title — keeps Arabic letters + digits. */
-function slugifyCourseSlugFromAr(titleAr: string): string {
-  const t = titleAr.trim().toLowerCase();
-  if (!t) return "course";
-  const s = t
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF-]/gu, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-  return s || "course";
-}
-
 /**
  * Resolves the localized slug, generating sensible fallbacks per locale when
  * either field is left empty so the API never receives an empty `slug[ar]` / `slug[en]`.
  */
 function resolvedCourseSlug(values: CourseFormValues): LocalizedString {
-  const ar = values.slug.ar.trim();
-  const en = values.slug.en.trim();
+  const ar = slugifyAr(values.slug.ar);
+  const en = slugify(values.slug.en);
   return {
-    ar: ar || slugifyCourseSlugFromAr(values.title.ar) || slugifyCourseSlugFromEn(values.title.en),
+    ar: ar || slugifyAr(values.title.ar) || slugifyCourseSlugFromEn(values.title.en),
     en: en || slugifyCourseSlugFromEn(values.title.en),
   };
 }
@@ -243,7 +233,8 @@ export function normalizeCourseListPayload(payload: unknown): CourseRow[] {
     .filter((x): x is CourseRow => x != null);
 }
 
-export async function fetchCourses(_locale: "ar" | "en"): Promise<CourseRow[]> {
+export async function fetchCourses(locale: "ar" | "en"): Promise<CourseRow[]> {
+  void locale;
   const urls = ["/v1/courses", "/v1/admin/courses"];
   let lastErr: unknown;
   for (const url of urls) {
@@ -277,7 +268,7 @@ async function findListCourseRecord(id: string): Promise<Record<string, unknown>
     const listRes = await api.get(`/v1/courses`);
     const body = (listRes.data as { data?: unknown })?.data ?? listRes.data;
     const rows = unwrapDataArray(body);
-    let raw = rows.find((rec) => readId(rec) === id);
+    const raw = rows.find((rec) => readId(rec) === id);
     if (!raw) return null;
 
     let r = raw as Record<string, unknown>;
@@ -435,36 +426,6 @@ export function courseValuesToFormData(values: CourseFormValues, imageFile: File
   }
   appendBilingualImageAlt(fd, "image_alt", values.image_alt);
   return fd;
-}
-
-function courseUpdateJsonBody(values: CourseFormValues): Record<string, unknown> {
-  const slug = resolvedCourseSlug(values);
-  const body: Record<string, unknown> = {
-    title: values.title,
-    slug,
-    is_active: values.is_active ? 1 : 0,
-    description: {
-      ar: localizedHtmlForApi(values.description.ar),
-      en: localizedHtmlForApi(values.description.en),
-    },
-  };
-  if (values.price.trim()) body.price = values.price.trim();
-  if (values.compare_price.trim()) body.compare_at_price = values.compare_price.trim();
-  if (values.currency.trim()) body.currency = values.currency.trim();
-  body.image_alt = values.image_alt;
-
-  const objJson = objectivesPayloadFromForm(values.objectives);
-  if (objJson !== "[]") {
-    try {
-      const parsed = JSON.parse(objJson) as unknown;
-      body.objectives = parsed;
-      body.learning_objectives = parsed;
-      body.features = parsed;
-    } catch {
-      /* ignore malformed objectives */
-    }
-  }
-  return body;
 }
 
 export async function createCourse(values: CourseFormValues, imageFile: File | null) {

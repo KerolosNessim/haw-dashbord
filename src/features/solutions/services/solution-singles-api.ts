@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { appendBilingualImageAlt, bilingualImageAltFromApi, type BilingualImageAlt } from "@/lib/bilingual-image-alt";
 import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
+import { slugify, slugifyAr } from "@/lib/slugify";
 import type { LocaleString, SolutionFeature, SolutionItemsResponse } from "../types";
 
 const BASE = "/v1/admin/solutions/singles";
@@ -41,8 +42,8 @@ function payloadToFormData(p: SolutionSingleFormPayload, imageFile: File | null,
   fd.append("title[ar]", p.title.ar.trim());
   fd.append("title[en]", p.title.en.trim());
   appendLocalizedDescriptionHtml(fd, "description", p.description.ar, p.description.en);
-  fd.append("slug[ar]", (p.slug.ar ?? "").trim());
-  fd.append("slug[en]", (p.slug.en ?? "").trim());
+  fd.append("slug[ar]", slugifyAr(p.slug.ar ?? ""));
+  fd.append("slug[en]", slugify(p.slug.en ?? ""));
   if (typeof p.is_active === "boolean") {
     fd.append("is_active", p.is_active ? "1" : "0");
   }
@@ -186,7 +187,7 @@ export async function updateSolutionSingle(
   const body = {
     title: p.title,
     description: p.description,
-    slug: p.slug,
+    slug: { ar: slugifyAr(p.slug.ar ?? ""), en: slugify(p.slug.en ?? "") },
     ...(categoryId ? { category_id: categoryId } : { category_id: null }),
     ...(typeof p.is_active === "boolean" ? { is_active: p.is_active } : {}),
   };

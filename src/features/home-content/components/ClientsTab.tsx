@@ -8,14 +8,19 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { AccreditationImageServicesSelect } from "@/features/home-content/components/AccreditationImageServicesSelect";
 import { LocalizedDescriptionFields } from "@/features/shared/components/localized-description-fields";
 import {
   buildMediaGalleryFormData,
+  linkedServicesFromIds,
   mediaAltFromApi,
+  serviceIdsFromAccreditationImage,
   type BilingualAlt,
 } from "../services/accreditation-form-data";
+import { useAccreditationServiceOptions } from "../hooks/useAccreditationServiceOptions";
 import { useHomeContentCountry } from "../context/home-content-country-context";
 import { useClients } from "../hooks/useCliets";
+import type { AccreditationLinkedService } from "../types";
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
@@ -32,12 +37,16 @@ type ExistingImage = {
   id: number;
   url: string;
   alt: BilingualAlt;
+  serviceIds: number[];
+  linkedServices: AccreditationLinkedService[];
 };
 
 type NewImage = {
   file: File;
   preview: string;
   alt: BilingualAlt;
+  serviceIds: number[];
+  linkedServices: AccreditationLinkedService[];
 };
 
 export default function ClientsTab() {
@@ -48,6 +57,8 @@ export default function ClientsTab() {
 
   const { countryId } = useHomeContentCountry();
   const { getClientsQuery, updateClients, isPending, isCountryReady } = useClients();
+  const servicesQuery = useAccreditationServiceOptions();
+  const serviceOptions = servicesQuery.data ?? [];
   const apiData = getClientsQuery?.data?.data?.data?.[0];
   const hasPartnerRow =
     apiData != null && (apiData.id > 0 || Boolean(apiData.title?.ar?.trim() || apiData.title?.en?.trim()));
@@ -101,6 +112,8 @@ export default function ClientsTab() {
         id: img.id,
         url: img.url,
         alt: mediaAltFromApi(img.image_alt),
+        serviceIds: serviceIdsFromAccreditationImage(img),
+        linkedServices: img.services ?? [],
       })),
     );
     setNewImages([]);
@@ -116,18 +129,23 @@ export default function ClientsTab() {
 
   const onSubmit = (data: ClientsFormValues) => {
     const existingImagesAlt: Record<string, BilingualAlt> = {};
+    const existingImagesServices: Record<string, number[]> = {};
     existingImages.forEach((img) => {
-      existingImagesAlt[String(img.id)] = {
+      const mediaId = String(img.id);
+      existingImagesAlt[mediaId] = {
         ar: img.alt.ar.trim(),
         en: img.alt.en.trim(),
       };
+      existingImagesServices[mediaId] = [...img.serviceIds];
     });
 
     const formData = buildMediaGalleryFormData({
       title: { ar: data.title_ar, en: data.title_en },
       description: { ar: data.des_ar, en: data.des_en },
       newImages: newImages.map(({ file, alt }) => ({ file, alt })),
+      newImagesServices: newImages.map((img) => [...img.serviceIds]),
       existingImagesAlt,
+      existingImagesServices,
       deletedImageIds,
     });
 
@@ -147,6 +165,8 @@ export default function ClientsTab() {
             file,
             preview: reader.result as string,
             alt: { ar: "", en: "" },
+            serviceIds: [],
+            linkedServices: [],
           },
         ]);
       };
@@ -178,6 +198,32 @@ export default function ClientsTab() {
       prev.map((img, i) =>
         i === index ? { ...img, alt: { ...img.alt, [lang]: value } } : img,
       ),
+    );
+  };
+
+  const updateExistingServiceIds = (id: number, serviceIds: number[]) => {
+    setExistingImages((prev) =>
+      prev.map((img) => {
+        if (img.id !== id) return img;
+        return {
+          ...img,
+          serviceIds,
+          linkedServices: linkedServicesFromIds(serviceIds, serviceOptions, img.linkedServices),
+        };
+      }),
+    );
+  };
+
+  const updateNewServiceIds = (index: number, serviceIds: number[]) => {
+    setNewImages((prev) =>
+      prev.map((img, i) => {
+        if (i !== index) return img;
+        return {
+          ...img,
+          serviceIds,
+          linkedServices: linkedServicesFromIds(serviceIds, serviceOptions, img.linkedServices),
+        };
+      }),
     );
   };
 
@@ -322,6 +368,15 @@ export default function ClientsTab() {
                       className="h-9 rounded-lg text-sm"
                     />
                   </div>
+                  <AccreditationImageServicesSelect
+                    value={img.serviceIds}
+                    onChange={(ids) => updateExistingServiceIds(img.id, ids)}
+                    services={serviceOptions}
+                    embeddedServices={img.linkedServices}
+                    i18nKeyPrefix="home_content.our_clients"
+                    disabled={isPending}
+                    loading={servicesQuery.isLoading}
+                  />
                 </div>
               </div>
             ))}
@@ -376,6 +431,15 @@ export default function ClientsTab() {
                       className="h-9 rounded-lg text-sm"
                     />
                   </div>
+                  <AccreditationImageServicesSelect
+                    value={img.serviceIds}
+                    onChange={(ids) => updateNewServiceIds(idx, ids)}
+                    services={serviceOptions}
+                    embeddedServices={img.linkedServices}
+                    i18nKeyPrefix="home_content.our_clients"
+                    disabled={isPending}
+                    loading={servicesQuery.isLoading}
+                  />
                 </div>
               </div>
             ))}

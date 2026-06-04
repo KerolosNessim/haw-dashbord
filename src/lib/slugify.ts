@@ -20,7 +20,7 @@ export function slugify(text: string): string {
 export function slugifyAr(text: string): string {
   const spaced = text.trim().toLowerCase().replace(/\s+/g, "-");
   const allowed = spaced.replace(
-    /[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\d\-]+/gu,
+    /[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\d-]+/gu,
     "",
   );
   return allowed.replace(/-+/g, "-").replace(/^-+|-+$/g, "");

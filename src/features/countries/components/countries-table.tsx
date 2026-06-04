@@ -13,7 +13,8 @@ import {
   useDeleteCountry,
 } from "@/features/countries/hooks/useCountries";
 import type { Country } from "@/features/countries/types";
-import { Globe, Loader2, Pencil, Search, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Search, Trash2 } from "lucide-react";
+import { countryFlagEmoji } from "@/features/countries/lib/country-flag";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CountryDialog from "./country-dialog";
@@ -122,8 +123,8 @@ export default function CountriesTable() {
                             className="w-full h-full object-cover transition-transform group-hover:scale-110"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center opacity-20">
-                            <Globe className="w-6 h-6" />
+                          <div className="flex h-full w-full items-center justify-center text-2xl">
+                            <span aria-hidden>{countryFlagEmoji(country)}</span>
                           </div>
                         )}
                       </div>

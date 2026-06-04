@@ -14,6 +14,7 @@ import { useEffect, useId, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { localizedSlugRequired } from "@/lib/zod-localized-slug";
+import { slugify, slugifyAr } from "@/lib/slugify";
 import * as z from "zod";
 
 const localizedRequired = z.object({
@@ -114,7 +115,7 @@ export default function ServiceCatalogForm({
       title: data.title,
       subtitle: data.subtitle,
       description: data.description,
-      slug: { ar: data.slug.ar.trim(), en: data.slug.en.trim() },
+      slug: { ar: slugifyAr(data.slug.ar), en: slugify(data.slug.en) },
       sort_order: data.sort_order,
       is_active: data.is_active,
     };

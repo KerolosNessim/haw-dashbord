@@ -7,7 +7,7 @@ import type {
   ServiceSectionsPayload,
   ToolsSectionData,
 } from "../service-section-types";
-import { htmlForMultipartApi } from "@/lib/html-for-multipart-api";
+import { slugify, slugifyAr } from "@/lib/slugify";
 import { appendServiceTagsToFormData } from "../lib/service-tags";
 import {
   appendIndexedBilingualSectionImage,
@@ -24,7 +24,6 @@ import {
   appendScalar,
   appendSectionItemField,
   appendSectionItemLocalizedHtml,
-  htmlFromUnknown,
 } from "../utils/form-data-helpers";
 
 function appendSectionId(
@@ -55,8 +54,8 @@ function appendServiceSlug(
   fd: FormData,
   slug: { ar?: string | null; en?: string | null } | null | undefined,
 ) {
-  fd.append("slug[ar]", (slug?.ar ?? "").trim());
-  fd.append("slug[en]", (slug?.en ?? "").trim());
+  fd.append("slug[ar]", slugifyAr(slug?.ar ?? ""));
+  fd.append("slug[en]", slugify(slug?.en ?? ""));
 }
 
 function appendSectionLink(

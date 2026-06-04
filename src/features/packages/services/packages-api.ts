@@ -5,6 +5,7 @@ import { parseCountryIdsFromApi } from "@/features/shared/lib/parse-country-ids"
 import { appendBilingualImageAlt, bilingualImageAltFromApi } from "@/lib/bilingual-image-alt";
 import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import { pickBilingualSlug, pickLocalized, readId, unwrapDataArray } from "@/lib/api-payload";
+import { slugify, slugifyAr } from "@/lib/slugify";
 import type { PackageFormValues, PackageRow } from "../types";
 
 export type PackageMeta = {
@@ -296,8 +297,8 @@ export function packageValuesToFormData(
   appendDescription(fd, v.description);
   appendLocalized(fd, "button_text", v.button_text);
   appendLocalized(fd, "slug", {
-    ar: v.slug.ar.trim(),
-    en: v.slug.en.trim(),
+    ar: slugifyAr(v.slug.ar),
+    en: slugify(v.slug.en),
   });
 
   fd.append("is_featured", v.is_featured ? "1" : "0");

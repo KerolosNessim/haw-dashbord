@@ -25,6 +25,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { localizedSlugRequired } from "@/lib/zod-localized-slug";
 import { localizedRichTextRequired, richTextValueToString } from "@/lib/zod-rich-text";
+import { slugify, slugifyAr } from "@/lib/slugify";
 import * as z from "zod";
 
 function normalizeSelectLabel(value: string | undefined) {
@@ -224,8 +225,8 @@ export default function PackageForm({ mode, packageId, initialValues, isInitialL
   };
 
   const onSubmit = (data: FormValues) => {
-    const slugAr = data.slug.ar.trim() || data.title.ar.trim();
-    const slugEn = data.slug.en.trim() || data.title.en.trim();
+    const slugAr = slugifyAr(data.slug.ar) || slugifyAr(data.title.ar);
+    const slugEn = slugify(data.slug.en) || slugify(data.title.en);
 
     const payload: PackageFormValues = {
       country_ids: data.country_ids,

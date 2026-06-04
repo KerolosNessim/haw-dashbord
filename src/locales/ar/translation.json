@@ -1,5 +1,5 @@
 {
-    "success_message": "تم بنجاح",
+  "success_message": "تم بنجاح",
   "error_message": "حدث خطأ، حاول مرة أخرى",
   "welcome": "مرحباً بك في التطبيق",
   "editor": {
@@ -140,7 +140,7 @@
     "search_dialog_description": "ابحث في مسارات لوحة التحكم بالعنوان أو الرابط.",
     "no_results": "لا توجد صفحات مطابقة."
   },
-  "sidebar":{
+  "sidebar": {
     "dashboard_title": "لوحة التحكم",
     "navigation": "التنقل",
     "group_landing": "الصفحة الرئيسية للموقع",
@@ -164,6 +164,7 @@
     "settings": "الإعدادات",
     "faq": "الأسئلة الشائعة",
     "blogs": "المدونات",
+    "redirects": "إعادة التوجيه",
     "blog_categories": "تصنيفات المدونة",
     "categories": "تصنيف الدورات",
     "package_categories": "تصنيفات الباقات",
@@ -211,9 +212,7 @@
       "upload_image": "رفع صورة"
     }
   },
-
-
-  "services":{
+  "services": {
     "title": "الخدمات",
     "pricing": {
       "title": "باقات أسعار الخدمات",
@@ -529,6 +528,7 @@
       "service_pricing": "أسعار الخدمات",
       "faq": "الأسئلة الشائعة",
       "blogs": "المدونات",
+      "redirects": "إعادة التوجيه",
       "blog_categories": "تصنيفات المدونة",
       "testimonials": "آراء العملاء",
       "about": "من نحن",
@@ -1885,7 +1885,7 @@
       }
     }
   },
-  "home_content":{
+  "home_content": {
     "title": "محتوى الصفحة الرئيسية",
     "description": "إدارة محتوى الصفحة الرئيسية",
     "country_label": "عرض المحتوى في الدولة",
@@ -1966,7 +1966,15 @@
       "image_alt_en": "النص البديل (إنجليزي)",
       "image_alt_placeholder": "وصف الشعار لإمكانية الوصول",
       "new_image_badge": "جديد",
-      "save": "حفظ التغييرات"
+      "save": "حفظ التغييرات",
+      "linked_services": "الخدمات المرتبطة",
+      "linked_services_placeholder": "اختر الخدمات…",
+      "linked_services_edit": "إضافة أو تعديل الخدمات",
+      "linked_services_none": "لا توجد خدمات مرتبطة بهذا العميل.",
+      "linked_services_remove": "إزالة الخدمة",
+      "linked_services_loading": "جاري تحميل الخدمات…",
+      "linked_services_empty": "لا توجد خدمات.",
+      "linked_services_hint": "الخدمات العادية فقط. يمكن ظهور هذا العميل في صفحات الخدمات المحددة، وعرض الصفحة الرئيسية لن يتغير."
     }
   },
   "why_choose_us": {
@@ -2426,9 +2434,84 @@
       "invoice_number_hint": "رقم الفاتورة (يُولَّد تلقائياً):",
       "catalog_required": "اختر باقة أو خدمة أو دورة واحدة على الأقل."
     }
+  },
+  "redirects_page": {
+    "title": "إعادة التوجيه",
+    "description": "إدارة روابط الموقع المحذوفة أو التي تغيرت من مكان واحد.",
+    "dialog": {
+      "create_title": "إنشاء إعادة توجيه",
+      "edit_title": "تعديل إعادة التوجيه",
+      "description": "اجعل الروابط المحذوفة أو المعاد تسميتها واضحة باستخدام 301/302، أو علّمها كـ 404/410."
+    },
+    "fields": {
+      "old_path": "المسار القديم",
+      "locale": "اللغة",
+      "status": "الحالة",
+      "resource_type": "نوع المورد",
+      "resource_id": "معرّف المورد",
+      "target_path": "المسار الجديد",
+      "target_locale": "لغة المسار الجديد",
+      "active": "مفعّل"
+    },
+    "placeholders": {
+      "optional": "اختياري"
+    },
+    "validation": {
+      "old_path_required": "المسار القديم مطلوب.",
+      "target_required": "المسار الجديد مطلوب لهذه الحالة."
+    },
+    "locales": {
+      "ar": "العربية",
+      "en": "الإنجليزية"
+    },
+    "actions": {
+      "new": "إضافة إعادة توجيه",
+      "cancel": "إلغاء",
+      "create": "إنشاء إعادة التوجيه",
+      "save": "حفظ إعادة التوجيه",
+      "apply": "تطبيق"
+    },
+    "filters": {
+      "search": "بحث",
+      "search_placeholder": "المسار القديم، الهدف، المورد...",
+      "type": "النوع",
+      "status": "الحالة",
+      "locale": "اللغة",
+      "all": "الكل"
+    },
+    "table": {
+      "old_url": "الرابط القديم",
+      "status": "الحالة",
+      "target": "الهدف",
+      "type": "النوع",
+      "locale": "اللغة",
+      "state": "الحالة",
+      "actions": "الإجراءات"
+    },
+    "state": {
+      "active": "مفعّل",
+      "inactive": "غير مفعّل"
+    },
+    "resources": {
+      "blog": "مقال",
+      "service": "خدمة",
+      "solution": "نموذج عمل",
+      "page": "صفحة",
+      "custom": "مخصص",
+      "other": "أخرى"
+    },
+    "toasts": {
+      "created": "تم إنشاء إعادة التوجيه بنجاح",
+      "updated": "تم تحديث إعادة التوجيه بنجاح",
+      "deleted": "تم حذف إعادة التوجيه بنجاح",
+      "create_error": "تعذر إنشاء إعادة التوجيه",
+      "update_error": "تعذر تحديث إعادة التوجيه",
+      "delete_error": "تعذر حذف إعادة التوجيه"
+    },
+    "errors": {
+      "load": "تعذر تحميل إعادة التوجيه."
+    },
+    "delete_confirm": "هل تريد حذف إعادة التوجيه هذه؟",
+    "empty": "لا توجد عمليات إعادة توجيه."
   }
 }
-
-
-
-

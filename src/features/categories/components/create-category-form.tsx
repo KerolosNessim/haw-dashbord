@@ -8,6 +8,7 @@ import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import { api } from "@/lib/api";
 import { axiosResponseErrorSummary } from "@/lib/api-error-message";
 import { resolveApiToastMessage } from "@/lib/api-toast-message";
+import { slugify, slugifyAr } from "@/lib/slugify";
 import { COURSE_TAXONOMY_CATEGORIES_KEY } from "@/features/categories/query-keys";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
@@ -82,8 +83,8 @@ export default function CreateCategoryForm() {
     fd.append("type", "courses");
     fd.append("name[ar]", data.title_ar.trim());
     fd.append("name[en]", data.title_en.trim());
-    fd.append("slug[ar]", data.slug_ar.trim());
-    fd.append("slug[en]", data.slug_en.trim());
+    fd.append("slug[ar]", slugifyAr(data.slug_ar));
+    fd.append("slug[en]", slugify(data.slug_en));
     appendLocalizedDescriptionHtml(fd, "description", data.desc_ar, data.desc_en);
     fd.append("meta_title[ar]", data.meta_title_ar?.trim() ?? "");
     fd.append("meta_title[en]", data.meta_title_en?.trim() ?? "");
