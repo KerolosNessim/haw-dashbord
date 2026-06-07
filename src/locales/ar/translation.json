@@ -1340,7 +1340,34 @@
       "working_hours": "ساعات العمل",
       "social": "وسائل التواصل الاجتماعي",
       "seo": "SEO",
-      "scripts": "أكواد برمجية"
+      "scripts": "أكواد برمجية",
+      "ai_tools_box": "أدوات SEO"
+    },
+    "ai_tools_box": {
+      "title": "صندوق أدوات SEO",
+      "description": "إعداد صندوق جمع البيانات الذي يظهر في صفحات الخدمات المحددة.",
+      "tab_ar": "العربية",
+      "tab_en": "الإنجليزية",
+      "is_active": "نشط",
+      "save_changes": "حفظ التغييرات",
+      "toast_saved": "تم حفظ إعدادات صندوق أدوات SEO.",
+      "fields": {
+        "description": "النص التمهيدي",
+        "challenge_label": "الحقل الأول — أكبر تحدٍ",
+        "email_label": "الحقل الثاني — البريد الإلكتروني",
+        "consent_label": "نص خانة الموافقة",
+        "button_text": "نص زر الإجراء"
+      },
+      "services": {
+        "linked_services": "إظهار الصندوق في الخدمات",
+        "linked_services_hint": "اختر صفحات الخدمات التي يظهر فيها هذا الصندوق.",
+        "linked_services_placeholder": "اختر الخدمات…",
+        "linked_services_edit": "تعديل الخدمات المحددة",
+        "linked_services_loading": "جاري تحميل الخدمات…",
+        "linked_services_none": "لم يتم تحديد خدمات — الصندوق مخفي في كل الصفحات.",
+        "linked_services_empty": "لا توجد خدمات.",
+        "linked_services_remove": "إزالة"
+      }
     },
     "scripts": {
       "title": "أكواد الترويسة والجسم البرمجية",

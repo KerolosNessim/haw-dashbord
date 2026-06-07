@@ -1342,7 +1342,34 @@
       "working_hours": "Working Hours",
       "social": "Social Media",
       "seo": "SEO",
-      "scripts": "Scripts"
+      "scripts": "Scripts",
+      "ai_tools_box": "SEO Tools"
+    },
+    "ai_tools_box": {
+      "title": "SEO Tools Lead Box",
+      "description": "Configure the lead capture box shown on selected service pages.",
+      "tab_ar": "Arabic",
+      "tab_en": "English",
+      "is_active": "Active",
+      "save_changes": "Save changes",
+      "toast_saved": "SEO tools box settings saved.",
+      "fields": {
+        "description": "Intro text",
+        "challenge_label": "Field 1 — biggest challenge",
+        "email_label": "Field 2 — email address",
+        "consent_label": "Checkbox consent text",
+        "button_text": "Action button text"
+      },
+      "services": {
+        "linked_services": "Show box on services",
+        "linked_services_hint": "Select service pages where this lead box should appear.",
+        "linked_services_placeholder": "Choose services…",
+        "linked_services_edit": "Edit selected services",
+        "linked_services_loading": "Loading services…",
+        "linked_services_none": "No services selected — box is hidden on all pages.",
+        "linked_services_empty": "No services found.",
+        "linked_services_remove": "Remove"
+      }
     },
     "scripts": {
       "title": "Custom Header & Body Scripts",

@@ -83,3 +83,33 @@ export interface ScriptsResponse {
   message: string;
   data: ScriptsSettings;
 }
+
+export type LocaleString = {
+  ar: string;
+  en: string;
+};
+
+export type AiToolsBoxSettings = {
+  description: LocaleString;
+  challenge_label: LocaleString;
+  email_label: LocaleString;
+  consent_label: LocaleString;
+  button_text: LocaleString;
+  service_ids: number[];
+  is_active: boolean;
+};
+
+export type AiToolsBoxFormValues = {
+  description_ar: string;
+  description_en: string;
+  challenge_label_ar: string;
+  challenge_label_en: string;
+  email_label_ar: string;
+  email_label_en: string;
+  consent_label_ar: string;
+  consent_label_en: string;
+  button_text_ar: string;
+  button_text_en: string;
+  service_ids: number[];
+  is_active: boolean;
+};

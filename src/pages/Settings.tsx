@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings as SettingsIcon, Globe, MapPin, Clock, Share2, Search, Phone, Code2, Database } from "lucide-react";
+import { Settings as SettingsIcon, Globe, MapPin, Clock, Share2, Search, Phone, Code2, Database, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import WorkingHoursForm from "@/features/settings/components/working-hours-form"
 import SocialMediaRepeater from "@/features/settings/components/social-media-repeater";
 import SeoSettingsRepeater from "@/features/settings/components/seo-settings-repeater";
 import ScriptsSettingsForm from "@/features/settings/components/scripts-settings-form";
+import AiToolsBoxSettingsForm from "@/features/settings/components/ai-tools-box-settings-form";
 
 export default function SettingsPage() {
   const { t } = useTranslation("translation", { keyPrefix: "settings" });
@@ -37,8 +38,8 @@ export default function SettingsPage() {
 
       {/* Tabs */}
       <Tabs  defaultValue="general" className="space-y-8">
-        <div className="bg-white p-1 rounded-2xl border shadow-sm w-fit flex flex-wrap">
-          <TabsList className="bg-transparent gap-2 h-fit! flex-wrap">
+        <div className="w-full rounded-2xl border bg-white p-1 shadow-sm">
+          <TabsList className="h-fit! flex-wrap gap-2 bg-transparent">
             <TabsTrigger 
               value="general" 
               className="rounded-xl px-8 h-10 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300"
@@ -88,6 +89,13 @@ export default function SettingsPage() {
               <Code2 className="w-4 h-4 mr-2" />
               {t("tabs.scripts")}
             </TabsTrigger>
+            <TabsTrigger 
+              value="ai_tools_box" 
+              className="inline-flex h-10 items-center gap-2 rounded-xl px-6 font-bold transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-white"
+            >
+              <Sparkles className="h-4 w-4 shrink-0" />
+              {t("tabs.ai_tools_box")}
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -112,6 +120,9 @@ export default function SettingsPage() {
           </TabsContent>
           <TabsContent value="scripts" className="mt-0 outline-none">
             <ScriptsSettingsForm />
+          </TabsContent>
+          <TabsContent value="ai_tools_box" className="mt-0 outline-none">
+            <AiToolsBoxSettingsForm />
           </TabsContent>
         </div>
       </Tabs>
