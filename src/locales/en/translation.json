@@ -1617,17 +1617,23 @@
       "table": {
         "image": "Image",
         "title": "Title",
+        "slug_ar": "Slug (Arabic)",
+        "slug_en": "Slug (English)",
         "job_type": "Job type",
+        "linkedin": "LinkedIn",
         "status": "Status",
         "actions": "Actions"
       },
       "fields": {
         "title_ar": "Title (Arabic)",
         "title_en": "Title (English)",
+        "slug_ar": "Slug (Arabic)",
+        "slug_en": "Slug (English)",
         "description_ar": "Description (Arabic)",
         "description_en": "Description (English)",
         "job_type_ar": "Job type (Arabic)",
         "job_type_en": "Job type (English)",
+        "linkedin_url": "LinkedIn URL",
         "image_alt_ar": "Image alt (Arabic)",
         "image_alt_en": "Image alt (English)",
         "image_ar": "Image (Arabic)",

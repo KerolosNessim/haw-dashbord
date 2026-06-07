@@ -58,6 +58,7 @@ function SmartSlugFieldBody<T extends FieldValues>({
   trigger,
   placeholder,
   inputClassName,
+  inputDir = "ltr",
 }: {
   field: ControllerRenderProps<T, FieldPath<T>>;
   titleEn: string;
@@ -68,6 +69,7 @@ function SmartSlugFieldBody<T extends FieldValues>({
   trigger?: UseFormTrigger<T>;
   placeholder?: string;
   inputClassName?: string;
+  inputDir?: "ltr" | "rtl";
 }) {
   const { value, onChange, onBlur, name, ref } = field;
 
@@ -104,7 +106,7 @@ function SmartSlugFieldBody<T extends FieldValues>({
       value={value ?? ""}
       onBlur={handleBlur}
       readOnly={isSlugLocked}
-      dir="ltr"
+      dir={inputDir}
       placeholder={placeholder}
       className={cn(
         "h-12 min-h-12 w-full min-w-0 rounded-2xl px-3 py-2 font-mono text-sm md:px-4",
@@ -117,6 +119,116 @@ function SmartSlugFieldBody<T extends FieldValues>({
         onChange(normalizeSlug ? slugifyForLocale(slugLocale, raw) : raw);
       }}
     />
+  );
+}
+
+export type StandaloneSmartSlugFieldProps = {
+  value: string;
+  onChange: (value: string) => void;
+  /** Source title for auto slug when linked (e.g. `title.ar` or `title.en`). */
+  titleSource: string;
+  label: React.ReactNode;
+  placeholder?: string;
+  syncFromTitleWhenLocked?: boolean;
+  /** Resets linked/manual mode when this key changes (e.g. dialog open + mode). */
+  resetKey?: string | number;
+  slugLocale?: SlugLocale;
+  normalizeSlug?: boolean;
+  inputDir?: "ltr" | "rtl";
+  className?: string;
+  inputClassName?: string;
+};
+
+export function StandaloneSmartSlugField({
+  value,
+  onChange,
+  titleSource,
+  label,
+  placeholder,
+  syncFromTitleWhenLocked = false,
+  resetKey,
+  slugLocale = "en",
+  normalizeSlug = true,
+  inputDir = "ltr",
+  className,
+  inputClassName,
+}: StandaloneSmartSlugFieldProps) {
+  const { t } = useTranslation("translation", { keyPrefix: "forms.smart_slug" });
+  const [isSlugLocked, setIsSlugLocked] = useState(() => syncFromTitleWhenLocked);
+
+  useEffect(() => {
+    setIsSlugLocked(syncFromTitleWhenLocked);
+  }, [syncFromTitleWhenLocked, resetKey]);
+
+  useEffect(() => {
+    if (!isSlugLocked || !syncFromTitleWhenLocked) return;
+    const next = normalizeSlug
+      ? slugifyForLocale(slugLocale, titleSource ?? "")
+      : String(titleSource ?? "").trim();
+    if (value !== next) onChange(next);
+  }, [
+    titleSource,
+    isSlugLocked,
+    syncFromTitleWhenLocked,
+    slugLocale,
+    normalizeSlug,
+    value,
+    onChange,
+  ]);
+
+  const handleBlur = () => {
+    if (normalizeSlug) {
+      const raw = String(value ?? "");
+      const fixed = slugifyForLocale(slugLocale, raw);
+      if (fixed !== raw) onChange(fixed);
+    }
+  };
+
+  return (
+    <Field className={cn("min-w-0 w-full", className)}>
+      <div className="flex w-full min-w-0 flex-col gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-8 w-fit shrink-0 gap-2 self-start px-2 font-semibold",
+            !isSlugLocked && "text-orange-600 hover:bg-orange-50 hover:text-orange-700",
+          )}
+          onClick={() => setIsSlugLocked((v) => !v)}
+        >
+          {isSlugLocked ? (
+            <>
+              <Lock className="h-3.5 w-3.5" />
+              {t("linked")}
+            </>
+          ) : (
+            <>
+              <Unlock className="h-3.5 w-3.5" />
+              {t("manual")}
+            </>
+          )}
+        </Button>
+        <FieldLabel className="flex w-full min-w-0 flex-wrap items-center gap-2 wrap-break-word">{label}</FieldLabel>
+      </div>
+      <Input
+        value={value ?? ""}
+        onBlur={handleBlur}
+        readOnly={isSlugLocked}
+        dir={inputDir}
+        placeholder={placeholder}
+        className={cn(
+          "h-12 min-h-12 w-full min-w-0 rounded-2xl px-3 py-2 font-mono text-sm md:px-4",
+          isSlugLocked && "cursor-not-allowed bg-muted/20",
+          !isSlugLocked && "border-orange-200 focus-visible:border-orange-300",
+          inputClassName,
+        )}
+        onChange={(e) => {
+          const raw = e.target.value;
+          onChange(normalizeSlug ? slugifyForLocale(slugLocale, raw) : raw);
+        }}
+      />
+    </Field>
   );
 }
 

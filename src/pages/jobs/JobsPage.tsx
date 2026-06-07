@@ -1,4 +1,5 @@
 import { TypeToConfirmDeleteAlertDialog } from "@/components/type-to-confirm-delete-alert-dialog";
+import { StandaloneSmartSlugField } from "@/components/form/smart-slug-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -39,7 +40,7 @@ import type {
 import { getHttpErrorMessage } from "@/lib/http-error-message";
 import { resolveApiToastMessage } from "@/lib/api-toast-message";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BriefcaseBusiness, Download, Eye, Pencil, Plus, Trash2 } from "lucide-react";
+import { BriefcaseBusiness, Download, ExternalLink, Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -78,8 +79,10 @@ function emptySectionForm(): JobsSectionFormValues {
 function emptyOpeningForm(): JobOpeningFormValues {
   return {
     title: { ar: "", en: "" },
+    slug: { ar: "", en: "" },
     description: { ar: "", en: "" },
     job_type: { ar: "", en: "" },
+    linkedin_url: "",
     image_alt: { ar: "", en: "" },
     sort_order: 0,
     is_active: true,
@@ -107,8 +110,10 @@ function sectionToForm(section: JobsSection): JobsSectionFormValues {
 function openingToForm(opening: JobOpening): JobOpeningFormValues {
   return {
     title: { ...opening.title },
+    slug: { ...opening.slug },
     description: { ...opening.description },
     job_type: { ...opening.job_type },
+    linkedin_url: opening.linkedin_url ?? "",
     image_alt: { ...opening.image_alt },
     sort_order: opening.sort_order,
     is_active: opening.is_active,
@@ -244,7 +249,17 @@ export default function JobsPage() {
     const q = openingsSearch.trim().toLowerCase();
     if (!q) return openings;
     return openings.filter((opening) =>
-      [opening.title.ar, opening.title.en, opening.description.ar, opening.description.en, opening.job_type.ar, opening.job_type.en]
+      [
+        opening.title.ar,
+        opening.title.en,
+        opening.slug.ar,
+        opening.slug.en,
+        opening.description.ar,
+        opening.description.en,
+        opening.job_type.ar,
+        opening.job_type.en,
+        opening.linkedin_url,
+      ]
         .join(" ")
         .toLowerCase()
         .includes(q),
@@ -907,17 +922,68 @@ function OpeningsTable({
           <TableRow>
             <TableHead>{t("openings.table.image")}</TableHead>
             <TableHead>{t("openings.table.title")}</TableHead>
+            <TableHead>{t("openings.table.slug_ar")}</TableHead>
+            <TableHead>{t("openings.table.slug_en")}</TableHead>
             <TableHead>{t("openings.table.job_type")}</TableHead>
+            <TableHead>{t("openings.table.linkedin")}</TableHead>
             <TableHead>{t("openings.table.status")}</TableHead>
             <TableHead>{t("openings.table.actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id}>
-              <TableCell>{row.image.ar || row.image.en ? <img src={row.image.ar || row.image.en || ""} alt="" className="h-10 w-10 rounded border object-cover" /> : <div className="h-10 w-10 rounded border bg-muted" />}</TableCell>
+          {rows.map((row) => {
+            const arImage = row.image.ar;
+            return (
+              <TableRow key={row.id}>
+                <TableCell>
+                  {arImage ? (
+                    <img
+                      src={arImage}
+                      alt={row.image_alt.ar || row.title.ar || ""}
+                      className="h-10 w-10 rounded border object-cover"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded border bg-muted" />
+                  )}
+                </TableCell>
               <TableCell>{isRtl ? row.title.ar || row.title.en : row.title.en || row.title.ar}</TableCell>
+              <TableCell>
+                {row.slug.ar ? (
+                  <Badge variant="outline" className="max-w-[140px] truncate font-mono text-xs">
+                    {row.slug.ar}
+                  </Badge>
+                ) : (
+                  <span className="text-sm text-muted-foreground">—</span>
+                )}
+              </TableCell>
+              <TableCell>
+                {row.slug.en ? (
+                  <Badge variant="outline" className="max-w-[140px] truncate font-mono text-xs">
+                    {row.slug.en}
+                  </Badge>
+                ) : (
+                  <span className="text-sm text-muted-foreground">—</span>
+                )}
+              </TableCell>
               <TableCell>{isRtl ? row.job_type.ar || row.job_type.en : row.job_type.en || row.job_type.ar}</TableCell>
+              <TableCell>
+                {row.linkedin_url?.trim() ? (
+                  <a
+                    href={row.linkedin_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex max-w-[180px] items-center gap-1 truncate text-sm font-medium text-primary hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate" dir="ltr">
+                      {row.linkedin_url.replace(/^https?:\/\//, "")}
+                    </span>
+                  </a>
+                ) : (
+                  <span className="text-sm text-muted-foreground">—</span>
+                )}
+              </TableCell>
               <TableCell><Badge variant={row.is_active ? "default" : "outline"}>{row.is_active ? t("active") : t("inactive")}</Badge></TableCell>
               <TableCell>
                 <div className="flex items-center gap-1">
@@ -926,7 +992,8 @@ function OpeningsTable({
                 </div>
               </TableCell>
             </TableRow>
-          ))}
+            );
+          })}
         </TableBody>
       </Table>
     </div>
@@ -964,6 +1031,9 @@ function OpeningFormDialog({
     setPreview({ ar: currentImage?.ar ?? null, en: currentImage?.en ?? null });
   }, [currentImage?.ar, currentImage?.en, initial, open]);
 
+  const slugResetKey = open ? (initial ? "edit" : "create") : "closed";
+  const syncSlugFromTitle = !initial;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto md:max-w-4xl">
@@ -975,6 +1045,26 @@ function OpeningFormDialog({
           <div className="grid gap-3 md:grid-cols-2">
             <Field><FieldLabel>{t("openings.fields.title_ar")}</FieldLabel><Input required value={form.title.ar} onChange={(e) => setForm((s) => ({ ...s, title: { ...s.title, ar: e.target.value } }))} /></Field>
             <Field><FieldLabel>{t("openings.fields.title_en")}</FieldLabel><Input value={form.title.en} onChange={(e) => setForm((s) => ({ ...s, title: { ...s.title, en: e.target.value } }))} /></Field>
+            <StandaloneSmartSlugField
+              value={form.slug.ar}
+              onChange={(ar) => setForm((s) => ({ ...s, slug: { ...s.slug, ar } }))}
+              titleSource={form.title.ar}
+              slugLocale="ar"
+              syncFromTitleWhenLocked={syncSlugFromTitle}
+              resetKey={slugResetKey}
+              label={t("openings.fields.slug_ar")}
+              inputClassName="h-11 rounded-xl"
+            />
+            <StandaloneSmartSlugField
+              value={form.slug.en}
+              onChange={(en) => setForm((s) => ({ ...s, slug: { ...s.slug, en } }))}
+              titleSource={form.title.en}
+              slugLocale="en"
+              syncFromTitleWhenLocked={syncSlugFromTitle}
+              resetKey={slugResetKey}
+              label={t("openings.fields.slug_en")}
+              inputClassName="h-11 rounded-xl"
+            />
             <Field>
               <FieldLabel>{t("openings.fields.description_ar")}</FieldLabel>
               <div className="min-h-[160px] overflow-hidden rounded-xl border">
@@ -1001,6 +1091,16 @@ function OpeningFormDialog({
             </Field>
             <Field><FieldLabel>{t("openings.fields.job_type_ar")}</FieldLabel><Input value={form.job_type.ar} onChange={(e) => setForm((s) => ({ ...s, job_type: { ...s.job_type, ar: e.target.value } }))} /></Field>
             <Field><FieldLabel>{t("openings.fields.job_type_en")}</FieldLabel><Input value={form.job_type.en} onChange={(e) => setForm((s) => ({ ...s, job_type: { ...s.job_type, en: e.target.value } }))} /></Field>
+            <Field className="md:col-span-2">
+              <FieldLabel>{t("openings.fields.linkedin_url")}</FieldLabel>
+              <Input
+                type="url"
+                dir="ltr"
+                placeholder="https://www.linkedin.com/..."
+                value={form.linkedin_url}
+                onChange={(e) => setForm((s) => ({ ...s, linkedin_url: e.target.value }))}
+              />
+            </Field>
             <Field><FieldLabel>{t("openings.fields.image_alt_ar")}</FieldLabel><Input value={form.image_alt.ar} onChange={(e) => setForm((s) => ({ ...s, image_alt: { ...s.image_alt, ar: e.target.value } }))} /></Field>
             <Field><FieldLabel>{t("openings.fields.image_alt_en")}</FieldLabel><Input value={form.image_alt.en} onChange={(e) => setForm((s) => ({ ...s, image_alt: { ...s.image_alt, en: e.target.value } }))} /></Field>
           </div>

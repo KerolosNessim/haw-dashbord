@@ -57,8 +57,10 @@ export type JobsSectionFormValues = {
 export type JobOpening = {
   id: number;
   title: LocalizedText;
+  slug: LocalizedText;
   description: LocalizedText;
   job_type: LocalizedText;
+  linkedin_url: string;
   image_alt: LocalizedText;
   image: { ar: string | null; en: string | null };
   sort_order: number;

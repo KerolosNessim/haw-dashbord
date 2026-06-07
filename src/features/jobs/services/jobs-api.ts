@@ -1,5 +1,7 @@
 import { api } from "@/lib/api";
 import { unwrapLaravelPaginated } from "@/lib/laravel-pagination";
+import { pickImageUrlFromUnknown, pickLocalizedImageUrls } from "@/lib/resolve-media-url";
+import { slugify, slugifyAr } from "@/lib/slugify";
 import type {
   JobApplication,
   JobApplicationListResult,
@@ -37,54 +39,41 @@ function pickLocalizedFromRow(row: Record<string, unknown>, ...keys: string[]): 
   };
 }
 
-function pickImage(value: unknown): string | null {
-  if (typeof value === "string" && value.trim()) return value;
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const row = value as Record<string, unknown>;
-  if (typeof row.url === "string") return row.url;
-  if (typeof row.path === "string") return row.path;
-  if (typeof row.src === "string") return row.src;
-  if (typeof row.original_url === "string") return row.original_url;
-  return null;
-}
-
-function pickLocalizedImage(input: unknown): { ar: string | null; en: string | null } {
-  if (!input || typeof input !== "object" || Array.isArray(input)) return { ar: null, en: null };
-  const row = input as Record<string, unknown>;
-  return {
-    ar: pickImage(row.ar) ?? pickImage(row.image_ar) ?? pickImage(row.imageAr),
-    en: pickImage(row.en) ?? pickImage(row.image_en) ?? pickImage(row.imageEn),
-  };
-}
-
 function pickLocalizedImageFromRow(row: Record<string, unknown>, ...keys: string[]): { ar: string | null; en: string | null } {
+  const media = row.media;
+  if (media && typeof media === "object" && !Array.isArray(media)) {
+    const mediaRow = media as Record<string, unknown>;
+    const fromMedia = pickLocalizedImageUrls(mediaRow.image, mediaRow.images);
+    if (fromMedia.ar || fromMedia.en) return fromMedia;
+  }
+
   for (const key of keys) {
     const value = row[key];
-    if (value && typeof value === "object") {
-      const localized = pickLocalizedImage(value);
-      if (localized.ar || localized.en) return localized;
-    }
+    if (value == null) continue;
+    const localized = pickLocalizedImageUrls(value, key === "image" ? row.images : undefined);
+    if (localized.ar || localized.en) return localized;
   }
 
   const ar =
-    pickImage(row.image_ar) ??
-    pickImage(row.imageAr) ??
-    pickImage(row.ar_image) ??
-    pickImage(row.arImage) ??
-    pickImage(row.ar) ??
-    (typeof row.image_ar_url === "string" ? row.image_ar_url : null);
+    pickImageUrlFromUnknown(row.image_ar) ??
+    pickImageUrlFromUnknown(row.imageAr) ??
+    pickImageUrlFromUnknown(row.ar_image) ??
+    pickImageUrlFromUnknown(row.arImage) ??
+    pickImageUrlFromUnknown(row.image_ar_url);
 
   const en =
-    pickImage(row.image_en) ??
-    pickImage(row.imageEn) ??
-    pickImage(row.en_image) ??
-    pickImage(row.enImage) ??
-    pickImage(row.en) ??
-    (typeof row.image_en_url === "string" ? row.image_en_url : null);
+    pickImageUrlFromUnknown(row.image_en) ??
+    pickImageUrlFromUnknown(row.imageEn) ??
+    pickImageUrlFromUnknown(row.en_image) ??
+    pickImageUrlFromUnknown(row.enImage) ??
+    pickImageUrlFromUnknown(row.image_en_url);
 
   if (ar || en) return { ar, en };
 
-  const image = pickImage(row.image) ?? pickImage(row.image_url) ?? pickImage(row.imageUrl);
+  const image =
+    pickImageUrlFromUnknown(row.image) ??
+    pickImageUrlFromUnknown(row.image_url) ??
+    pickImageUrlFromUnknown(row.imageUrl);
   return { ar: image, en: image };
 }
 
@@ -138,8 +127,10 @@ function normalizeOpening(input: unknown): JobOpening {
   return {
     id: Number(row.id ?? 0),
     title: pickLocalizedFromRow(row, "title"),
+    slug: pickLocalizedFromRow(row, "slug"),
     description: pickLocalizedFromRow(row, "description"),
     job_type: pickLocalizedFromRow(row, "job_type", "jobType"),
+    linkedin_url: typeof row.linkedin_url === "string" ? row.linkedin_url : "",
     image_alt: pickLocalizedFromRow(row, "image_alt", "imageAlt", "alt", "alt_text"),
     image: pickLocalizedImageFromRow(row, "image", "cover"),
     sort_order: Number(row.sort_order ?? 0),
@@ -242,10 +233,13 @@ export async function deleteJobsSection(id: number) {
 function appendOpeningFormData(fd: FormData, values: JobOpeningFormValues) {
   fd.append("title[ar]", values.title.ar.trim());
   fd.append("title[en]", values.title.en.trim());
+  fd.append("slug[ar]", slugifyAr(values.slug.ar));
+  fd.append("slug[en]", slugify(values.slug.en));
   fd.append("description[ar]", values.description.ar.trim());
   fd.append("description[en]", values.description.en.trim());
   fd.append("job_type[ar]", values.job_type.ar.trim());
   fd.append("job_type[en]", values.job_type.en.trim());
+  fd.append("linkedin_url", values.linkedin_url.trim());
   fd.append("image_alt[ar]", values.image_alt.ar.trim());
   fd.append("image_alt[en]", values.image_alt.en.trim());
   fd.append("sort_order", String(values.sort_order));
