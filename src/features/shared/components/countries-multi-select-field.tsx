@@ -1,15 +1,9 @@
-import {
-  Combobox,
-  ComboboxChip,
-  ComboboxChips,
-  ComboboxChipsInput,
-  ComboboxContent,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { useActiveUniqueCountries } from "@/features/countries/hooks/useCountries";
 import { countryFlagEmoji } from "@/features/countries/lib/country-flag";
+import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 type Props = {
@@ -23,7 +17,7 @@ type Props = {
 };
 
 /**
- * Multi-select countries (same UX as services `country_ids`).
+ * Multi-select countries via toggle chips (works inside dialogs; one or more).
  */
 export default function CountriesMultiSelectField({
   value,
@@ -38,68 +32,89 @@ export default function CountriesMultiSelectField({
   const { countries, isLoading } = useActiveUniqueCountries();
   const lang = i18n.language?.toLowerCase().startsWith("ar") ? "ar" : "en";
 
+  const selectedIds = useMemo(
+    () => [...new Set((value ?? []).map((id) => String(id)).filter(Boolean))],
+    [value],
+  );
+
+  const isDisabled = disabled || isLoading || !countries.length;
+
+  const toggleCountry = (id: string) => {
+    if (isDisabled) return;
+    const has = selectedIds.includes(id);
+    if (has) {
+      const next = selectedIds.filter((row) => row !== id);
+      onChange(next);
+      return;
+    }
+    onChange([...selectedIds, id]);
+  };
+
   return (
     <Field>
       <FieldLabel>
         {label ?? t("countries_field_label")}
         {required ? " *" : null}
       </FieldLabel>
-      {hint ? <p className="text-xs text-muted-foreground mb-2">{hint}</p> : null}
-      <Combobox
-        value={value}
-        onValueChange={onChange}
-        multiple
-        disabled={disabled || isLoading || !countries.length}
-      >
-        <ComboboxChips className="min-h-12 rounded-2xl border-border/50 bg-background p-2">
-          {value.map((val) => {
-            const country = countries.find((c) => String(c.id) === val);
-            const name = country
-              ? lang === "ar"
-                ? country.name.ar
-                : country.name.en
-              : val;
+      {hint ? <p className="mb-2 text-xs text-muted-foreground">{hint}</p> : null}
+
+      {isLoading ? (
+        <div className="flex min-h-12 items-center gap-2 rounded-2xl border border-border/50 bg-background px-4 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {t("country_loading")}
+        </div>
+      ) : !countries.length ? (
+        <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {t("country_empty")}
+        </p>
+      ) : (
+        <div
+          className={cn(
+            "flex min-h-12 flex-wrap gap-2 rounded-2xl border border-border/50 bg-background p-2",
+            isDisabled && "pointer-events-none opacity-60",
+          )}
+          role="group"
+          aria-label={label ?? t("countries_field_label")}
+        >
+          {countries.map((country) => {
+            const id = String(country.id);
+            const isActive = selectedIds.includes(id);
+            const name = lang === "ar" ? country.name.ar : country.name.en;
+
             return (
-              <ComboboxChip key={val} value={val}>
-                {country?.image ? (
-                  <img src={country.image} alt="" className="mr-1 h-4 w-4 rounded object-cover" />
-                ) : country ? (
-                  <span className="mr-1 text-sm leading-none" aria-hidden>
+              <button
+                key={country.id}
+                type="button"
+                disabled={isDisabled}
+                onClick={() => toggleCountry(id)}
+                aria-pressed={isActive}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-semibold transition-all",
+                  isActive
+                    ? "border-primary bg-primary text-white shadow-sm"
+                    : "border-gray-100 bg-gray-50 text-gray-700 hover:border-primary/40",
+                )}
+              >
+                {country.image ? (
+                  <img src={country.image} alt="" className="h-5 w-5 rounded object-cover" />
+                ) : (
+                  <span className="text-base leading-none" aria-hidden>
                     {countryFlagEmoji(country)}
                   </span>
-                ) : null}
+                )}
                 {name}
-              </ComboboxChip>
+              </button>
             );
           })}
-          <ComboboxChipsInput
-            placeholder={value.length === 0 ? t("countries_field_placeholder") : ""}
-            className="border-none bg-transparent focus:ring-0"
-          />
-        </ComboboxChips>
-        <ComboboxContent className="w-[--anchor-width]">
-          <ComboboxList>
-            {countries.map((country) => (
-              <ComboboxItem key={country.id} value={String(country.id)}>
-                <span className="inline-flex items-center gap-2">
-                  {country.image ? (
-                    <img
-                      src={country.image}
-                      alt=""
-                      className="h-5 w-5 rounded object-cover"
-                    />
-                  ) : (
-                    <span className="text-base leading-none" aria-hidden>
-                      {countryFlagEmoji(country)}
-                    </span>
-                  )}
-                  {lang === "ar" ? country.name.ar : country.name.en}
-                </span>
-              </ComboboxItem>
-            ))}
-          </ComboboxList>
-        </ComboboxContent>
-      </Combobox>
+        </div>
+      )}
+
+      {selectedIds.length > 1 ? (
+        <p className="mt-2 text-xs text-muted-foreground">
+          {t("countries_filter_selected", { count: selectedIds.length })}
+        </p>
+      ) : null}
+
       <FieldError errors={error ? [{ message: error }] : undefined} />
     </Field>
   );

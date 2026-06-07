@@ -1901,6 +1901,7 @@
     "countries_filter_hint": "Select one or more countries to list and edit matching content. Saves can target multiple countries.",
     "countries_filter_selected": "{{count}} countries selected",
     "countries_field_label": "Countries",
+    "countries_field_placeholder": "Select countries",
     "countries_field_hint": "Choose every country where this item should appear on the site.",
     "country_loading": "Loading countries…",
     "country_empty": "Add at least one active country under Catalog → Countries before editing home content.",

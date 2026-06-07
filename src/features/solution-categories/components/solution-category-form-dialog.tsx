@@ -28,7 +28,7 @@ import { emptyBilingualSectionImage } from "@/lib/bilingual-section-image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { FolderTree, Link as LinkIcon, Loader2, Save } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
@@ -134,26 +134,33 @@ export default function SolutionCategoryFormDialog({
 
   const watchNameAr = watch("name_ar");
   const watchNameEn = watch("name_en");
+  const formSeedRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!open) return;
-    if (mode === "edit" && initial) {
-      if (categoryDetail) {
-        reset(apiValuesToDialog(categoryDetail));
-        return;
-      }
-      if (!detailLoading) {
-        reset(apiValuesToDialog(rowToFormValues(initial)));
-      }
+    if (!open) {
+      formSeedRef.current = null;
       return;
     }
+
+    if (mode === "edit" && initial) {
+      if (detailLoading) return;
+      const seedKey = `edit:${initial.id}`;
+      if (formSeedRef.current === seedKey) return;
+      reset(apiValuesToDialog(categoryDetail ?? rowToFormValues(initial)));
+      formSeedRef.current = seedKey;
+      return;
+    }
+
     if (mode === "create") {
+      if (!isCountryReady) return;
+      if (formSeedRef.current === "create") return;
       reset({
         ...emptyDialogValues,
         country_ids: countryIds.map(String),
       });
+      formSeedRef.current = "create";
     }
-  }, [open, mode, initial, categoryDetail, detailLoading, reset, countryIds]);
+  }, [open, mode, initial, categoryDetail, detailLoading, reset, countryIds, isCountryReady]);
 
   const translateError = (msg: string | undefined) => (msg ? commonT(msg) : undefined);
 
