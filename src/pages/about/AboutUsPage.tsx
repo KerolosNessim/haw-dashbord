@@ -3,8 +3,9 @@ import ContactTab from "@/features/about-us/components/ContactTab";
 import GeneralTab from "@/features/about-us/components/GeneralTab";
 import IntroTab from "@/features/about-us/components/IntroTab";
 import VisionTab from "@/features/about-us/components/VisionTab";
+import WhoWeAreTab from "@/features/about-us/components/WhoWeAreTab";
 import WhyUsTab from "@/features/about-us/components/WhyUsTab";
-import { HelpCircle, Info, MessageCircle, Target } from "lucide-react";
+import { HelpCircle, Info, MessageCircle, Target, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 
@@ -54,6 +55,7 @@ export default function AboutUsPage() {
             <Info className="w-4 h-4" />
             {t("tabs.intro")}
           </TabsTrigger>
+
           <TabsTrigger
             value="vision"
             className="rounded-[18px] px-8 py-3.5 text-base font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-xl transition-all gap-2"
@@ -69,12 +71,20 @@ export default function AboutUsPage() {
             {t("tabs.why_us")}
           </TabsTrigger>
           <TabsTrigger
+            value="who_we_are"
+            className="rounded-[18px] px-8 py-3.5 text-base font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-xl transition-all gap-2"
+          >
+            <Users className="w-4 h-4" />
+            {t("tabs.who_we_are")}
+          </TabsTrigger>
+          <TabsTrigger
             value="contact"
             className="rounded-[18px] px-8 py-3.5 text-base font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-xl transition-all gap-2"
           >
             <MessageCircle className="w-4 h-4" />
             {t("tabs.contact")}
           </TabsTrigger>
+
         </TabsList>
 
         <div className="bg-white rounded-[48px] border border-border/60 p-8 md:p-12 shadow-2xl shadow-gray-200/50">
@@ -83,6 +93,9 @@ export default function AboutUsPage() {
           </TabsContent>
           <TabsContent value="intro" className="m-0 outline-none">
             <IntroTab />
+          </TabsContent>
+          <TabsContent value="who_we_are" className="m-0 outline-none">
+            <WhoWeAreTab />
           </TabsContent>
           <TabsContent value="vision" className="m-0 outline-none">
             <VisionTab />

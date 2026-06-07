@@ -29,6 +29,14 @@ export interface InfoSection {
   is_active: boolean;
 }
 
+/** Admin: bilingual who-we-are block (title + description only, no image). */
+export interface WhoWeAreSection {
+  id: number;
+  title: Translation;
+  description: Translation;
+  is_active: boolean;
+}
+
 export interface ContactSection {
   id: number;
   title: Translation;
@@ -62,6 +70,7 @@ export interface AboutUsData {
   info_sections: InfoSection[];
   contact_sections: ContactSection[];
   why_us_sections: WhyUsSection[];
+  who_we_are_sections: WhoWeAreSection[];
   created_at: string;
 }
 
@@ -100,4 +109,10 @@ export interface UpdateAboutUsInput {
   contact_title?: Translation;
   contact_description?: Translation;
   contact_phone?: string;
+}
+
+export interface UpdateWhoWeAreSectionInput {
+  title: Translation;
+  description: Translation;
+  is_active: boolean;
 }

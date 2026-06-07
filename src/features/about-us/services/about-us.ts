@@ -1,6 +1,11 @@
 import { api } from "@/lib/api";
 import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
-import type { AboutUsData, AboutUsResponse, UpdateAboutUsInput } from "../types";
+import type {
+  AboutUsData,
+  AboutUsResponse,
+  UpdateAboutUsInput,
+  UpdateWhoWeAreSectionInput,
+} from "../types";
 
 export const getAboutUs = (): Promise<AboutUsResponse<AboutUsData>> => {
   return api
@@ -157,6 +162,24 @@ export const updateWhyUsSection = (data: UpdateAboutUsInput): Promise<AboutUsRes
         "Content-Type": "multipart/form-data",
       },
     })
+    .then((res) => res.data);
+};
+
+export const upsertWhoWeAreSection = (
+  data: UpdateWhoWeAreSectionInput,
+): Promise<AboutUsResponse<AboutUsData>> => {
+  return api
+    .post<AboutUsResponse<AboutUsData>>("/v1/admin/about-us/who-we-are", {
+      title: { ar: data.title.ar, en: data.title.en },
+      description: { ar: data.description.ar, en: data.description.en },
+      is_active: data.is_active,
+    })
+    .then((res) => res.data);
+};
+
+export const deleteWhoWeAreSection = (id: number): Promise<AboutUsResponse<AboutUsData>> => {
+  return api
+    .delete<AboutUsResponse<AboutUsData>>(`/v1/admin/about-us/who-we-are/${id}`)
     .then((res) => res.data);
 };
 

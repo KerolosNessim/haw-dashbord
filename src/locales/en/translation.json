@@ -102,6 +102,10 @@
     "about_why_us_update_failed": "Failed to update About Us Why Us section",
     "about_contact_updated": "About Us contact section updated successfully",
     "about_contact_update_failed": "Failed to update About Us contact section",
+    "about_who_we_are_updated": "Our Ideal Client section saved successfully",
+    "about_who_we_are_update_failed": "Failed to save Our Ideal Client section",
+    "about_who_we_are_deleted": "Our Ideal Client section deleted",
+    "about_who_we_are_delete_failed": "Failed to delete Our Ideal Client section",
     "items_updated": "Items updated successfully",
     "solutions_updated": "Clients updated successfully",
     "solutions_update_failed": "Failed to update clients",
@@ -2221,6 +2225,7 @@
     "tabs": {
       "general": "General Settings",
       "intro": "Introductory Section",
+      "who_we_are": "Our Ideal Client",
       "vision": "Vision & Message",
       "why_us": "Why Us",
       "contact": "Contact"
@@ -2290,6 +2295,19 @@
       "sec_des": "Description",
       "phone": "Phone Number",
       "save": "Save Changes"
+    },
+    "who_we_are": {
+      "ar": "Arabic",
+      "en": "English",
+      "title": "Our Ideal Client",
+      "description": "Manage the Our Ideal Client block (title and description only — separate from the main page hero).",
+      "sec_title": "Section Title",
+      "sec_des": "Section Description",
+      "is_active": "Visible on site",
+      "is_active_hint": "Only active sections appear on the public About Us page.",
+      "save": "Save Changes",
+      "delete": "Delete section",
+      "delete_confirm": "Delete the Our Ideal Client section? It will no longer appear on the public site."
     }
   },
   "contact": {

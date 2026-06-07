@@ -78,6 +78,28 @@ export const useAboutUs = () => {
     },
   });
 
+  const whoWeAreMutation = useMutation({
+    mutationFn: aboutUsService.upsertWhoWeAreSection,
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["about-us"] });
+      toast.success(res.message || t("toasts.about_who_we_are_updated"));
+    },
+    onError: (error: AxiosError<{ message: string }>) => {
+      toast.error(error?.response?.data?.message || t("toasts.about_who_we_are_update_failed"));
+    },
+  });
+
+  const deleteWhoWeAreMutation = useMutation({
+    mutationFn: aboutUsService.deleteWhoWeAreSection,
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["about-us"] });
+      toast.success(res.message || t("toasts.about_who_we_are_deleted"));
+    },
+    onError: (error: AxiosError<{ message: string }>) => {
+      toast.error(error?.response?.data?.message || t("toasts.about_who_we_are_delete_failed"));
+    },
+  });
+
   return {
     getAboutUsQuery,
     updateAboutUs: generalMutation.mutate,
@@ -90,5 +112,9 @@ export const useAboutUs = () => {
     isUpdatingWhyUsSection: whyUsMutation.isPending,
     updateContactSection: contactMutation.mutate,
     isUpdatingContactSection: contactMutation.isPending,
+    upsertWhoWeAreSection: whoWeAreMutation.mutate,
+    isUpsertingWhoWeAreSection: whoWeAreMutation.isPending,
+    deleteWhoWeAreSection: deleteWhoWeAreMutation.mutate,
+    isDeletingWhoWeAreSection: deleteWhoWeAreMutation.isPending,
   };
 };
