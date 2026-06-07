@@ -8,9 +8,10 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Trash2, Mail, Phone, Calendar, Briefcase } from "lucide-react";
+import { Eye, Trash2, Mail, Calendar, Briefcase } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { ServiceBooking } from "../types/index";
+import { bookingServiceTitle } from "../services/bookingService";
 import { LaravelResourcePagination } from "@/components/ui/laravel-resource-pagination";
 import { useState } from "react";
 import BookingDetailsDialog from "./booking-details-dialog";
@@ -130,7 +131,12 @@ export default function BookingsTable({
                         <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0 border border-primary/10">
                           <Briefcase className="w-5 h-5" />
                         </div>
-                        <span className="font-bold text-gray-900 line-clamp-2 max-w-[250px]" dangerouslySetInnerHTML={{ __html: booking.service.title[currentLang] }} />
+                        <span
+                          className="font-bold text-gray-900 line-clamp-2 max-w-[250px]"
+                          dangerouslySetInnerHTML={{
+                            __html: bookingServiceTitle(booking, currentLang) || "—",
+                          }}
+                        />
                       </div>
                     </TableCell>
                     <TableCell>

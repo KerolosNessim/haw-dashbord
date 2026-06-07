@@ -46,40 +46,34 @@ export default function TestimonialsListTab() {
   });
 
   const { getListQuery, updateList, isPending } = useTestimonialsList();
-  const apiTestimonials = getListQuery.data?.data?.testimonials ?? [];
-  console.log(apiTestimonials);
-  
+  const apiTestimonials = getListQuery.data?.testimonials ?? [];
 
   const { control, handleSubmit } = useForm<TestimonialsFormValues>({
     values: {
-      items: apiTestimonials.length > 0 
-        ? apiTestimonials.map((item) => {
-            const name = item.content?.name ?? item.name;
-            const job = item.content?.job_title ?? item.job_title;
-            const content = item.content?.content ?? item.description;
-            
-            return {
-              id: item.id,
-              name_ar: typeof name === 'object' ? name.ar : (name ?? ""),
-              name_en: typeof name === 'object' ? name.en : (name ?? ""),
-              job_ar: typeof job === 'object' ? job.ar : (job ?? ""),
-              job_en: typeof job === 'object' ? job.en : (job ?? ""),
-              content_ar: typeof content === 'object' ? content.ar : (content ?? ""),
-              content_en: typeof content === 'object' ? content.en : (content ?? ""),
-              rate: item.rate ?? 5,
-              image: item.image,
-            };
-          })
-        : [{
-            name_ar: "",
-            name_en: "",
-            job_ar: "",
-            job_en: "",
-            content_ar: "",
-            content_en: "",
-            rate: 5,
-            image: null
-          }],
+      items: apiTestimonials.length > 0
+        ? apiTestimonials.map((item) => ({
+            id: item.id,
+            name_ar: item.name.ar ?? "",
+            name_en: item.name.en ?? "",
+            job_ar: item.job_title.ar ?? "",
+            job_en: item.job_title.en ?? "",
+            content_ar: item.description.ar ?? "",
+            content_en: item.description.en ?? "",
+            rate: item.rate ?? 5,
+            image: item.image,
+          }))
+        : [
+            {
+              name_ar: "",
+              name_en: "",
+              job_ar: "",
+              job_en: "",
+              content_ar: "",
+              content_en: "",
+              rate: 5,
+              image: null,
+            },
+          ],
     },
   });
 

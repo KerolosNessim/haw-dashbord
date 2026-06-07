@@ -7,31 +7,28 @@ export interface TestimonialsGeneralData {
   id: number;
   slug: string;
   is_active: boolean;
-    title: LocaleString;
-    description: LocaleString;
+  title: LocaleString;
+  description: LocaleString;
 }
 
 export interface TestimonialItemData {
   id: number;
-  content?: {
-    name?: LocaleString | string;
-    job_title?: LocaleString | string;
-    content?: LocaleString | string;
+  content: {
+    name: LocaleString;
+    job_title: LocaleString;
+    content: LocaleString;
   };
-  name?: LocaleString | string;
-  job_title?: LocaleString | string;
-  description?: LocaleString | string;
+  name: LocaleString;
+  job_title: LocaleString;
+  description: LocaleString;
   image: string | null;
   rate: number;
   sort_order: number;
+  is_active: boolean;
+  country_ids: number[];
 }
 
 export interface TestimonialsListData {
-  id: number;
-  content: {
-    title: string;
-    description: string;
-  };
   testimonials: TestimonialItemData[];
 }
 

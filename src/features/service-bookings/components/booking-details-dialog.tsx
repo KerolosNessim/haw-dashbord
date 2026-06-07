@@ -5,9 +5,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Briefcase, Calendar, Mail, MessageSquare, Phone, Reply, User } from "lucide-react";
+import { Briefcase, Calendar, Mail, MessageSquare, Phone, User, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { ServiceBooking } from "../types/index";
+import { bookingServiceTitle } from "../services/bookingService";
 
 interface BookingDetailsDialogProps {
   booking: ServiceBooking | null;
@@ -41,7 +42,7 @@ export default function BookingDetailsDialog({
               </DialogTitle>
             </div>
             <p className="text-muted-foreground font-medium">
-              {booking.service.title[currentLang]}
+              {bookingServiceTitle(booking, currentLang) || "—"}
             </p>
           </DialogHeader>
         </div>
@@ -93,7 +94,7 @@ export default function BookingDetailsDialog({
   );
 }
 
-function InfoCard({ icon: Icon, label, value, dir }: { icon: any; label: string; value: string; dir?: "ltr" | "rtl" }) {
+function InfoCard({ icon: Icon, label, value, dir }: { icon: LucideIcon; label: string; value: string; dir?: "ltr" | "rtl" }) {
   return (
     <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/5 border border-border/40">
       <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-border/40 shadow-sm shrink-0">
