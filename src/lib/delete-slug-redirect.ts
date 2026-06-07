@@ -1,4 +1,5 @@
 import type { BlogSlugRedirectCode } from "@/lib/http-redirect-codes";
+import { normalizeInternalSitePath, redirectCodeForLocale } from "@/lib/locale-path";
 
 /** Payload sent when deleting a slugged resource so the old URL keeps SEO behavior. */
 export type DeleteSlugRedirectPayload = {
@@ -18,10 +19,12 @@ export function appendDeleteSlugRedirectToFormData(
   fd: FormData,
   payload: DeleteSlugRedirectPayload,
 ): void {
-  fd.append("slug_redirect_code[ar]", payload.slug_redirect_code.ar);
-  fd.append("slug_redirect_code[en]", payload.slug_redirect_code.en);
-  const arTarget = payload.slug_redirect_target?.ar?.trim();
-  const enTarget = payload.slug_redirect_target?.en?.trim();
+  const arCode = redirectCodeForLocale("ar", payload.slug_redirect_code.ar);
+  const enCode = redirectCodeForLocale("en", payload.slug_redirect_code.en);
+  fd.append("slug_redirect_code[ar]", arCode);
+  fd.append("slug_redirect_code[en]", enCode);
+  const arTarget = normalizeInternalSitePath(payload.slug_redirect_target?.ar ?? "");
+  const enTarget = normalizeInternalSitePath(payload.slug_redirect_target?.en ?? "");
   if (arTarget) fd.append("slug_redirect_target[ar]", arTarget);
   if (enTarget) fd.append("slug_redirect_target[en]", enTarget);
 }

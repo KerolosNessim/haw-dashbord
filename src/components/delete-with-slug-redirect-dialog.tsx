@@ -137,7 +137,7 @@ export function DeleteWithSlugRedirectDialog({
                   <Input
                     value={targetAr}
                     onChange={(e) => setTargetAr(e.target.value)}
-                    placeholder="/ar/blogs/new-slug"
+                    placeholder="/blogs/new-slug"
                     className="rounded-xl"
                     dir="ltr"
                   />
@@ -156,7 +156,7 @@ export function DeleteWithSlugRedirectDialog({
                   <Input
                     value={targetEn}
                     onChange={(e) => setTargetEn(e.target.value)}
-                    placeholder="/en/blogs/new-slug"
+                    placeholder="/blogs/new-slug"
                     className="rounded-xl"
                     dir="ltr"
                   />

@@ -2455,7 +2455,7 @@
     "dialog": {
       "create_title": "Create redirect",
       "edit_title": "Edit redirect",
-      "description": "Keep deleted or renamed URLs explicit with 301/302 redirects, or mark them as 404/410."
+      "description": "Keep deleted or renamed URLs explicit with 301/302 redirects, or mark them as 404/410. Enter paths without /ar or /en — locale is selected separately."
     },
     "fields": {
       "old_path": "Old path",

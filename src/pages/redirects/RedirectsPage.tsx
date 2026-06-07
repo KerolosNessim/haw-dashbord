@@ -41,7 +41,9 @@ import {
   type RedirectRow,
 } from "@/features/redirects/types";
 import { codeNeedsRedirectTarget } from "@/lib/delete-slug-redirect";
+import { getHttpErrorMessage } from "@/lib/http-error-message";
 import { BLOG_SLUG_REDIRECT_CODES, type BlogSlugRedirectCode } from "@/lib/http-redirect-codes";
+import { redirectCodeForLocale } from "@/lib/locale-path";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Loader2, Pencil, Plus, RefreshCw, Route, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -55,7 +57,7 @@ const emptyForm: RedirectFormValues = {
   source_locale: "ar",
   resource_type: "custom",
   resource_id: "",
-  status_code: "410",
+  status_code: "301",
   target_path: "",
   target_locale: "ar",
   is_active: true,
@@ -100,11 +102,21 @@ function RedirectFormDialog({
   const canSubmit = !isPending && !missingSource && !missingTarget;
 
   const update = <K extends keyof RedirectFormValues>(key: K, value: RedirectFormValues[K]) => {
-    setValues((prev) => ({
-      ...prev,
-      [key]: value,
-      ...(key === "source_locale" && !prev.target_path ? { target_locale: value as RedirectLocale } : {}),
-    }));
+    setValues((prev) => {
+      const next = {
+        ...prev,
+        [key]: value,
+        ...(key === "source_locale" && !prev.target_path
+          ? { target_locale: value as RedirectLocale }
+          : {}),
+      };
+      if (key === "source_locale" || key === "status_code") {
+        const locale = (key === "source_locale" ? value : next.source_locale) as RedirectLocale;
+        const code = (key === "status_code" ? value : next.status_code) as BlogSlugRedirectCode;
+        next.status_code = redirectCodeForLocale(locale, code);
+      }
+      return next;
+    });
   };
 
   return (
@@ -124,7 +136,7 @@ function RedirectFormDialog({
               dir="ltr"
               value={values.source_path}
               onChange={(e) => update("source_path", e.target.value)}
-              placeholder="/ar/blogs/old-article"
+              placeholder="/blogs/old-article"
               className="rounded-xl"
             />
             {missingSource ? <p className="text-xs text-destructive">{t("validation.old_path_required")}</p> : null}
@@ -194,7 +206,7 @@ function RedirectFormDialog({
                   dir="ltr"
                   value={values.target_path ?? ""}
                   onChange={(e) => update("target_path", e.target.value)}
-                  placeholder="/ar/blogs/new-article"
+                  placeholder="/blogs/new-article"
                   className="rounded-xl"
                 />
                 {missingTarget ? <p className="text-xs text-destructive">{t("validation.target_required")}</p> : null}
@@ -256,7 +268,8 @@ export default function RedirectsPage() {
       queryClient.invalidateQueries({ queryKey: REDIRECTS_QUERY_KEY });
       setIsFormOpen(false);
     },
-    onError: () => toast.error(t("toasts.create_error")),
+    onError: (error) =>
+      toast.error(getHttpErrorMessage(error, { default: t("toasts.create_error") })),
   });
 
   const updateMutation = useMutation({
@@ -267,7 +280,8 @@ export default function RedirectsPage() {
       setIsFormOpen(false);
       setEditingRow(null);
     },
-    onError: () => toast.error(t("toasts.update_error")),
+    onError: (error) =>
+      toast.error(getHttpErrorMessage(error, { default: t("toasts.update_error") })),
   });
 
   const deleteMutation = useMutation({
