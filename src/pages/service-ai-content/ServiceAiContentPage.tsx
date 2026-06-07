@@ -1,36 +1,41 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Save, Sparkles, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { BilingualSectionImageUpload } from "@/components/form/bilingual-section-image-upload";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { Can } from "@/features/permissions/components/PermissionGate";
 import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
 import {
   createServiceAiContent,
   fetchServiceAiContent,
+  previewImageFromApiItem,
   updateServiceAiContent,
 } from "@/features/service-ai-content/services/service-ai-content-api";
 import type {
   ServiceAiContent,
+  ServiceAiContentFormItem,
   ServiceAiContentFormValues,
-  ServiceAiContentItem,
 } from "@/features/service-ai-content/types";
+import { emptyBilingualSectionImage, type BilingualSectionImage } from "@/lib/bilingual-section-image";
 import { getHttpErrorMessage } from "@/lib/http-error-message";
 
 const QUERY_KEY = ["service-ai-content"];
 
-function emptyItem(): ServiceAiContentItem {
+function newClientId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+}
+
+function emptyItem(): ServiceAiContentFormItem {
   return {
+    clientId: newClientId(),
     video: "",
-    subtitle: "",
-    description: { ar: "", en: "" },
-    sort_order: 0,
+    preview_image: emptyBilingualSectionImage(),
   };
 }
 
@@ -38,9 +43,6 @@ function emptyForm(): ServiceAiContentFormValues {
   return {
     title: { ar: "", en: "" },
     description: { ar: "", en: "" },
-    meta_title: { ar: "", en: "" },
-    meta_description: { ar: "", en: "" },
-    image_alt: { ar: "", en: "" },
     items: [],
     is_active: true,
   };
@@ -48,19 +50,28 @@ function emptyForm(): ServiceAiContentFormValues {
 
 function contentToForm(content: ServiceAiContent): ServiceAiContentFormValues {
   return {
-    title: { ...content.title },
-    description: { ...content.description },
-    meta_title: { ...content.meta_title },
-    meta_description: { ...content.meta_description },
-    image_alt: { ...content.image_alt },
-    items: content.items.map((item) => ({ ...item, description: { ...item.description } })),
-    is_active: content.is_active,
+    title: { ar: content.title?.ar ?? "", en: content.title?.en ?? "" },
+    description: { ar: content.description?.ar ?? "", en: content.description?.en ?? "" },
+    items: (content.items ?? []).map((item) => ({
+      clientId: newClientId(),
+      video: item.video ?? "",
+      preview_image: previewImageFromApiItem(item),
+    })),
+    is_active: content.is_active ?? true,
   };
 }
 
-function isOptionalUrl(value: string): boolean {
+function htmlToPlainText(value: string): string {
+  return value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isHttpUrl(value: string): boolean {
   const trimmed = value.trim();
-  if (!trimmed) return true;
+  if (!trimmed) return false;
   try {
     const url = new URL(trimmed);
     return url.protocol === "http:" || url.protocol === "https:";
@@ -71,6 +82,7 @@ function isOptionalUrl(value: string): boolean {
 
 type FormErrors = {
   title_ar?: string;
+  itemVideo?: string;
   itemUrl?: string;
 };
 
@@ -86,15 +98,9 @@ export default function ServiceAiContentPage() {
   const exists = Boolean(contentQuery.data?.id);
 
   const saveMutation = useMutation({
-    mutationFn: async ({
-      values,
-      images,
-    }: {
-      values: ServiceAiContentFormValues;
-      images: { ar: File | null; en: File | null };
-    }) => {
-      if (exists) return updateServiceAiContent(values, images);
-      return createServiceAiContent(values, images);
+    mutationFn: async (values: ServiceAiContentFormValues) => {
+      if (exists) return updateServiceAiContent(values);
+      return createServiceAiContent(values);
     },
     onSuccess: () => {
       toast.success(t("toast_saved"));
@@ -102,6 +108,14 @@ export default function ServiceAiContentPage() {
     },
     onError: (error) => toast.error(getHttpErrorMessage(error, { default: t("toast_error") })),
   });
+
+  if (contentQuery.isError) {
+    return (
+      <div className="mx-auto max-w-[1200px] py-16 text-center text-destructive">
+        {t("load_error")}
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-[1200px] space-y-8 pb-20">
@@ -127,7 +141,7 @@ export default function ServiceAiContentPage() {
           t={t}
           initial={contentQuery.data ?? undefined}
           isSaving={saveMutation.isPending}
-          onSave={(values, images) => saveMutation.mutate({ values, images })}
+          onSave={(values) => saveMutation.mutate(values)}
         />
       )}
     </div>
@@ -143,49 +157,46 @@ function ServiceAiContentForm({
   t: (key: string) => string;
   initial?: ServiceAiContent;
   isSaving: boolean;
-  onSave: (values: ServiceAiContentFormValues, images: { ar: File | null; en: File | null }) => void;
+  onSave: (values: ServiceAiContentFormValues) => void;
 }) {
   const [form, setForm] = useState<ServiceAiContentFormValues>(() =>
     initial ? contentToForm(initial) : emptyForm(),
   );
-  const [images, setImages] = useState<{ ar: File | null; en: File | null }>({ ar: null, en: null });
-  const [preview, setPreview] = useState<{ ar: string | null; en: string | null }>({
-    ar: initial?.image.ar ?? null,
-    en: initial?.image.en ?? null,
-  });
   const [errors, setErrors] = useState<FormErrors>({});
-
-  useEffect(() => {
-    if (!initial) return;
-    setForm(contentToForm(initial));
-    setPreview({ ar: initial.image.ar, en: initial.image.en });
-    setImages({ ar: null, en: null });
-    setErrors({});
-  }, [initial]);
 
   const validate = (): boolean => {
     const next: FormErrors = {};
-    if (!form.title.ar.trim()) next.title_ar = t("validation.title_ar");
-    if (form.items.some((item) => !isOptionalUrl(item.video) || !isOptionalUrl(item.subtitle))) {
+    if (!htmlToPlainText(form.title.ar)) next.title_ar = t("validation.title_ar");
+    if (form.items.some((item) => !item.video.trim())) {
+      next.itemVideo = t("validation.video_required");
+    } else if (form.items.some((item) => !isHttpUrl(item.video))) {
       next.itemUrl = t("validation.url");
     }
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
-  const updateItem = (index: number, patch: Partial<ServiceAiContentItem>) => {
+  const updateItem = (index: number, patch: Partial<ServiceAiContentFormItem>) => {
     setForm((state) => ({
       ...state,
       items: state.items.map((item, i) => (i === index ? { ...item, ...patch } : item)),
     }));
   };
 
-  const updateItemDescription = (index: number, locale: "ar" | "en", value: string) => {
+  const updateItemPreview = (index: number, next: BilingualSectionImage) => {
     setForm((state) => ({
       ...state,
-      items: state.items.map((item, i) =>
-        i === index ? { ...item, description: { ...item.description, [locale]: value } } : item,
-      ),
+      items: state.items.map((item, i) => {
+        if (i !== index) return item;
+        const clearPreview = { ar: item.clearPreview?.ar ?? false, en: item.clearPreview?.en ?? false };
+        if (typeof item.preview_image.ar === "string" && item.preview_image.ar && !next.ar) {
+          clearPreview.ar = true;
+        }
+        if (typeof item.preview_image.en === "string" && item.preview_image.en && !next.en) {
+          clearPreview.en = true;
+        }
+        return { ...item, preview_image: next, clearPreview };
+      }),
     }));
   };
 
@@ -195,7 +206,7 @@ function ServiceAiContentForm({
       onSubmit={(event) => {
         event.preventDefault();
         if (!validate()) return;
-        onSave(form, images);
+        onSave(form);
       }}
     >
       <Tabs defaultValue="ar" className="space-y-6">
@@ -207,11 +218,18 @@ function ServiceAiContentForm({
         <TabsContent value="ar" className="space-y-4 rounded-2xl border p-5">
           <Field>
             <FieldLabel>{t("fields.title")}</FieldLabel>
-            <Input
-              dir="rtl"
-              value={form.title.ar}
-              onChange={(e) => setForm((s) => ({ ...s, title: { ...s.title, ar: e.target.value } }))}
-            />
+            <div className="min-h-[120px] overflow-hidden rounded-xl border">
+              <RichTextEditor
+                dir="rtl"
+                value={form.title.ar}
+                onChange={(val) =>
+                  setForm((s) => ({
+                    ...s,
+                    title: { ...s.title, ar: editorOnChangeToHtml(val) },
+                  }))
+                }
+              />
+            </div>
             {errors.title_ar ? <p className="text-sm text-destructive">{errors.title_ar}</p> : null}
           </Field>
           <Field>
@@ -229,63 +247,23 @@ function ServiceAiContentForm({
               />
             </div>
           </Field>
-          <Field>
-            <FieldLabel>{t("fields.meta_title")}</FieldLabel>
-            <Input
-              dir="rtl"
-              value={form.meta_title.ar}
-              onChange={(e) =>
-                setForm((s) => ({ ...s, meta_title: { ...s.meta_title, ar: e.target.value } }))
-              }
-            />
-          </Field>
-          <Field>
-            <FieldLabel>{t("fields.meta_description")}</FieldLabel>
-            <Input
-              dir="rtl"
-              value={form.meta_description.ar}
-              onChange={(e) =>
-                setForm((s) => ({
-                  ...s,
-                  meta_description: { ...s.meta_description, ar: e.target.value },
-                }))
-              }
-            />
-          </Field>
-          <Field>
-            <FieldLabel>{t("fields.image_alt")}</FieldLabel>
-            <Input
-              dir="rtl"
-              value={form.image_alt.ar}
-              onChange={(e) =>
-                setForm((s) => ({ ...s, image_alt: { ...s.image_alt, ar: e.target.value } }))
-              }
-            />
-          </Field>
-          <Field>
-            <FieldLabel>{t("fields.image")}</FieldLabel>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                setImages((s) => ({ ...s, ar: file }));
-                setPreview((s) => ({ ...s, ar: file ? URL.createObjectURL(file) : s.ar }));
-              }}
-            />
-            {preview.ar ? (
-              <img src={preview.ar} alt="" className="mt-2 h-28 w-full rounded-md border object-cover" />
-            ) : null}
-          </Field>
         </TabsContent>
 
         <TabsContent value="en" className="space-y-4 rounded-2xl border p-5">
           <Field>
             <FieldLabel>{t("fields.title")}</FieldLabel>
-            <Input
-              value={form.title.en}
-              onChange={(e) => setForm((s) => ({ ...s, title: { ...s.title, en: e.target.value } }))}
-            />
+            <div className="min-h-[120px] overflow-hidden rounded-xl border">
+              <RichTextEditor
+                dir="ltr"
+                value={form.title.en}
+                onChange={(val) =>
+                  setForm((s) => ({
+                    ...s,
+                    title: { ...s.title, en: editorOnChangeToHtml(val) },
+                  }))
+                }
+              />
+            </div>
           </Field>
           <Field>
             <FieldLabel>{t("fields.description")}</FieldLabel>
@@ -301,51 +279,6 @@ function ServiceAiContentForm({
                 }
               />
             </div>
-          </Field>
-          <Field>
-            <FieldLabel>{t("fields.meta_title")}</FieldLabel>
-            <Input
-              value={form.meta_title.en}
-              onChange={(e) =>
-                setForm((s) => ({ ...s, meta_title: { ...s.meta_title, en: e.target.value } }))
-              }
-            />
-          </Field>
-          <Field>
-            <FieldLabel>{t("fields.meta_description")}</FieldLabel>
-            <Input
-              value={form.meta_description.en}
-              onChange={(e) =>
-                setForm((s) => ({
-                  ...s,
-                  meta_description: { ...s.meta_description, en: e.target.value },
-                }))
-              }
-            />
-          </Field>
-          <Field>
-            <FieldLabel>{t("fields.image_alt")}</FieldLabel>
-            <Input
-              value={form.image_alt.en}
-              onChange={(e) =>
-                setForm((s) => ({ ...s, image_alt: { ...s.image_alt, en: e.target.value } }))
-              }
-            />
-          </Field>
-          <Field>
-            <FieldLabel>{t("fields.image")}</FieldLabel>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                setImages((s) => ({ ...s, en: file }));
-                setPreview((s) => ({ ...s, en: file ? URL.createObjectURL(file) : s.en }));
-              }}
-            />
-            {preview.en ? (
-              <img src={preview.en} alt="" className="mt-2 h-28 w-full rounded-md border object-cover" />
-            ) : null}
           </Field>
         </TabsContent>
       </Tabs>
@@ -370,12 +303,13 @@ function ServiceAiContentForm({
             {t("items.add")}
           </Button>
         </div>
+        {errors.itemVideo ? <p className="text-sm text-destructive">{errors.itemVideo}</p> : null}
         {errors.itemUrl ? <p className="text-sm text-destructive">{errors.itemUrl}</p> : null}
         {!form.items.length ? (
           <p className="text-sm text-muted-foreground">{t("items.empty")}</p>
         ) : (
           form.items.map((item, index) => (
-            <div key={index} className="space-y-3 rounded-xl border p-4">
+            <div key={item.clientId} className="space-y-4 rounded-xl border p-4">
               <div className="flex flex-wrap justify-end gap-2">
                 <Button
                   type="button"
@@ -419,43 +353,22 @@ function ServiceAiContentForm({
                   {t("items.delete")}
                 </Button>
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <Field>
-                  <FieldLabel>{t("items.fields.video")}</FieldLabel>
-                  <Input
-                    type="url"
-                    placeholder="https://"
-                    value={item.video}
-                    onChange={(e) => updateItem(index, { video: e.target.value })}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>{t("items.fields.subtitle")}</FieldLabel>
-                  <Input
-                    type="url"
-                    placeholder="https://"
-                    value={item.subtitle}
-                    onChange={(e) => updateItem(index, { subtitle: e.target.value })}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>{t("items.fields.description_ar")}</FieldLabel>
-                  <Textarea
-                    dir="rtl"
-                    rows={3}
-                    value={item.description.ar}
-                    onChange={(e) => updateItemDescription(index, "ar", e.target.value)}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>{t("items.fields.description_en")}</FieldLabel>
-                  <Textarea
-                    rows={3}
-                    value={item.description.en}
-                    onChange={(e) => updateItemDescription(index, "en", e.target.value)}
-                  />
-                </Field>
-              </div>
+              <Field>
+                <FieldLabel>{t("items.fields.video")}</FieldLabel>
+                <Input
+                  type="url"
+                  dir="ltr"
+                  placeholder="https://"
+                  value={item.video}
+                  onChange={(e) => updateItem(index, { video: e.target.value })}
+                />
+              </Field>
+              <BilingualSectionImageUpload
+                keyPrefix="service_ai_content"
+                value={item.preview_image}
+                onChange={(next) => updateItemPreview(index, next)}
+                required={false}
+              />
             </div>
           ))
         )}
