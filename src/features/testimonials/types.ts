@@ -5,10 +5,16 @@ export interface LocaleString {
 
 export interface TestimonialsGeneralData {
   id: number;
-  slug: string;
+  slug?: string;
   is_active: boolean;
   title: LocaleString;
   description: LocaleString;
+  country_ids?: number[];
+}
+
+/** Full `/v1/admin/testimonials/content` payload (section + items). */
+export interface TestimonialsContentData extends TestimonialsGeneralData {
+  testimonials: TestimonialItemData[];
 }
 
 export interface TestimonialItemData {

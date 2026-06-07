@@ -25,6 +25,7 @@ export const useTestimonialsGeneral = () => {
     },
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["testimonials-list"] });
       toast.success(res.message || t("toasts.generic_updated"));
     },
     onError: (error: AxiosError<{ message: string }>) => {

@@ -3,6 +3,7 @@ import { countryIdsQuery } from "@/features/home-content/lib/country-scope";
 import type {
   LocaleString,
   TestimonialItemData,
+  TestimonialsContentData,
   TestimonialsGeneralData,
   TestimonialsListData,
   TestimonialsResponse,
@@ -94,14 +95,48 @@ export function normalizeTestimonialsListPayload(body: unknown): TestimonialsLis
   return { testimonials };
 }
 
-export const getTestimonialsGeneral = (
+/** Section settings from `/v1/admin/testimonials/content` (`data.content.title`, etc.). */
+export function normalizeTestimonialsContentPayload(body: unknown): TestimonialsContentData {
+  const root = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+  const data =
+    root.data && typeof root.data === "object" && !Array.isArray(root.data)
+      ? (root.data as Record<string, unknown>)
+      : root;
+
+  const contentBlock =
+    data.content && typeof data.content === "object" && !Array.isArray(data.content)
+      ? (data.content as Record<string, unknown>)
+      : null;
+
+  const country_ids = Array.isArray(data.country_ids)
+    ? data.country_ids.map((v) => Number(v)).filter((n) => Number.isFinite(n) && n > 0)
+    : [];
+
+  const list = normalizeTestimonialsListPayload(body);
+
+  return {
+    id: Number(data.id ?? 0),
+    slug: typeof data.slug === "string" ? data.slug : undefined,
+    is_active: data.is_active !== false && data.is_active !== 0 && data.is_active !== "0",
+    title: localeString(contentBlock?.title ?? data.title),
+    description: localeString(contentBlock?.description ?? data.description),
+    country_ids,
+    testimonials: list.testimonials,
+  };
+}
+
+export const getTestimonialsGeneral = async (
   countryIds?: number[],
 ): Promise<TestimonialsResponse<TestimonialsGeneralData>> => {
-  return api
-    .get<TestimonialsResponse<TestimonialsGeneralData>>("/v1/admin/testimonials/content", {
-      params: countryIdsQuery(countryIds),
-    })
-    .then((res) => res.data);
+  const res = await api.get<TestimonialsResponse<unknown>>("/v1/admin/testimonials/content", {
+    params: countryIdsQuery(countryIds),
+  });
+  const normalized = normalizeTestimonialsContentPayload(res.data);
+  return {
+    status: String((res.data as TestimonialsResponse<unknown>)?.status ?? "true"),
+    message: String((res.data as TestimonialsResponse<unknown>)?.message ?? ""),
+    data: normalized,
+  };
 };
 
 export const updateTestimonialsGeneral = (
