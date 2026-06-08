@@ -1350,15 +1350,14 @@
       "description": "Configure the lead capture box shown on selected service pages.",
       "tab_ar": "Arabic",
       "tab_en": "English",
-      "is_active": "Active",
       "save_changes": "Save changes",
-      "toast_saved": "SEO tools box settings saved.",
+      "toast_saved": "SEO application settings saved.",
       "fields": {
-        "description": "Intro text",
-        "challenge_label": "Field 1 — biggest challenge",
-        "email_label": "Field 2 — email address",
-        "consent_label": "Checkbox consent text",
-        "button_text": "Action button text"
+        "heading": "Heading",
+        "website_placeholder": "Website URL placeholder",
+        "email_placeholder": "Email placeholder",
+        "consent_text": "Consent checkbox text",
+        "submit_button_text": "Submit button text"
       },
       "services": {
         "linked_services": "Show box on services",
@@ -2014,6 +2013,8 @@
       "image_alt_en": "Alt text (English)",
       "image_alt_placeholder": "Describe the logo for accessibility",
       "new_image_badge": "New",
+      "sort_order": "Sort order",
+      "is_active": "Active",
       "linked_services": "Linked services",
       "linked_services_placeholder": "Select services…",
       "linked_services_edit": "Add or change services",
@@ -2414,6 +2415,11 @@
   "consultation": {
     "title": "Consultation Bookings",
     "description": "Manage and view service booking requests and consultations from clients.",
+    "tabs": {
+      "general": "General",
+      "seo": "SEO",
+      "ai_tools": "AI Tools"
+    },
     "booking_details": "Booking Details",
     "no_bookings": "No bookings found at the moment.",
     "name": "Client Name",
@@ -2442,6 +2448,80 @@
     "pagination": {
       "previous": "Previous",
       "next": "Next"
+    },
+    "seo": {
+      "submission_details": "SEO Submission Details",
+      "no_submissions": "No SEO submissions found at the moment.",
+      "service": "Requested Service",
+      "website": "Website URL",
+      "email": "Email Address",
+      "date": "Submission Date",
+      "consent": "Consent",
+      "consent_yes": "Agreed",
+      "consent_no": "Not agreed",
+      "status_label": "Status",
+      "close": "Close",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "deleting": "Deleting...",
+      "delete_success": "SEO submission deleted successfully.",
+      "delete_error": "Failed to delete SEO submission.",
+      "delete_confirm_title": "Confirm Deletion",
+      "delete_confirm_description": "Are you sure you want to delete this SEO submission? This action cannot be undone.",
+      "status": {
+        "new": "New",
+        "read": "Read"
+      },
+      "table": {
+        "service": "Requested Service",
+        "website": "Website",
+        "email": "Email",
+        "status": "Status",
+        "date": "Date",
+        "actions": "Actions"
+      },
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next"
+      }
+    },
+    "ai_tools": {
+      "submission_details": "AI Tools Submission Details",
+      "no_submissions": "No AI tool submissions found at the moment.",
+      "loading": "Loading details…",
+      "search_placeholder": "Search by email, challenge, or status…",
+      "challenge": "Challenge",
+      "email": "Email Address",
+      "date": "Submission Date",
+      "accepts_updates": "Update consent",
+      "accepts_yes": "Agreed",
+      "accepts_no": "Not agreed",
+      "status_label": "Status",
+      "close": "Close",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "deleting": "Deleting...",
+      "delete_success": "AI tool submission deleted successfully.",
+      "delete_error": "Failed to delete AI tool submission.",
+      "delete_confirm_title": "Confirm Deletion",
+      "delete_confirm_description": "Are you sure you want to delete this AI tool submission? This action cannot be undone.",
+      "status": {
+        "new": "New",
+        "read": "Read"
+      },
+      "table": {
+        "id": "#",
+        "challenge": "Challenge",
+        "email": "Email",
+        "accepts_updates": "Update consent",
+        "status": "Status",
+        "date": "Date",
+        "actions": "Actions"
+      },
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next"
+      }
     }
   },
   "invoices": {

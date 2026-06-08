@@ -2,51 +2,41 @@ import { AccreditationImageServicesSelect } from "@/features/home-content/compon
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { resolveApiToastMessage } from "@/lib/api-toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Save, Sparkles } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import * as z from "zod";
 import { useAiToolsBox, useToolsBoxServices, useUpdateAiToolsBox } from "../hooks/useSettings";
-import { aiToolsBoxToFormValues, defaultAiToolsBoxSettings } from "../services/ai-tools-box-api";
-import type { AiToolsBoxFormValues } from "../types";
+import {
+  applicationSeoToFormValues,
+  defaultApplicationSeoSettings,
+  normalizeApplicationSeo,
+} from "../services/ai-tools-box-api";
+import type { ApplicationSeoFormValues } from "../types";
 
 const schema = z.object({
-  description_ar: z.string().min(1, { message: "validation.required" }),
-  description_en: z.string().optional().default(""),
-  challenge_label_ar: z.string().min(1, { message: "validation.required" }),
-  challenge_label_en: z.string().optional().default(""),
-  email_label_ar: z.string().min(1, { message: "validation.required" }),
-  email_label_en: z.string().optional().default(""),
-  consent_label_ar: z.string().min(1, { message: "validation.required" }),
-  consent_label_en: z.string().optional().default(""),
-  button_text_ar: z.string().min(1, { message: "validation.required" }),
-  button_text_en: z.string().optional().default(""),
+  heading_ar: z.string().min(1, { message: "validation.required" }),
+  heading_en: z.string().optional().default(""),
+  website_placeholder_ar: z.string().min(1, { message: "validation.required" }),
+  website_placeholder_en: z.string().optional().default(""),
+  email_placeholder_ar: z.string().min(1, { message: "validation.required" }),
+  email_placeholder_en: z.string().optional().default(""),
+  consent_text_ar: z.string().min(1, { message: "validation.required" }),
+  consent_text_en: z.string().optional().default(""),
+  submit_button_text_ar: z.string().min(1, { message: "validation.required" }),
+  submit_button_text_en: z.string().optional().default(""),
   service_ids: z.array(z.number()).default([]),
-  is_active: z.boolean(),
 });
 
 type FormValues = z.infer<typeof schema>;
 
-const emptyValues: AiToolsBoxFormValues = {
-  description_ar: "",
-  description_en: "",
-  challenge_label_ar: "",
-  challenge_label_en: "",
-  email_label_ar: "",
-  email_label_en: "",
-  consent_label_ar: "",
-  consent_label_en: "",
-  button_text_ar: "",
-  button_text_en: "",
-  service_ids: [],
-  is_active: true,
-};
+const emptyValues: ApplicationSeoFormValues = defaultApplicationSeoSettings();
 
 export default function AiToolsBoxSettingsForm() {
   const { t } = useTranslation("translation", { keyPrefix: "settings.ai_tools_box" });
@@ -54,6 +44,11 @@ export default function AiToolsBoxSettingsForm() {
   const { data, isLoading, isError } = useAiToolsBox();
   const { data: services = [], isLoading: servicesLoading } = useToolsBoxServices();
   const { mutateAsync: save, isPending } = useUpdateAiToolsBox();
+
+  const embeddedServices = useMemo(
+    () => (data?.services ?? []).map((s) => ({ id: s.id, title: s.title })),
+    [data?.services],
+  );
 
   const {
     control,
@@ -66,16 +61,18 @@ export default function AiToolsBoxSettingsForm() {
   });
 
   useEffect(() => {
-    if (data) reset(aiToolsBoxToFormValues(data));
-    else if (isError) reset(aiToolsBoxToFormValues(defaultAiToolsBoxSettings()));
+    if (data) reset(applicationSeoToFormValues(data));
+    else if (isError) reset(applicationSeoToFormValues(defaultApplicationSeoSettings()));
   }, [data, isError, reset]);
 
   const translateError = (msg: string | undefined) => (msg ? commonT(msg) : undefined);
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await save(values);
-      toast.success(t("toast_saved"));
+      const res = await save({ ...values, services: data?.services });
+      const saved = res.data ? normalizeApplicationSeo(res.data) : null;
+      if (saved) reset(applicationSeoToFormValues(saved));
+      toast.success(resolveApiToastMessage(res, t("toast_saved")));
     } catch {
       toast.error(commonT("toasts.generic_update_failed"));
     }
@@ -99,16 +96,6 @@ export default function AiToolsBoxSettingsForm() {
             <p className="text-sm text-muted-foreground">{t("description")}</p>
           </div>
         </div>
-        <Controller
-          name="is_active"
-          control={control}
-          render={({ field }) => (
-            <div className="flex items-center gap-3 rounded-xl border px-4 py-2">
-              <FieldLabel className="mb-0 text-sm font-bold">{t("is_active")}</FieldLabel>
-              <Switch checked={field.value} onCheckedChange={field.onChange} />
-            </div>
-          )}
-        />
       </div>
 
       <Tabs defaultValue="ar" className="space-y-6">
@@ -119,57 +106,65 @@ export default function AiToolsBoxSettingsForm() {
 
         <TabsContent value="ar" className="mt-0 space-y-5 rounded-2xl border p-6">
           <Controller
-            name="description_ar"
+            name="heading_ar"
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel>{t("fields.description")}</FieldLabel>
+                <FieldLabel>{t("fields.heading")}</FieldLabel>
                 <Textarea {...field} dir="rtl" rows={3} className="rounded-xl" />
-                <FieldError errors={[{ message: translateError(errors.description_ar?.message) }]} />
+                <FieldError errors={[{ message: translateError(errors.heading_ar?.message) }]} />
               </Field>
             )}
           />
           <Controller
-            name="challenge_label_ar"
+            name="website_placeholder_ar"
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel>{t("fields.challenge_label")}</FieldLabel>
+                <FieldLabel>{t("fields.website_placeholder")}</FieldLabel>
                 <Input {...field} dir="rtl" className="h-11 rounded-xl" />
-                <FieldError errors={[{ message: translateError(errors.challenge_label_ar?.message) }]} />
+                <FieldError
+                  errors={[{ message: translateError(errors.website_placeholder_ar?.message) }]}
+                />
               </Field>
             )}
           />
           <Controller
-            name="email_label_ar"
+            name="email_placeholder_ar"
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel>{t("fields.email_label")}</FieldLabel>
+                <FieldLabel>{t("fields.email_placeholder")}</FieldLabel>
                 <Input {...field} dir="rtl" className="h-11 rounded-xl" />
-                <FieldError errors={[{ message: translateError(errors.email_label_ar?.message) }]} />
+                <FieldError
+                  errors={[{ message: translateError(errors.email_placeholder_ar?.message) }]}
+                />
               </Field>
             )}
           />
           <Controller
-            name="consent_label_ar"
+            name="consent_text_ar"
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel>{t("fields.consent_label")}</FieldLabel>
+                <FieldLabel>{t("fields.consent_text")}</FieldLabel>
                 <Textarea {...field} dir="rtl" rows={3} className="rounded-xl" />
-                <FieldError errors={[{ message: translateError(errors.consent_label_ar?.message) }]} />
+                <FieldError
+                  errors={[{ message: translateError(errors.consent_text_ar?.message) }]}
+                />
               </Field>
             )}
           />
           <Controller
-            name="button_text_ar"
+            name="submit_button_text_ar"
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel>{t("fields.button_text")}</FieldLabel>
+                <FieldLabel>{t("fields.submit_button_text")}</FieldLabel>
                 <Input {...field} dir="rtl" className="h-11 rounded-xl" />
-                <FieldError errors={[{ message: translateError(errors.button_text_ar?.message) }]} />
+                <FieldError
+                  errors={[{ message: translateError(errors.submit_button_text_ar?.message) }]}
+                />
               </Field>
             )}
           />
@@ -177,51 +172,51 @@ export default function AiToolsBoxSettingsForm() {
 
         <TabsContent value="en" className="mt-0 space-y-5 rounded-2xl border p-6">
           <Controller
-            name="description_en"
+            name="heading_en"
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel>{t("fields.description")}</FieldLabel>
+                <FieldLabel>{t("fields.heading")}</FieldLabel>
                 <Textarea {...field} dir="ltr" rows={3} className="rounded-xl" />
               </Field>
             )}
           />
           <Controller
-            name="challenge_label_en"
+            name="website_placeholder_en"
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel>{t("fields.challenge_label")}</FieldLabel>
+                <FieldLabel>{t("fields.website_placeholder")}</FieldLabel>
                 <Input {...field} dir="ltr" className="h-11 rounded-xl" />
               </Field>
             )}
           />
           <Controller
-            name="email_label_en"
+            name="email_placeholder_en"
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel>{t("fields.email_label")}</FieldLabel>
+                <FieldLabel>{t("fields.email_placeholder")}</FieldLabel>
                 <Input {...field} dir="ltr" className="h-11 rounded-xl" />
               </Field>
             )}
           />
           <Controller
-            name="consent_label_en"
+            name="consent_text_en"
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel>{t("fields.consent_label")}</FieldLabel>
+                <FieldLabel>{t("fields.consent_text")}</FieldLabel>
                 <Textarea {...field} dir="ltr" rows={3} className="rounded-xl" />
               </Field>
             )}
           />
           <Controller
-            name="button_text_en"
+            name="submit_button_text_en"
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel>{t("fields.button_text")}</FieldLabel>
+                <FieldLabel>{t("fields.submit_button_text")}</FieldLabel>
                 <Input {...field} dir="ltr" className="h-11 rounded-xl" />
               </Field>
             )}
@@ -238,6 +233,7 @@ export default function AiToolsBoxSettingsForm() {
               value={field.value}
               onChange={field.onChange}
               services={services}
+              embeddedServices={embeddedServices}
               loading={servicesLoading}
               disabled={isPending}
               i18nKeyPrefix="settings.ai_tools_box.services"

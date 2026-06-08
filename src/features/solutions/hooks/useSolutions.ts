@@ -17,6 +17,7 @@ export const useSolutions = () => {
   const { mutate: updateSolutionsMutation, isPending } = useMutation({
     mutationFn: updateSolutions,
     onSuccess: (res) => {
+      queryClient.setQueryData(SOLUTION_BLOCK_QUERY_KEY, res);
       void queryClient.invalidateQueries({ queryKey: SOLUTION_BLOCK_QUERY_KEY });
       toast.success(res.message || t("toasts.solutions_updated"));
     },

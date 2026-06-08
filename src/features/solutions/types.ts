@@ -36,6 +36,13 @@ export interface SolutionsResponse {
   data: SolutionsData;
 }
 
+export type SolutionsSectionSaveInput = {
+  title_ar: string;
+  title_en?: string;
+  des_ar: string;
+  des_en?: string;
+};
+
 export interface SolutionItemsResponse {
   status: string;
   message: string;

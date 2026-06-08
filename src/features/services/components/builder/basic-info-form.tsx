@@ -60,11 +60,6 @@ import { slugify, slugifyAr } from "@/lib/slugify";
 // Schema
 // ---------------------------------------------------------------------------
 
-const localizedSchema = z.object({
-  ar: z.string().min(1, { message: "validation.required" }),
-  en: z.string().optional().default(""),
-});
-
 const localizedEditorSchema = z
   .object({
     ar: z.any().optional(),
@@ -72,27 +67,10 @@ const localizedEditorSchema = z
   })
   .optional();
 
-const serviceImageSchema = z
-  .object({
-    ar: z.any().nullable().optional(),
-    en: z.any().nullable().optional(),
-  })
-  .superRefine((val, ctx) => {
-    if (!val.ar) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "validation.cover_ar_required",
-        path: ["ar"],
-      });
-    }
-    if (!val.en) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "validation.cover_en_required",
-        path: ["en"],
-      });
-    }
-  });
+const optionalServiceImageSchema = z.object({
+  ar: z.any().nullable().optional(),
+  en: z.any().nullable().optional(),
+});
 
 const optionalLocalizedSchema = z.object({
   ar: z.string().optional(),
@@ -149,14 +127,14 @@ const optionalTitleSchema = z.object({
   en: z.string().optional().default(""),
 });
 
-function buildBasicInfoSchema(isAiScope: boolean) {
+function buildBasicInfoSchema() {
   return z.object({
-    slug: isAiScope ? optionalSlugSchema : localizedSchema,
+    slug: optionalSlugSchema,
     slug_redirect_code: slugRedirectCodeOptional,
-  country_ids: z.array(z.string()).min(1, { message: "validation.country_required" }),
+  country_ids: z.array(z.string()).optional().default([]),
   package_ids: z.array(z.string()).optional(),
   is_active: z.boolean(),
-  title: isAiScope ? optionalTitleSchema : localizedSchema,
+  title: optionalTitleSchema,
   subtitle: optionalLocalizedEditorSchema.optional(),
   single_page_title: optionalLocalizedEditorSchema.optional(),
   tags: z
@@ -168,16 +146,16 @@ function buildBasicInfoSchema(isAiScope: boolean) {
         .filter((r) => r.name.length > 0),
     ),
   page_script: z.string().optional().default(""),
-  description: localizedSchema,
+  description: optionalLocalizedSchema,
   highlight_description: localizedEditorSchema,
   /**
    * Repeatable sections — replaces the old single `inside_desc` field.
    * Shape: Array<{ label?: string; ar?: any; en?: any }>
    */
   sections: z.array(sectionItemSchema).optional().default([]),
-  meta_title: localizedSchema,
-  meta_description: localizedSchema,
-  image: serviceImageSchema,
+  meta_title: optionalLocalizedSchema,
+  meta_description: optionalLocalizedSchema,
+  image: optionalServiceImageSchema,
   image_alt: z.object({
     ar: z.string().optional(),
     en: z.string().optional(),
@@ -236,7 +214,7 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
     const { t, i18n } = useTranslation("translation", { keyPrefix: "services.form" });
     const { t: commonT } = useTranslation("translation", { keyPrefix: "validation" });
     const isAiScope = getServiceResourceScope() === "service_ais";
-    const basicInfoSchema = buildBasicInfoSchema(isAiScope);
+    const basicInfoSchema = buildBasicInfoSchema();
     const [socialMetaOpen, setSocialMetaOpen] = useState(false);
     const { countries } = useActiveUniqueCountries();
     const { draft, hydrated } = useServiceFormDraft(initialId);
@@ -1151,7 +1129,9 @@ const BasicInfoForm = forwardRef<BasicInfoFormHandle, BasicInfoFormProps>(
                       errors={[
                         {
                           message: translateError(
-                            (errors.image as { ar?: { message?: string } } | undefined)?.ar,
+                            (errors.image as Record<string, { message?: string }> | undefined)?.[
+                              locale
+                            ],
                           ),
                         },
                       ]}

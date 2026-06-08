@@ -1348,15 +1348,14 @@
       "description": "إعداد صندوق جمع البيانات الذي يظهر في صفحات الخدمات المحددة.",
       "tab_ar": "العربية",
       "tab_en": "الإنجليزية",
-      "is_active": "نشط",
       "save_changes": "حفظ التغييرات",
-      "toast_saved": "تم حفظ إعدادات صندوق أدوات SEO.",
+      "toast_saved": "تم حفظ إعدادات تقديم SEO.",
       "fields": {
-        "description": "النص التمهيدي",
-        "challenge_label": "الحقل الأول — أكبر تحدٍ",
-        "email_label": "الحقل الثاني — البريد الإلكتروني",
-        "consent_label": "نص خانة الموافقة",
-        "button_text": "نص زر الإجراء"
+        "heading": "العنوان التمهيدي",
+        "website_placeholder": "نص حقل رابط الموقع",
+        "email_placeholder": "نص حقل البريد الإلكتروني",
+        "consent_text": "نص خانة الموافقة",
+        "submit_button_text": "نص زر الإرسال"
       },
       "services": {
         "linked_services": "إظهار الصندوق في الخدمات",
@@ -2004,6 +2003,8 @@
       "image_alt_en": "النص البديل (إنجليزي)",
       "image_alt_placeholder": "وصف الشعار لإمكانية الوصول",
       "new_image_badge": "جديد",
+      "sort_order": "ترتيب العرض",
+      "is_active": "مفعّل",
       "save": "حفظ التغييرات",
       "linked_services": "الخدمات المرتبطة",
       "linked_services_placeholder": "اختر الخدمات…",
@@ -2401,6 +2402,11 @@
   "consultation": {
     "title": "حجوزات الاستشارات",
     "description": "إدارة وعرض طلبات حجز الاستشارات والخدمات المقدمة من العملاء.",
+    "tabs": {
+      "general": "عام",
+      "seo": "SEO",
+      "ai_tools": "أدوات الذكاء الاصطناعي"
+    },
     "booking_details": "تفاصيل الحجز",
     "no_bookings": "لا توجد حجوزات حالياً.",
     "name": "اسم العميل",
@@ -2429,6 +2435,80 @@
     "pagination": {
       "previous": "السابق",
       "next": "التالي"
+    },
+    "seo": {
+      "submission_details": "تفاصيل طلب تدقيق SEO",
+      "no_submissions": "لا توجد طلبات تدقيق SEO حالياً.",
+      "service": "الخدمة المطلوبة",
+      "website": "رابط الموقع",
+      "email": "البريد الإلكتروني",
+      "date": "تاريخ الطلب",
+      "consent": "الموافقة",
+      "consent_yes": "موافق",
+      "consent_no": "غير موافق",
+      "status_label": "الحالة",
+      "close": "إغلاق",
+      "delete": "حذف",
+      "cancel": "إلغاء",
+      "deleting": "جاري الحذف...",
+      "delete_success": "تم حذف طلب تدقيق SEO بنجاح.",
+      "delete_error": "فشل حذف طلب تدقيق SEO.",
+      "delete_confirm_title": "تأكيد الحذف",
+      "delete_confirm_description": "هل أنت متأكد من حذف طلب تدقيق SEO هذا؟ لا يمكن التراجع عن هذا الإجراء.",
+      "status": {
+        "new": "جديد",
+        "read": "تمت القراءة"
+      },
+      "table": {
+        "service": "الخدمة المطلوبة",
+        "website": "الموقع",
+        "email": "البريد الإلكتروني",
+        "status": "الحالة",
+        "date": "التاريخ",
+        "actions": "الإجراءات"
+      },
+      "pagination": {
+        "previous": "السابق",
+        "next": "التالي"
+      }
+    },
+    "ai_tools": {
+      "submission_details": "تفاصيل طلب أدوات الذكاء الاصطناعي",
+      "no_submissions": "لا توجد طلبات أدوات ذكاء اصطناعي حالياً.",
+      "loading": "جاري تحميل التفاصيل…",
+      "search_placeholder": "بحث بالبريد أو التحدي أو الحالة…",
+      "challenge": "التحدي",
+      "email": "البريد الإلكتروني",
+      "date": "تاريخ الطلب",
+      "accepts_updates": "موافقة التحديثات",
+      "accepts_yes": "موافق",
+      "accepts_no": "غير موافق",
+      "status_label": "الحالة",
+      "close": "إغلاق",
+      "delete": "حذف",
+      "cancel": "إلغاء",
+      "deleting": "جاري الحذف...",
+      "delete_success": "تم حذف طلب أدوات الذكاء الاصطناعي بنجاح.",
+      "delete_error": "فشل حذف طلب أدوات الذكاء الاصطناعي.",
+      "delete_confirm_title": "تأكيد الحذف",
+      "delete_confirm_description": "هل أنت متأكد من حذف طلب أدوات الذكاء الاصطناعي هذا؟ لا يمكن التراجع عن هذا الإجراء.",
+      "status": {
+        "new": "جديد",
+        "read": "مقروء"
+      },
+      "table": {
+        "id": "#",
+        "challenge": "التحدي",
+        "email": "البريد",
+        "accepts_updates": "موافقة التحديثات",
+        "status": "الحالة",
+        "date": "التاريخ",
+        "actions": "الإجراءات"
+      },
+      "pagination": {
+        "previous": "السابق",
+        "next": "التالي"
+      }
     }
   },
   "invoices": {

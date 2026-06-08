@@ -2,35 +2,17 @@ import { api } from "@/lib/api";
 import { assertApiEnvelopeSuccess, unwrapShowResource } from "@/lib/api-payload";
 import { fetchRegularAdminServices } from "@/features/home-content/services/accreditation-services-api";
 import type { Service } from "@/features/services/type";
-import type { AiToolsBoxSettings, AiToolsBoxFormValues, LocaleString } from "../types";
+import type {
+  ApplicationSeoFormValues,
+  ApplicationSeoLinkedService,
+  ApplicationSeoSettings,
+  LocaleString,
+} from "../types";
 
-const TOOLS_BOX_PATH = "/v1/admin/services/tools-box";
+const APPLICATION_SEO_PATH = "/v1/admin/settings/application-seo";
 
-export function defaultAiToolsBoxSettings(): AiToolsBoxSettings {
-  return {
-    description: {
-      ar: "أدخل مجالك أدناه لتوليد قائمة مخصصة بأقوى أدوات الذكاء الاصطناعي لزيادة إنتاجيتك ومضاعفة أرباحك.",
-      en: "Enter your field below to generate a customized list of the most powerful AI tools to boost productivity and multiply your profits.",
-    },
-    challenge_label: {
-      ar: "ما هو التحدي الأكبر في عملك حالياً؟ (مثال: كتابة المحتوى، المبيعات، التصميم...)",
-      en: "What is the biggest challenge in your work right now? (e.g. content writing, sales, design...)",
-    },
-    email_label: {
-      ar: "البريد الإلكتروني الذي سيصلك دليل الأدوات المخصص عليه",
-      en: "Email address where your personalized tools guide will be sent",
-    },
-    consent_label: {
-      ar: "أوافق على استقبال تحديثات دورية بأحدث أدوات الذكاء الاصطناعي المكتشفة وحلول الأتمتة المبتكرة.",
-      en: "I agree to receive periodic updates about the latest discovered AI tools and innovative automation solutions.",
-    },
-    button_text: {
-      ar: "ادوات الذكاء الاصطناعي",
-      en: "AI Tools",
-    },
-    service_ids: [],
-    is_active: true,
-  };
+function str(value: unknown): string {
+  return typeof value === "string" ? value : "";
 }
 
 function pickLocalized(row: Record<string, unknown>, ...keys: string[]): LocaleString {
@@ -40,112 +22,188 @@ function pickLocalized(row: Record<string, unknown>, ...keys: string[]): LocaleS
     if (typeof value === "string") return { ar: value, en: value };
     if (typeof value === "object" && !Array.isArray(value)) {
       const o = value as Record<string, unknown>;
-      return {
-        ar: typeof o.ar === "string" ? o.ar : "",
-        en: typeof o.en === "string" ? o.en : "",
-      };
+      return { ar: str(o.ar), en: str(o.en) };
     }
   }
   return { ar: "", en: "" };
 }
 
+function pickLinkedServices(raw: unknown): ApplicationSeoLinkedService[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const row = item as Record<string, unknown>;
+      const id = Number(row.id);
+      if (!Number.isFinite(id) || id <= 0) return null;
+      return {
+        id,
+        title: pickLocalized(row, "title"),
+        slug: pickLocalized(row, "slug"),
+        is_active:
+          row.is_active === false || row.is_active === 0 || row.is_active === "0"
+            ? false
+            : row.is_active == null
+              ? undefined
+              : true,
+      };
+    })
+    .filter((item): item is ApplicationSeoLinkedService => item != null);
+}
+
 function pickServiceIds(row: Record<string, unknown>): number[] {
-  const raw = row.service_ids ?? row.service_ai_ids;
-  if (Array.isArray(raw)) {
-    return raw.map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0);
+  if (Array.isArray(row.service_ids)) {
+    return row.service_ids.map((id) => Number(id)).filter((id) => id > 0);
   }
-  if (Array.isArray(row.services)) {
-    return row.services
-      .map((item) => {
-        if (!item || typeof item !== "object") return 0;
-        return Number((item as Record<string, unknown>).id);
-      })
-      .filter((id) => id > 0);
-  }
-  return [];
+  return pickLinkedServices(row.services).map((s) => s.id);
 }
 
-export function normalizeAiToolsBox(input: unknown): AiToolsBoxSettings {
-  const defaults = defaultAiToolsBoxSettings();
+export function defaultApplicationSeoSettings(): ApplicationSeoSettings {
+  return {
+    heading_ar: "أدخل معلوماتك أدناه للحصول على تدقيق SEO مجاني لموقعك.",
+    heading_en: "Enter your information below to get a free SEO audit for your website.",
+    website_placeholder_ar: "رابط موقعك",
+    website_placeholder_en: "Your website link",
+    email_placeholder_ar: "البريد الإلكتروني سيصلك عليه التقرير",
+    email_placeholder_en: "The email address where you will receive the report",
+    consent_text_ar:
+      "أوافق على تقديم عنوان بريدي الإلكتروني واسمي ومعلومات الاتصال الإضافية من أجل تخزينها ومعالجتها لاحقًا.",
+    consent_text_en:
+      "I agree to provide my email address, name, and additional contact information for storage and processing later.",
+    submit_button_text_ar: "التدقيق الآن",
+    submit_button_text_en: "Audit Now",
+    service_ids: [],
+    services: [],
+  };
+}
+
+/** @deprecated */
+export const defaultAiToolsBoxSettings = defaultApplicationSeoSettings;
+
+export function normalizeApplicationSeo(input: unknown): ApplicationSeoSettings {
+  const defaults = defaultApplicationSeoSettings();
   const row = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
-  const description = pickLocalized(row, "description", "intro", "heading");
-  const challenge_label = pickLocalized(row, "challenge_label", "challenge_field", "field_1_label", "field_one_label");
-  const email_label = pickLocalized(row, "email_label", "email_field", "field_2_label", "field_two_label");
-  const consent_label = pickLocalized(row, "consent_label", "consent_text", "checkbox_label");
-  const button_text = pickLocalized(row, "button_text", "cta_text", "action_button_text");
+
+  const heading = pickLocalized(row, "heading", "description", "intro");
+  const websitePlaceholder = pickLocalized(
+    row,
+    "website_placeholder",
+    "challenge_label",
+    "website",
+  );
+  const emailPlaceholder = pickLocalized(row, "email_placeholder", "email_label", "email");
+  const consentText = pickLocalized(row, "consent_text", "consent_label", "consent");
+  const submitButton = pickLocalized(
+    row,
+    "submit_button_text",
+    "button_text",
+    "cta_text",
+  );
+
+  const services = pickLinkedServices(row.services);
 
   return {
-    description: {
-      ar: description.ar || defaults.description.ar,
-      en: description.en || defaults.description.en,
-    },
-    challenge_label: {
-      ar: challenge_label.ar || defaults.challenge_label.ar,
-      en: challenge_label.en || defaults.challenge_label.en,
-    },
-    email_label: {
-      ar: email_label.ar || defaults.email_label.ar,
-      en: email_label.en || defaults.email_label.en,
-    },
-    consent_label: {
-      ar: consent_label.ar || defaults.consent_label.ar,
-      en: consent_label.en || defaults.consent_label.en,
-    },
-    button_text: {
-      ar: button_text.ar || defaults.button_text.ar,
-      en: button_text.en || defaults.button_text.en,
-    },
+    heading_ar: str(row.heading_ar) || heading.ar || defaults.heading_ar,
+    heading_en: str(row.heading_en) || heading.en || defaults.heading_en,
+    website_placeholder_ar:
+      str(row.website_placeholder_ar) || websitePlaceholder.ar || defaults.website_placeholder_ar,
+    website_placeholder_en:
+      str(row.website_placeholder_en) || websitePlaceholder.en || defaults.website_placeholder_en,
+    email_placeholder_ar:
+      str(row.email_placeholder_ar) || emailPlaceholder.ar || defaults.email_placeholder_ar,
+    email_placeholder_en:
+      str(row.email_placeholder_en) || emailPlaceholder.en || defaults.email_placeholder_en,
+    consent_text_ar: str(row.consent_text_ar) || consentText.ar || defaults.consent_text_ar,
+    consent_text_en: str(row.consent_text_en) || consentText.en || defaults.consent_text_en,
+    submit_button_text_ar:
+      str(row.submit_button_text_ar) || submitButton.ar || defaults.submit_button_text_ar,
+    submit_button_text_en:
+      str(row.submit_button_text_en) || submitButton.en || defaults.submit_button_text_en,
     service_ids: pickServiceIds(row),
-    is_active: row.is_active === false || row.is_active === 0 || row.is_active === "0" ? false : true,
+    services,
   };
 }
 
-export function aiToolsBoxToFormValues(data: AiToolsBoxSettings): AiToolsBoxFormValues {
+/** @deprecated */
+export const normalizeAiToolsBox = normalizeApplicationSeo;
+
+export function applicationSeoToFormValues(data: ApplicationSeoSettings): ApplicationSeoFormValues {
   return {
-    description_ar: data.description.ar,
-    description_en: data.description.en,
-    challenge_label_ar: data.challenge_label.ar,
-    challenge_label_en: data.challenge_label.en,
-    email_label_ar: data.email_label.ar,
-    email_label_en: data.email_label.en,
-    consent_label_ar: data.consent_label.ar,
-    consent_label_en: data.consent_label.en,
-    button_text_ar: data.button_text.ar,
-    button_text_en: data.button_text.en,
+    heading_ar: data.heading_ar,
+    heading_en: data.heading_en,
+    website_placeholder_ar: data.website_placeholder_ar,
+    website_placeholder_en: data.website_placeholder_en,
+    email_placeholder_ar: data.email_placeholder_ar,
+    email_placeholder_en: data.email_placeholder_en,
+    consent_text_ar: data.consent_text_ar,
+    consent_text_en: data.consent_text_en,
+    submit_button_text_ar: data.submit_button_text_ar,
+    submit_button_text_en: data.submit_button_text_en,
     service_ids: data.service_ids,
-    is_active: data.is_active,
+    services: data.services,
   };
 }
 
-export function formValuesToAiToolsBoxPayload(values: AiToolsBoxFormValues) {
+/** @deprecated */
+export const aiToolsBoxToFormValues = applicationSeoToFormValues;
+
+export function formValuesToApplicationSeoPayload(values: ApplicationSeoFormValues) {
   return {
-    description: { ar: values.description_ar.trim(), en: values.description_en.trim() },
-    challenge_label: { ar: values.challenge_label_ar.trim(), en: values.challenge_label_en.trim() },
-    email_label: { ar: values.email_label_ar.trim(), en: values.email_label_en.trim() },
-    consent_label: { ar: values.consent_label_ar.trim(), en: values.consent_label_en.trim() },
-    button_text: { ar: values.button_text_ar.trim(), en: values.button_text_en.trim() },
+    heading_ar: values.heading_ar.trim(),
+    heading_en: values.heading_en.trim(),
+    website_placeholder_ar: values.website_placeholder_ar.trim(),
+    website_placeholder_en: values.website_placeholder_en.trim(),
+    email_placeholder_ar: values.email_placeholder_ar.trim(),
+    email_placeholder_en: values.email_placeholder_en.trim(),
+    consent_text_ar: values.consent_text_ar.trim(),
+    consent_text_en: values.consent_text_en.trim(),
+    submit_button_text_ar: values.submit_button_text_ar.trim(),
+    submit_button_text_en: values.submit_button_text_en.trim(),
     service_ids: values.service_ids,
-    is_active: values.is_active,
   };
 }
 
-export async function fetchAiToolsBoxSettings(): Promise<AiToolsBoxSettings> {
-  const res = await api.get(TOOLS_BOX_PATH);
-  assertApiEnvelopeSuccess(res.data);
-  const root = res.data as { data?: unknown };
-  if (root.data == null) return defaultAiToolsBoxSettings();
+/** @deprecated */
+export const formValuesToAiToolsBoxPayload = formValuesToApplicationSeoPayload;
+
+export type ApplicationSeoResponse = {
+  status: string;
+  message: string;
+  data: Record<string, unknown> | null;
+};
+
+function settingsFromResponse(body: unknown): ApplicationSeoSettings {
+  const root = body as { data?: unknown };
+  if (root.data == null) return defaultApplicationSeoSettings();
   try {
-    const payload = unwrapShowResource(res.data);
-    return normalizeAiToolsBox(payload);
+    return normalizeApplicationSeo(unwrapShowResource(body));
   } catch {
-    return normalizeAiToolsBox(root.data);
+    return normalizeApplicationSeo(root.data);
   }
 }
 
-export async function updateAiToolsBoxSettings(values: AiToolsBoxFormValues): Promise<unknown> {
-  const res = await api.post(TOOLS_BOX_PATH, formValuesToAiToolsBoxPayload(values));
+export async function fetchApplicationSeoSettings(): Promise<ApplicationSeoSettings> {
+  const res = await api.get<ApplicationSeoResponse>(APPLICATION_SEO_PATH);
+  assertApiEnvelopeSuccess(res.data);
+  return settingsFromResponse(res.data);
+}
+
+/** @deprecated */
+export const fetchAiToolsBoxSettings = fetchApplicationSeoSettings;
+
+export async function updateApplicationSeoSettings(
+  values: ApplicationSeoFormValues,
+): Promise<ApplicationSeoResponse> {
+  const res = await api.put<ApplicationSeoResponse>(
+    APPLICATION_SEO_PATH,
+    formValuesToApplicationSeoPayload(values),
+  );
+  assertApiEnvelopeSuccess(res.data);
   return res.data;
 }
+
+/** @deprecated */
+export const updateAiToolsBoxSettings = updateApplicationSeoSettings;
 
 export async function fetchToolsBoxServices(): Promise<Service[]> {
   return fetchRegularAdminServices();

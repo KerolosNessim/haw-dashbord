@@ -169,7 +169,7 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
         href: "/ai-services/content",
         icon: Sparkles,
       },
-      DASHBOARD_INVOICES_LINK,
+      // DASHBOARD_INVOICES_LINK,
     ],
   },
   {

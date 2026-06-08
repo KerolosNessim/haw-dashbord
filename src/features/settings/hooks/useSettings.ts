@@ -14,9 +14,10 @@ import {
   deleteSeoApi
 } from "../services/settings";
 import {
-  fetchAiToolsBoxSettings,
-  updateAiToolsBoxSettings,
+  fetchApplicationSeoSettings,
+  updateApplicationSeoSettings,
   fetchToolsBoxServices,
+  normalizeApplicationSeo,
 } from "../services/ai-tools-box-api";
 
 export const useSettings = () => {
@@ -135,17 +136,23 @@ export const useDeleteSeo = () => {
 
 export const useAiToolsBox = () => {
   return useQuery({
-    queryKey: ["settings", "ai-tools-box"],
-    queryFn: fetchAiToolsBoxSettings,
+    queryKey: ["settings", "application-seo"],
+    queryFn: fetchApplicationSeoSettings,
   });
 };
 
 export const useUpdateAiToolsBox = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateAiToolsBoxSettings,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settings", "ai-tools-box"] });
+    mutationFn: updateApplicationSeoSettings,
+    onSuccess: (res) => {
+      if (res.data != null) {
+        queryClient.setQueryData(
+          ["settings", "application-seo"],
+          normalizeApplicationSeo(res.data),
+        );
+      }
+      void queryClient.invalidateQueries({ queryKey: ["settings", "application-seo"] });
     },
   });
 };

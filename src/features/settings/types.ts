@@ -89,27 +89,32 @@ export type LocaleString = {
   en: string;
 };
 
-export type AiToolsBoxSettings = {
-  description: LocaleString;
-  challenge_label: LocaleString;
-  email_label: LocaleString;
-  consent_label: LocaleString;
-  button_text: LocaleString;
-  service_ids: number[];
-  is_active: boolean;
+export type ApplicationSeoLinkedService = {
+  id: number;
+  title: LocaleString;
+  slug?: LocaleString;
+  is_active?: boolean;
 };
 
-export type AiToolsBoxFormValues = {
-  description_ar: string;
-  description_en: string;
-  challenge_label_ar: string;
-  challenge_label_en: string;
-  email_label_ar: string;
-  email_label_en: string;
-  consent_label_ar: string;
-  consent_label_en: string;
-  button_text_ar: string;
-  button_text_en: string;
+/** GET/PUT /v1/admin/settings/application-seo */
+export type ApplicationSeoSettings = {
+  heading_ar: string;
+  heading_en: string;
+  website_placeholder_ar: string;
+  website_placeholder_en: string;
+  email_placeholder_ar: string;
+  email_placeholder_en: string;
+  consent_text_ar: string;
+  consent_text_en: string;
+  submit_button_text_ar: string;
+  submit_button_text_en: string;
   service_ids: number[];
-  is_active: boolean;
+  services?: ApplicationSeoLinkedService[];
 };
+
+export type ApplicationSeoFormValues = ApplicationSeoSettings;
+
+/** @deprecated Use ApplicationSeoSettings */
+export type AiToolsBoxSettings = ApplicationSeoSettings;
+/** @deprecated Use ApplicationSeoFormValues */
+export type AiToolsBoxFormValues = ApplicationSeoFormValues;

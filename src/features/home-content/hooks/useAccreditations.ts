@@ -25,7 +25,8 @@ export const useAccreditations = () => {
     },
     onSuccess: (res) => {
       toast.success(res?.message || t("toasts.accreditation_updated"));
-      queryClient.invalidateQueries({ queryKey: ["accreditations", countryId] });
+      queryClient.setQueryData(["accreditations", countryId], res);
+      void queryClient.invalidateQueries({ queryKey: ["accreditations", countryId] });
     },
     onError: (error: AxiosError<{ message: string }>) => {
       toast.error(error?.response?.data?.message || t("toasts.accreditation_update_failed"));

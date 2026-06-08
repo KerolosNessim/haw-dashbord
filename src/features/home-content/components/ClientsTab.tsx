@@ -8,8 +8,9 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { AccreditationImageServicesSelect } from "@/features/home-content/components/AccreditationImageServicesSelect";
+import { Switch } from "@/components/ui/switch";
 import { LocalizedDescriptionFields } from "@/features/shared/components/localized-description-fields";
+import { AccreditationImageServicesSelect } from "./AccreditationImageServicesSelect";
 import {
   buildMediaGalleryFormData,
   linkedServicesFromIds,
@@ -29,6 +30,8 @@ const clientsSchema = z.object({
   title_en: z.string().optional().default(""),
   des_ar: z.string().min(1, "Required"),
   des_en: z.string().optional().default(""),
+  sort_order: z.number().int().min(0).optional(),
+  is_active: z.boolean(),
 });
 
 type ClientsFormValues = z.infer<typeof clientsSchema>;
@@ -60,8 +63,10 @@ export default function ClientsTab() {
   const servicesQuery = useAccreditationServiceOptions();
   const serviceOptions = servicesQuery.data ?? [];
   const apiData = getClientsQuery?.data?.data?.data?.[0];
-  const hasPartnerRow =
-    apiData != null && (apiData.id > 0 || Boolean(apiData.title?.ar?.trim() || apiData.title?.en?.trim()));
+  const isEmptyPartner =
+    !getClientsQuery.isLoading &&
+    !getClientsQuery.isFetching &&
+    (!apiData || apiData.id === 0);
 
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
   const [newImages, setNewImages] = useState<NewImage[]>([]);
@@ -79,18 +84,22 @@ export default function ClientsTab() {
       title_en: "",
       des_ar: "",
       des_en: "",
+      sort_order: 0,
+      is_active: true,
     },
   });
 
   useEffect(() => {
     if (getClientsQuery.isLoading || getClientsQuery.isFetching) return;
 
-    if (!hasPartnerRow) {
+    if (isEmptyPartner) {
       reset({
         title_ar: "",
         title_en: "",
         des_ar: "",
         des_en: "",
+        sort_order: 0,
+        is_active: true,
       });
       setExistingImages([]);
       setNewImages([]);
@@ -105,6 +114,8 @@ export default function ClientsTab() {
       title_en: apiData.title?.en ?? "",
       des_ar: apiData.description?.ar ?? "",
       des_en: apiData.description?.en ?? "",
+      sort_order: apiData.sort_order ?? 0,
+      is_active: apiData.is_active ?? true,
     });
 
     setExistingImages(
@@ -123,7 +134,7 @@ export default function ClientsTab() {
     countryId,
     getClientsQuery.isFetching,
     getClientsQuery.isLoading,
-    hasPartnerRow,
+    isEmptyPartner,
     reset,
   ]);
 
@@ -142,6 +153,8 @@ export default function ClientsTab() {
     const formData = buildMediaGalleryFormData({
       title: { ar: data.title_ar, en: data.title_en },
       description: { ar: data.des_ar, en: data.des_en },
+      sort_order: data.sort_order,
+      is_active: data.is_active,
       newImages: newImages.map(({ file, alt }) => ({ file, alt })),
       newImagesServices: newImages.map((img) => [...img.serviceIds]),
       existingImagesAlt,
@@ -309,6 +322,46 @@ export default function ClientsTab() {
           errorAr={errors.des_ar?.message}
           errorEn={errors.des_en?.message}
         />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <Controller
+            name="sort_order"
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel className="text-base font-bold">{t("sort_order")}</FieldLabel>
+                <Input
+                  {...field}
+                  type="number"
+                  min={0}
+                  value={field.value ?? 0}
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value === "" ? undefined : Number(e.target.value),
+                    )
+                  }
+                  className="h-14 rounded-2xl bg-muted/5 border-border/60 focus:bg-white transition-all px-5"
+                />
+              </Field>
+            )}
+          />
+          <Controller
+            name="is_active"
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel className="text-base font-bold">{t("is_active")}</FieldLabel>
+                <div className="flex h-14 items-center rounded-2xl border border-border/60 bg-muted/5 px-5">
+                  <Switch
+                    dir="ltr"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </div>
+              </Field>
+            )}
+          />
+        </div>
       </div>
 
       <div className="lg:col-span-5 space-y-6">

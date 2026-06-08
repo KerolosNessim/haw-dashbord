@@ -65,6 +65,7 @@ export default function DependenciesTab() {
     keyPrefix: "home_content.dependencies",
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
 
   const { countryId } = useHomeContentCountry();
   const { getAccreditationsQuery, updateAccred, isPending, isCountryReady } = useAccreditations();

@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import RichTextEditor, { editorOnChangeToHtml } from "@/features/shared/components/editor";
-import { localizedHtmlForApi } from "@/lib/localized-html-form";
+import { appendLocalizedDescriptionHtml } from "@/lib/localized-html-form";
 import { useSolutions } from "../hooks/useSolutions";
+import { buildSolutionsSectionFormData } from "../services/solutions";
 
 const generalSchema = z.object({
   title_ar: z.string().min(1, "Required"),
@@ -41,20 +42,13 @@ export default function SolutionsSectionForm({ onSaved, submitLabel, className }
     values: {
       title_ar: apiData?.title?.ar ?? "",
       title_en: apiData?.title?.en ?? "",
-      des_ar: apiData?.subtitle?.ar ?? apiData?.description?.ar ?? "",
-      des_en: apiData?.subtitle?.en ?? apiData?.description?.en ?? "",
+      des_ar: apiData?.description?.ar ?? apiData?.subtitle?.ar ?? "",
+      des_en: apiData?.description?.en ?? apiData?.subtitle?.en ?? "",
     },
   });
 
   const onSubmit = (data: SolutionsSectionFormValues) => {
-    const formData = new FormData();
-    formData.append("title[ar]", data.title_ar);
-    formData.append("title[en]", data.title_en);
-    const subAr = localizedHtmlForApi(data.des_ar);
-    const subEn = localizedHtmlForApi(data.des_en);
-    if (subAr) formData.append("subtitle[ar]", subAr);
-    if (subEn) formData.append("subtitle[en]", subEn);
-    updateSolutions(formData, { onSuccess: () => onSaved?.() });
+    updateSolutions(buildSolutionsSectionFormData(data), { onSuccess: () => onSaved?.() });
   };
 
   return (
