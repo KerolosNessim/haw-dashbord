@@ -11,6 +11,7 @@ export const SEO_PAGE_KEYS = [
   "blog",
   "author",
   "contact-us",
+  "om",
 ] as const;
 
 export type SeoPageKey = (typeof SEO_PAGE_KEYS)[number];

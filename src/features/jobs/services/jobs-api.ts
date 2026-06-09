@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { localizedHtmlForApi } from "@/lib/localized-html-form";
 import { unwrapLaravelPaginated } from "@/lib/laravel-pagination";
 import { pickImageUrlFromUnknown, pickLocalizedImageUrls } from "@/lib/resolve-media-url";
 import { slugify, slugifyAr } from "@/lib/slugify";
@@ -85,16 +86,31 @@ function extractPayload(data: unknown): unknown {
   return data;
 }
 
+function asRecord(input: unknown): Record<string, unknown> {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return {};
+  return input as Record<string, unknown>;
+}
+
+/** Jobs API nests fields under content / media / seo; fall back to flat keys. */
+function jobsNestedGroup(row: Record<string, unknown>, group: "content" | "media" | "seo"): Record<string, unknown> {
+  const nested = asRecord(row[group]);
+  return Object.keys(nested).length > 0 ? nested : row;
+}
+
 function normalizeHeader(input: unknown): JobsHeader {
-  const row = (extractPayload(input) ?? {}) as Record<string, unknown>;
+  const row = asRecord(extractPayload(input));
+  const content = jobsNestedGroup(row, "content");
+  const media = jobsNestedGroup(row, "media");
+  const seo = jobsNestedGroup(row, "seo");
+
   return {
     id: typeof row.id === "number" ? row.id : undefined,
-    title: pickLocalized(row.title),
-    description: pickLocalized(row.description),
-    meta_title: pickLocalized(row.meta_title),
-    meta_description: pickLocalized(row.meta_description),
-    image_alt: pickLocalizedFromRow(row, "image_alt", "imageAlt", "alt", "alt_text"),
-    image: pickLocalizedImageFromRow(row, "image", "cover", "media_url_cover"),
+    title: pickLocalizedFromRow(content, "title"),
+    description: pickLocalizedFromRow(content, "description"),
+    meta_title: pickLocalizedFromRow(seo, "meta_title"),
+    meta_description: pickLocalizedFromRow(seo, "meta_description"),
+    image_alt: pickLocalizedFromRow(media, "image_alt", "imageAlt", "alt", "alt_text"),
+    image: pickLocalizedImageFromRow(media, "image", "cover", "media_url_cover"),
     is_active: row.is_active === false || row.is_active === 0 || row.is_active === "0" ? false : true,
   };
 }
@@ -167,16 +183,16 @@ export async function fetchJobsHeader(): Promise<JobsHeader> {
 
 export async function saveJobsHeader(values: JobsHeaderFormValues, images: { ar: File | null; en: File | null }) {
   const fd = new FormData();
-  fd.append("title[ar]", values.title.ar);
-  fd.append("title[en]", values.title.en);
-  fd.append("description[ar]", values.description.ar);
-  fd.append("description[en]", values.description.en);
-  fd.append("meta_title[ar]", values.meta_title.ar);
-  fd.append("meta_title[en]", values.meta_title.en);
-  fd.append("meta_description[ar]", values.meta_description.ar);
-  fd.append("meta_description[en]", values.meta_description.en);
-  fd.append("image_alt[ar]", values.image_alt.ar);
-  fd.append("image_alt[en]", values.image_alt.en);
+  fd.append("title[ar]", localizedHtmlForApi(values.title.ar));
+  fd.append("title[en]", localizedHtmlForApi(values.title.en));
+  fd.append("description[ar]", localizedHtmlForApi(values.description.ar));
+  fd.append("description[en]", localizedHtmlForApi(values.description.en));
+  fd.append("meta_title[ar]", values.meta_title.ar.trim());
+  fd.append("meta_title[en]", values.meta_title.en.trim());
+  fd.append("meta_description[ar]", values.meta_description.ar.trim());
+  fd.append("meta_description[en]", values.meta_description.en.trim());
+  fd.append("image_alt[ar]", values.image_alt.ar.trim());
+  fd.append("image_alt[en]", values.image_alt.en.trim());
   fd.append("is_active", values.is_active ? "1" : "0");
   if (images.ar) fd.append("image[ar]", images.ar);
   if (images.en) fd.append("image[en]", images.en);
@@ -198,13 +214,16 @@ function appendSectionFormData(fd: FormData, values: JobsSectionFormValues) {
   fd.append("sort_order", String(values.sort_order));
   fd.append("is_active", values.is_active ? "1" : "0");
   values.items.forEach((item, index) => {
+    if (item.id != null && item.id > 0) {
+      fd.append(`items[${index}][id]`, String(item.id));
+    }
     fd.append(`items[${index}][title][ar]`, item.title.ar.trim());
     fd.append(`items[${index}][title][en]`, item.title.en.trim());
-    fd.append(`items[${index}][description][ar]`, item.description.ar.trim());
-    fd.append(`items[${index}][description][en]`, item.description.en.trim());
+    fd.append(`items[${index}][description][ar]`, localizedHtmlForApi(item.description.ar));
+    fd.append(`items[${index}][description][en]`, localizedHtmlForApi(item.description.en));
     fd.append(`items[${index}][image_alt][ar]`, item.image_alt.ar.trim());
     fd.append(`items[${index}][image_alt][en]`, item.image_alt.en.trim());
-    fd.append(`items[${index}][sort_order]`, String(index));
+    fd.append(`items[${index}][sort_order]`, String(item.sort_order ?? index));
     if (item.image.ar) fd.append(`items[${index}][image][ar]`, item.image.ar);
     if (item.image.en) fd.append(`items[${index}][image][en]`, item.image.en);
   });
@@ -230,16 +249,27 @@ export async function deleteJobsSection(id: number) {
   return res.data;
 }
 
+function resolveOpeningSlugs(values: JobOpeningFormValues): { ar: string; en: string } {
+  const ar = slugifyAr(values.slug.ar.trim()) || slugifyAr(values.title.ar.trim());
+  const en =
+    slugify(values.slug.en.trim()) ||
+    slugify(values.title.en.trim()) ||
+    slugifyAr(values.title.ar.trim());
+  return { ar, en };
+}
+
 function appendOpeningFormData(fd: FormData, values: JobOpeningFormValues) {
+  const slug = resolveOpeningSlugs(values);
   fd.append("title[ar]", values.title.ar.trim());
   fd.append("title[en]", values.title.en.trim());
-  fd.append("slug[ar]", slugifyAr(values.slug.ar));
-  fd.append("slug[en]", slugify(values.slug.en));
-  fd.append("description[ar]", values.description.ar.trim());
-  fd.append("description[en]", values.description.en.trim());
+  fd.append("slug[ar]", slug.ar);
+  fd.append("slug[en]", slug.en);
+  fd.append("description[ar]", localizedHtmlForApi(values.description.ar));
+  fd.append("description[en]", localizedHtmlForApi(values.description.en));
   fd.append("job_type[ar]", values.job_type.ar.trim());
   fd.append("job_type[en]", values.job_type.en.trim());
-  fd.append("linkedin_url", values.linkedin_url.trim());
+  const linkedin = values.linkedin_url.trim();
+  if (linkedin) fd.append("linkedin_url", linkedin);
   fd.append("image_alt[ar]", values.image_alt.ar.trim());
   fd.append("image_alt[en]", values.image_alt.en.trim());
   fd.append("sort_order", String(values.sort_order));

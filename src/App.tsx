@@ -56,6 +56,7 @@ import PrivacyPolicyPage from "./pages/legal/PrivacyPolicy"
 import TermsOfUsePage from "./pages/legal/TermsOfUse"
 import RefundPolicyPage from "./pages/legal/RefundPolicy"
 import ContactSubmissionsPage from "./pages/contact/ContactSubmissionsPage"
+import ContactHeadersPage from "./pages/contact-headers/ContactHeadersPage"
 import UsersPage from "./pages/users/UsersPage"
 import ServiceBookingsPage from "./pages/service-bookings/ServiceBookingsPage"
 import TeamPage from "./pages/team/TeamPage"
@@ -299,6 +300,10 @@ const router = createBrowserRouter([
       {
         path: "/contact-submissions",
         element: <ContactSubmissionsPage />,
+      },
+      {
+        path: "/contact-headers",
+        element: <ContactHeadersPage />,
       },
       {
         path: "/users",

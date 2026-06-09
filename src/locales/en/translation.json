@@ -178,6 +178,7 @@
     "about_us": "About Us",
     "author": "Author",
     "jobs": "Jobs",
+    "contact_headers": "Contact Headers",
     "contact_submissions": "Contact Submissions",
     "users": "Users Management",
     "site_users": "Site users",
@@ -541,7 +542,8 @@
       "jobs_openings": "Job Openings",
       "jobs_applications": "Job Applications",
       "legal": "Legal Pages",
-      "contact_submissions": "Contact Submissions",
+      "contact_headers": "Contact Headers",
+    "contact_submissions": "Contact Submissions",
       "settings": "Settings",
       "backup_export": "Backup Export",
       "site_users": "Site Users",
@@ -1485,7 +1487,8 @@
         "author": "Author",
         "courses": "Courses",
         "faq": "FAQ",
-        "contact-us": "Contact Us"
+        "contact-us": "Contact Us",
+        "om": "Oman (/om)"
       }
     }
   },
@@ -1573,6 +1576,7 @@
     "delete_placeholder": "delete",
     "header": {
       "toast_saved": "Header saved",
+      "upload_image": "Upload image",
       "fields": {
         "title_ar": "Title (Arabic)",
         "title_en": "Title (English)",
@@ -1591,6 +1595,7 @@
     },
     "sections": {
       "add_button": "Add section",
+      "upload_image": "Upload image",
       "empty": "No sections found.",
       "create_title": "Create section",
       "edit_title": "Edit section",
@@ -1631,6 +1636,7 @@
     },
     "openings": {
       "search_placeholder": "Search openings...",
+      "upload_image": "Upload image",
       "add_button": "Add opening",
       "empty": "No openings found.",
       "create_title": "Create opening",
@@ -1666,6 +1672,11 @@
         "image_en": "Image (English)",
         "sort_order": "Sort order",
         "is_active": "Active"
+      },
+      "validation": {
+        "title_ar": "Arabic title is required.",
+        "slug_ar": "Arabic slug is required (fill the title or enter a slug).",
+        "linkedin_url": "Enter a valid URL starting with http:// or https://."
       }
     },
     "applications": {
@@ -2342,6 +2353,66 @@
       "save": "Save Changes",
       "delete": "Delete section",
       "delete_confirm": "Delete the Our Ideal Client section? It will no longer appear on the public site."
+    }
+  },
+  "contact_headers": {
+    "title": "Contact Headers",
+    "description": "Manage bilingual contact page headers per country (Oman and Saudi Arabia).",
+    "add_button": "Add header",
+    "empty": "No contact headers found for the selected countries.",
+    "load_error": "Failed to load contact headers.",
+    "retry": "Retry",
+    "status_active": "Active",
+    "status_inactive": "Inactive",
+    "cancel": "Cancel",
+    "delete_title": "Delete contact header",
+    "delete_description": "Are you sure you want to delete this contact header? This action cannot be undone.",
+    "delete_confirm": "Delete",
+    "table": {
+      "title": "Title",
+      "countries": "Countries",
+      "sort_order": "Sort order",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "form": {
+      "create_title": "New contact header",
+      "edit_title": "Edit contact header",
+      "description": "Configure the contact page hero text and SEO fields for selected countries.",
+      "loading": "Loading…",
+      "countries": "Countries",
+      "countries_hint": "Select Oman and/or Saudi Arabia. Required when creating.",
+      "countries_loading": "Loading countries…",
+      "countries_empty": "Supported countries are not available.",
+      "section_countries": "Countries",
+      "section_content": "Page content",
+      "section_seo": "SEO",
+      "section_settings": "Display settings",
+      "description_label": "Description",
+      "description_placeholder": "Write the contact page intro text…",
+      "title_ar_placeholder": "e.g. Contact us",
+      "title_en_placeholder": "e.g. Contact us",
+      "is_active_hint": "Inactive headers are hidden on the public contact page.",
+      "title_ar": "Title (Arabic)",
+      "title_en": "Title (English)",
+      "description_ar": "Description (Arabic)",
+      "description_en": "Description (English)",
+      "meta_title_ar": "Meta title (Arabic)",
+      "meta_title_en": "Meta title (English)",
+      "meta_description_ar": "Meta description (Arabic)",
+      "meta_description_en": "Meta description (English)",
+      "sort_order": "Sort order",
+      "is_active": "Active on site",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "api": {
+      "create_success": "Contact header created.",
+      "create_error": "Failed to create contact header.",
+      "update_success": "Contact header updated.",
+      "update_error": "Failed to update contact header.",
+      "delete_success": "Contact header deleted.",
+      "delete_error": "Failed to delete contact header."
     }
   },
   "contact": {

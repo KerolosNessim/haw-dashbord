@@ -1,4 +1,5 @@
 import { TypeToConfirmDeleteAlertDialog } from "@/components/type-to-confirm-delete-alert-dialog";
+import { FormImageField } from "@/components/form/form-image-field";
 import { StandaloneSmartSlugField } from "@/components/form/smart-slug-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,6 @@ import {
   saveJobsHeader,
   upsertJobsSection,
   updateJobOpening,
-  updateJobsSection,
 } from "@/features/jobs/services/jobs-api";
 import type {
   JobApplication,
@@ -124,14 +124,6 @@ function SectionValidationError({ message }: { message: string }) {
   return <p className="text-xs text-destructive">{message}</p>;
 }
 
-function htmlToPlainText(value: string): string {
-  return value
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 export default function JobsPage() {
   const { t, i18n } = useTranslation("translation", { keyPrefix: "jobs" });
   const isRtl = i18n.language.startsWith("ar");
@@ -189,8 +181,7 @@ export default function JobsPage() {
     onError: (error) => toast.error(getHttpErrorMessage(error, { default: t("toast_error") })),
   });
   const saveSectionMutation = useMutation({
-    mutationFn: (payload: { id?: number; values: JobsSectionFormValues }) =>
-      payload.id ? updateJobsSection(payload.id, payload.values) : upsertJobsSection(payload.values),
+    mutationFn: (payload: { values: JobsSectionFormValues }) => upsertJobsSection(payload.values),
     onSuccess: (res) => {
       toast.success(resolveApiToastMessage(res, t("sections.toast_saved")));
       setSectionDialogOpen(false);
@@ -286,6 +277,7 @@ export default function JobsPage() {
 
         <TabsContent value="header">
           <JobsHeaderTab
+            key={headerQuery.data?.id ?? "jobs-header-empty"}
             t={t}
             initial={headerQuery.data}
             isLoading={headerQuery.isLoading}
@@ -423,8 +415,11 @@ export default function JobsPage() {
         open={sectionDialogOpen}
         initial={selectedSection ? sectionToForm(selectedSection) : undefined}
         isSaving={saveSectionMutation.isPending}
-        onOpenChange={setSectionDialogOpen}
-        onSubmit={(values) => saveSectionMutation.mutate({ id: selectedSection?.id, values })}
+        onOpenChange={(open) => {
+          setSectionDialogOpen(open);
+          if (!open) setSelectedSection(null);
+        }}
+        onSubmit={(values) => saveSectionMutation.mutate({ values })}
       />
       <OpeningFormDialog
         t={t}
@@ -432,7 +427,10 @@ export default function JobsPage() {
         initial={selectedOpening ? openingToForm(selectedOpening) : undefined}
         currentImage={selectedOpening?.image}
         isSaving={saveOpeningMutation.isPending}
-        onOpenChange={setOpeningDialogOpen}
+        onOpenChange={(open) => {
+          setOpeningDialogOpen(open);
+          if (!open) setSelectedOpening(null);
+        }}
         onSubmit={(values, images) => saveOpeningMutation.mutate({ id: selectedOpening?.id, values, images })}
       />
       <ApplicationDetailsDialog
@@ -506,48 +504,35 @@ function JobsHeaderTab({
   onSave: (values: JobsHeaderFormValues, images: { ar: File | null; en: File | null }) => void;
 }) {
   const [form, setForm] = useState<JobsHeaderFormValues>(() => initial ? {
-    title: {
-      ar: htmlToPlainText(initial.title.ar),
-      en: htmlToPlainText(initial.title.en),
-    },
+    title: { ...initial.title },
     description: { ...initial.description },
-    meta_title: {
-      ar: htmlToPlainText(initial.meta_title.ar),
-      en: htmlToPlainText(initial.meta_title.en),
-    },
-    meta_description: {
-      ar: htmlToPlainText(initial.meta_description.ar),
-      en: htmlToPlainText(initial.meta_description.en),
-    },
+    meta_title: { ...initial.meta_title },
+    meta_description: { ...initial.meta_description },
     image_alt: { ...initial.image_alt },
     is_active: initial.is_active,
   } : emptyHeaderForm());
   const [images, setImages] = useState<{ ar: File | null; en: File | null }>({ ar: null, en: null });
-  const [preview, setPreview] = useState<{ ar: string | null; en: string | null }>({
+  const [remoteUrls, setRemoteUrls] = useState<{ ar: string | null; en: string | null }>({
     ar: initial?.image.ar ?? null,
     en: initial?.image.en ?? null,
   });
 
+  const handleHeaderImageChange = (locale: "ar" | "en", file: File | null) => {
+    setImages((s) => ({ ...s, [locale]: file }));
+    if (file === null) setRemoteUrls((s) => ({ ...s, [locale]: null }));
+  };
+
   useEffect(() => {
     if (!initial) return;
     setForm({
-      title: {
-        ar: htmlToPlainText(initial.title.ar),
-        en: htmlToPlainText(initial.title.en),
-      },
+      title: { ...initial.title },
       description: { ...initial.description },
-      meta_title: {
-        ar: htmlToPlainText(initial.meta_title.ar),
-        en: htmlToPlainText(initial.meta_title.en),
-      },
-      meta_description: {
-        ar: htmlToPlainText(initial.meta_description.ar),
-        en: htmlToPlainText(initial.meta_description.en),
-      },
+      meta_title: { ...initial.meta_title },
+      meta_description: { ...initial.meta_description },
       image_alt: { ...initial.image_alt },
       is_active: initial.is_active,
     });
-    setPreview({ ar: initial.image.ar, en: initial.image.en });
+    setRemoteUrls({ ar: initial.image.ar, en: initial.image.en });
     setImages({ ar: null, en: null });
   }, [initial]);
 
@@ -651,25 +636,23 @@ function JobsHeaderTab({
           <Input value={form.image_alt.en} onChange={(e) => setForm((s) => ({ ...s, image_alt: { ...s.image_alt, en: e.target.value } }))} />
         </Field>
       </div>
-      <div className="grid gap-3 md:grid-cols-2">
-        <Field>
-          <FieldLabel>{t("header.fields.image_ar")}</FieldLabel>
-          <Input type="file" accept="image/*" onChange={(e) => {
-            const file = e.target.files?.[0] ?? null;
-            setImages((s) => ({ ...s, ar: file }));
-            setPreview((s) => ({ ...s, ar: file ? URL.createObjectURL(file) : s.ar }));
-          }} />
-          {preview.ar ? <img src={preview.ar} alt="" className="mt-2 h-28 w-full rounded-md border object-cover" /> : null}
-        </Field>
-        <Field>
-          <FieldLabel>{t("header.fields.image_en")}</FieldLabel>
-          <Input type="file" accept="image/*" onChange={(e) => {
-            const file = e.target.files?.[0] ?? null;
-            setImages((s) => ({ ...s, en: file }));
-            setPreview((s) => ({ ...s, en: file ? URL.createObjectURL(file) : s.en }));
-          }} />
-          {preview.en ? <img src={preview.en} alt="" className="mt-2 h-28 w-full rounded-md border object-cover" /> : null}
-        </Field>
+      <div className="grid gap-6 md:grid-cols-2">
+        <FormImageField
+          inputId="jobs-header-image-ar"
+          label={t("header.fields.image_ar")}
+          value={images.ar ?? remoteUrls.ar}
+          onChange={(file) => handleHeaderImageChange("ar", file)}
+          emptyHint={t("header.upload_image")}
+          aspectClassName="aspect-[21/9]"
+        />
+        <FormImageField
+          inputId="jobs-header-image-en"
+          label={t("header.fields.image_en")}
+          value={images.en ?? remoteUrls.en}
+          onChange={(file) => handleHeaderImageChange("en", file)}
+          emptyHint={t("header.upload_image")}
+          aspectClassName="aspect-[21/9]"
+        />
       </div>
       <Field className="flex items-center justify-between rounded-xl border p-3">
         <FieldLabel>{t("header.fields.is_active")}</FieldLabel>
@@ -875,14 +858,48 @@ function SectionFormDialog({
                       />
                     </div>
                   </Field>
-                  <Field><FieldLabel>{t("sections.fields.item_image_ar")}</FieldLabel><Input type="file" accept="image/*" onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    setForm((s) => ({ ...s, items: s.items.map((entry, i) => i === index ? { ...entry, image: { ...entry.image, ar: file } } : entry) }));
-                  }} />{item.currentImage.ar ? <img src={item.currentImage.ar} alt="" className="mt-2 h-20 rounded border object-cover" /> : null}</Field>
-                  <Field><FieldLabel>{t("sections.fields.item_image_en")}</FieldLabel><Input type="file" accept="image/*" onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    setForm((s) => ({ ...s, items: s.items.map((entry, i) => i === index ? { ...entry, image: { ...entry.image, en: file } } : entry) }));
-                  }} />{item.currentImage.en ? <img src={item.currentImage.en} alt="" className="mt-2 h-20 rounded border object-cover" /> : null}</Field>
+                  <FormImageField
+                    inputId={`jobs-section-item-${index}-image-ar`}
+                    label={t("sections.fields.item_image_ar")}
+                    value={item.image.ar ?? item.currentImage.ar}
+                    onChange={(file) => {
+                      setForm((s) => ({
+                        ...s,
+                        items: s.items.map((entry, i) =>
+                          i === index
+                            ? {
+                                ...entry,
+                                image: { ...entry.image, ar: file },
+                                currentImage: file === null ? { ...entry.currentImage, ar: null } : entry.currentImage,
+                              }
+                            : entry,
+                        ),
+                      }));
+                    }}
+                    emptyHint={t("sections.upload_image")}
+                    aspectClassName="aspect-video"
+                  />
+                  <FormImageField
+                    inputId={`jobs-section-item-${index}-image-en`}
+                    label={t("sections.fields.item_image_en")}
+                    value={item.image.en ?? item.currentImage.en}
+                    onChange={(file) => {
+                      setForm((s) => ({
+                        ...s,
+                        items: s.items.map((entry, i) =>
+                          i === index
+                            ? {
+                                ...entry,
+                                image: { ...entry.image, en: file },
+                                currentImage: file === null ? { ...entry.currentImage, en: null } : entry.currentImage,
+                              }
+                            : entry,
+                        ),
+                      }));
+                    }}
+                    emptyHint={t("sections.upload_image")}
+                    aspectClassName="aspect-video"
+                  />
                 </div>
               </div>
             ))}
@@ -1019,20 +1036,40 @@ function OpeningFormDialog({
 }) {
   const [form, setForm] = useState<JobOpeningFormValues>(initial ?? emptyOpeningForm());
   const [images, setImages] = useState<{ ar: File | null; en: File | null }>({ ar: null, en: null });
-  const [preview, setPreview] = useState<{ ar: string | null; en: string | null }>({
+  const [remoteUrls, setRemoteUrls] = useState<{ ar: string | null; en: string | null }>({
     ar: currentImage?.ar ?? null,
     en: currentImage?.en ?? null,
   });
+  const [errors, setErrors] = useState<{ title_ar?: string; slug_ar?: string; linkedin_url?: string }>({});
+
+  const handleOpeningImageChange = (locale: "ar" | "en", file: File | null) => {
+    setImages((s) => ({ ...s, [locale]: file }));
+    if (file === null) setRemoteUrls((s) => ({ ...s, [locale]: null }));
+  };
 
   useEffect(() => {
     if (!open) return;
     setForm(initial ?? emptyOpeningForm());
     setImages({ ar: null, en: null });
-    setPreview({ ar: currentImage?.ar ?? null, en: currentImage?.en ?? null });
+    setRemoteUrls({ ar: currentImage?.ar ?? null, en: currentImage?.en ?? null });
+    setErrors({});
   }, [currentImage?.ar, currentImage?.en, initial, open]);
 
   const slugResetKey = open ? (initial ? "edit" : "create") : "closed";
   const syncSlugFromTitle = !initial;
+
+  const validate = (): boolean => {
+    const next: { title_ar?: string; slug_ar?: string; linkedin_url?: string } = {};
+    if (!form.title.ar.trim()) next.title_ar = t("openings.validation.title_ar");
+    const slugAr = form.slug.ar.trim() || form.title.ar.trim();
+    if (!slugAr.trim()) next.slug_ar = t("openings.validation.slug_ar");
+    const linkedin = form.linkedin_url.trim();
+    if (linkedin && !/^https?:\/\/.+/i.test(linkedin)) {
+      next.linkedin_url = t("openings.validation.linkedin_url");
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1041,9 +1078,20 @@ function OpeningFormDialog({
           <DialogTitle>{initial ? t("openings.edit_title") : t("openings.create_title")}</DialogTitle>
           <DialogDescription>{t("openings.dialog_description")}</DialogDescription>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); onSubmit(form, images); }}>
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!validate()) return;
+            onSubmit(form, images);
+          }}
+        >
           <div className="grid gap-3 md:grid-cols-2">
-            <Field><FieldLabel>{t("openings.fields.title_ar")}</FieldLabel><Input required value={form.title.ar} onChange={(e) => setForm((s) => ({ ...s, title: { ...s.title, ar: e.target.value } }))} /></Field>
+            <Field>
+              <FieldLabel>{t("openings.fields.title_ar")}</FieldLabel>
+              <Input value={form.title.ar} onChange={(e) => setForm((s) => ({ ...s, title: { ...s.title, ar: e.target.value } }))} />
+              {errors.title_ar ? <SectionValidationError message={errors.title_ar} /> : null}
+            </Field>
             <Field><FieldLabel>{t("openings.fields.title_en")}</FieldLabel><Input value={form.title.en} onChange={(e) => setForm((s) => ({ ...s, title: { ...s.title, en: e.target.value } }))} /></Field>
             <StandaloneSmartSlugField
               value={form.slug.ar}
@@ -1065,6 +1113,7 @@ function OpeningFormDialog({
               label={t("openings.fields.slug_en")}
               inputClassName="h-11 rounded-xl"
             />
+            {errors.slug_ar ? <div className="md:col-span-2"><SectionValidationError message={errors.slug_ar} /></div> : null}
             <Field>
               <FieldLabel>{t("openings.fields.description_ar")}</FieldLabel>
               <div className="min-h-[160px] overflow-hidden rounded-xl border">
@@ -1094,27 +1143,34 @@ function OpeningFormDialog({
             <Field className="md:col-span-2">
               <FieldLabel>{t("openings.fields.linkedin_url")}</FieldLabel>
               <Input
-                type="url"
+                type="text"
                 dir="ltr"
                 placeholder="https://www.linkedin.com/..."
                 value={form.linkedin_url}
                 onChange={(e) => setForm((s) => ({ ...s, linkedin_url: e.target.value }))}
               />
+              {errors.linkedin_url ? <SectionValidationError message={errors.linkedin_url} /> : null}
             </Field>
             <Field><FieldLabel>{t("openings.fields.image_alt_ar")}</FieldLabel><Input value={form.image_alt.ar} onChange={(e) => setForm((s) => ({ ...s, image_alt: { ...s.image_alt, ar: e.target.value } }))} /></Field>
             <Field><FieldLabel>{t("openings.fields.image_alt_en")}</FieldLabel><Input value={form.image_alt.en} onChange={(e) => setForm((s) => ({ ...s, image_alt: { ...s.image_alt, en: e.target.value } }))} /></Field>
           </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <Field><FieldLabel>{t("openings.fields.image_ar")}</FieldLabel><Input type="file" accept="image/*" onChange={(e) => {
-              const file = e.target.files?.[0] ?? null;
-              setImages((s) => ({ ...s, ar: file }));
-              setPreview((s) => ({ ...s, ar: file ? URL.createObjectURL(file) : s.ar }));
-            }} />{preview.ar ? <img src={preview.ar} alt="" className="mt-2 h-20 rounded border object-cover" /> : null}</Field>
-            <Field><FieldLabel>{t("openings.fields.image_en")}</FieldLabel><Input type="file" accept="image/*" onChange={(e) => {
-              const file = e.target.files?.[0] ?? null;
-              setImages((s) => ({ ...s, en: file }));
-              setPreview((s) => ({ ...s, en: file ? URL.createObjectURL(file) : s.en }));
-            }} />{preview.en ? <img src={preview.en} alt="" className="mt-2 h-20 rounded border object-cover" /> : null}</Field>
+          <div className="grid gap-6 md:grid-cols-2">
+            <FormImageField
+              inputId="jobs-opening-image-ar"
+              label={t("openings.fields.image_ar")}
+              value={images.ar ?? remoteUrls.ar}
+              onChange={(file) => handleOpeningImageChange("ar", file)}
+              emptyHint={t("openings.upload_image")}
+              aspectClassName="aspect-video"
+            />
+            <FormImageField
+              inputId="jobs-opening-image-en"
+              label={t("openings.fields.image_en")}
+              value={images.en ?? remoteUrls.en}
+              onChange={(file) => handleOpeningImageChange("en", file)}
+              emptyHint={t("openings.upload_image")}
+              aspectClassName="aspect-video"
+            />
             <Field><FieldLabel>{t("openings.fields.sort_order")}</FieldLabel><Input type="number" value={form.sort_order} onChange={(e) => setForm((s) => ({ ...s, sort_order: Number(e.target.value || 0) }))} /></Field>
             <Field className="flex items-center justify-between rounded-xl border p-3"><FieldLabel>{t("openings.fields.is_active")}</FieldLabel><Switch checked={form.is_active} onCheckedChange={(v) => setForm((s) => ({ ...s, is_active: v }))} /></Field>
           </div>

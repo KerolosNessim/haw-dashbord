@@ -30,6 +30,7 @@ export const PATH_TO_RESOURCE: Record<string, string> = {
   "/privacy-policy": "legal",
   "/terms-of-use": "legal",
   "/refund-policy": "legal",
+  "/contact-headers": "contact-headers",
   "/contact-submissions": "contact-submissions",
   "/settings": "settings",
   "/backup-export": "backup-export",

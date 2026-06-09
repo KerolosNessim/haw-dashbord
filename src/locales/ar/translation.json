@@ -178,6 +178,7 @@
     "about_us": "من نحن",
     "author": "الكاتب",
     "jobs": "الوظائف",
+    "contact_headers": "عناوين صفحة التواصل",
     "contact_submissions": "طلبات التواصل",
     "users": "إدارة المستخدمين",
     "site_users": "مستخدمي الموقع",
@@ -542,7 +543,8 @@
       "jobs_openings": "الوظائف  الوظيفية",
       "jobs_applications": "طلبات التوظيف",
       "legal": "الصفحات القانونية",
-      "contact_submissions": "طلبات التواصل",
+      "contact_headers": "عناوين صفحة التواصل",
+    "contact_submissions": "طلبات التواصل",
       "settings": "الإعدادات",
       "backup_export": "النسخ الاحتياطي والتصدير",
       "site_users": "مستخدمي الموقع",
@@ -1478,7 +1480,8 @@
         "author": "الكاتب",
         "courses": "الدورات",
         "faq": "الأسئلة الشائعة",
-        "contact-us": "اتصل بنا"
+        "contact-us": "اتصل بنا",
+        "om": "عُمان (/om)"
       }
     }
   },
@@ -1566,6 +1569,7 @@
     "delete_placeholder": "delete",
     "header": {
       "toast_saved": "تم حفظ المعلومات العامة",
+      "upload_image": "رفع صورة",
       "fields": {
         "title_ar": "العنوان (عربي)",
         "title_en": "العنوان (إنجليزي)",
@@ -1584,6 +1588,7 @@
     },
     "sections": {
       "add_button": "إضافة قسم",
+      "upload_image": "رفع صورة",
       "empty": "لا توجد أقسام.",
       "create_title": "إنشاء قسم",
       "edit_title": "تعديل قسم",
@@ -1624,6 +1629,7 @@
     },
     "openings": {
       "search_placeholder": "ابحث في الوظائف ...",
+      "upload_image": "رفع صورة",
       "add_button": "إضافة وظيفه",
       "empty": "لا توجد شواغر.",
       "create_title": "إنشاء وظيفه",
@@ -1659,6 +1665,11 @@
         "image_en": "الصورة (إنجليزي)",
         "sort_order": "ترتيب العرض",
         "is_active": "نشط"
+      },
+      "validation": {
+        "title_ar": "العنوان بالعربية مطلوب.",
+        "slug_ar": "الرابط بالعربية مطلوب (أدخل العنوان أو الرابط يدوياً).",
+        "linkedin_url": "أدخل رابطاً صالحاً يبدأ بـ http:// أو https://."
       }
     },
     "applications": {
@@ -2329,6 +2340,66 @@
       "save": "حفظ التغييرات",
       "delete": "حذف القسم",
       "delete_confirm": "حذف قسم عميلنا المثالي؟ لن يظهر بعد ذلك في الموقع العام."
+    }
+  },
+  "contact_headers": {
+    "title": "عناوين صفحة التواصل",
+    "description": "إدارة عناوين صفحة التواصل ثنائية اللغة لكل دولة (عُمان والسعودية).",
+    "add_button": "إضافة عنوان",
+    "empty": "لا توجد عناوين تواصل للدول المحددة.",
+    "load_error": "فشل تحميل عناوين التواصل.",
+    "retry": "إعادة المحاولة",
+    "status_active": "نشط",
+    "status_inactive": "غير نشط",
+    "cancel": "إلغاء",
+    "delete_title": "حذف عنوان التواصل",
+    "delete_description": "هل أنت متأكد من حذف عنوان التواصل هذا؟ لا يمكن التراجع عن هذا الإجراء.",
+    "delete_confirm": "حذف",
+    "table": {
+      "title": "العنوان",
+      "countries": "الدول",
+      "sort_order": "الترتيب",
+      "status": "الحالة",
+      "actions": "الإجراءات"
+    },
+    "form": {
+      "create_title": "عنوان تواصل جديد",
+      "edit_title": "تعديل عنوان التواصل",
+      "description": "اضبط نص صفحة التواصل وحقول SEO للدول المحددة.",
+      "loading": "جاري التحميل…",
+      "countries": "الدول",
+      "countries_hint": "اختر عُمان و/أو السعودية. مطلوب عند الإنشاء.",
+      "countries_loading": "جاري تحميل الدول…",
+      "countries_empty": "الدول المدعومة غير متاحة.",
+      "section_countries": "الدول",
+      "section_content": "محتوى الصفحة",
+      "section_seo": "SEO",
+      "section_settings": "إعدادات العرض",
+      "description_label": "الوصف",
+      "description_placeholder": "اكتب نص مقدمة صفحة التواصل…",
+      "title_ar_placeholder": "مثال: تواصل معنا",
+      "title_en_placeholder": "e.g. Contact us",
+      "is_active_hint": "العناوين غير النشطة لا تظهر في صفحة التواصل العامة.",
+      "title_ar": "العنوان (عربي)",
+      "title_en": "العنوان (إنجليزي)",
+      "description_ar": "الوصف (عربي)",
+      "description_en": "الوصف (إنجليزي)",
+      "meta_title_ar": "عنوان SEO (عربي)",
+      "meta_title_en": "عنوان SEO (إنجليزي)",
+      "meta_description_ar": "وصف SEO (عربي)",
+      "meta_description_en": "وصف SEO (إنجليزي)",
+      "sort_order": "ترتيب العرض",
+      "is_active": "نشط على الموقع",
+      "cancel": "إلغاء",
+      "save": "حفظ"
+    },
+    "api": {
+      "create_success": "تم إنشاء عنوان التواصل.",
+      "create_error": "فشل إنشاء عنوان التواصل.",
+      "update_success": "تم تحديث عنوان التواصل.",
+      "update_error": "فشل تحديث عنوان التواصل.",
+      "delete_success": "تم حذف عنوان التواصل.",
+      "delete_error": "فشل حذف عنوان التواصل."
     }
   },
   "contact": {

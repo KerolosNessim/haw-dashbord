@@ -9,6 +9,7 @@ import {
   HandHelping,
   Home,
   Info,
+  Layout,
   LayoutGrid,
   LayoutPanelTop,
   LayoutTemplate,
@@ -189,6 +190,11 @@ export const DASHBOARD_NAV_GROUPS: readonly NavGroupDef[] = [
       { titleKey: "redirects", href: "/redirects", icon: Route },
       { titleKey: "testimonials", href: "/testimonials", icon: Quote },
       { titleKey: "about_us", href: "/about", icon: Info },
+      {
+        titleKey: "contact_headers",
+        href: "/contact-headers",
+        icon: Layout,
+      },
       {
         titleKey: "contact_submissions",
         href: "/contact-submissions",
